@@ -1,11 +1,14 @@
 set -e
 
+> packages.in
+
 # first, build wheels for all the packages, but exclude dependencies so that the
 # packages don't need to know where to find each other.
 for package_dir in libs/*
 do
   cd $package_dir
   pip wheel --no-deps . -w ../../wheels
+  python setup.py --name >> ../../packages.in
   cd -
 done
 

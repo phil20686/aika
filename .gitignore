@@ -6,3 +6,4 @@
 libs/*/build/
 **/*.egg-info
 wheels/
+packages.in
