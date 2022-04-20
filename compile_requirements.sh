@@ -23,7 +23,7 @@ done
 #  cd -
 #done
 
-pip-compile requirements.in --find-links ./wheels -q
+pip-compile packages.in -o requirements.txt --find-links ./wheels -q
 
 # replace all references to the local packages with editable path versions
 sed -i "" -E "s|^ebony-([^=]+)==.*$|-e libs/\1|g" requirements.txt
