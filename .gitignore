@@ -1,0 +1,9 @@
+**/.idea/
+**/.eggs
+**/_version.py
+**/*.pyc
+**/.venv/
+libs/*/build/
+**/*.egg-info
+wheels/
+packages.in
