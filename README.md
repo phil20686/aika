@@ -7,6 +7,10 @@ All libraries should be defined in their own subfolder under the `libs/` directo
 Dependencies for each package should be declared inline in the `install_requires` list
 of `setup.py`
 
+Note that because we are creating different packages and distributions under the same namespace,
+there must be no `__init__` under src/ebony, but only under src/ebony/package should have the first init,
+otherwise the modules will not be importable. See [python documentation](https://packaging.python.org/en/latest/guides/packaging-namespace-packages/) on namespace packages.
+
 ## Compiling dependencies
 
 The `requirements.txt` file at the top level contains all the dependencies for all
