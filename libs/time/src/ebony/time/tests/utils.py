@@ -54,4 +54,6 @@ def assert_call(func, expect, *args, test_kwargs: Optional[Dict] = None, **kwarg
     else:
         if test_kwargs is None:
             test_kwargs = {}
-        assert_equal(func(*args, **kwargs), expect, **test_kwargs)
+        val = func(*args, **kwargs)
+        assert_equal(val, expect, **test_kwargs)
+        return val
