@@ -74,6 +74,11 @@ class TimeRange:
                 tensor.index.get_level_values(level).map(lambda x: x in self)
             ]
 
+    @staticmethod
+    def from_pandas(tensor: Tensor, level=None):
+        values = tensor.index.get_level_values(level)
+        return TimeRange(values[0], values[-1])
+
     def __contains__(self, item):
         return self.start < item <= self.end
 
