@@ -20,31 +20,31 @@ class HashBackedPersistanceEngine(iPersistenceEngine):
 
     def replace(self, dataset: DataSet) -> bool:
         original_size = len(self._cache)
-        self._cache[dataset] = dataset
+        self._cache[dataset.metadata] = dataset
         return original_size == len(self._cache)
 
     def append(self, dataset: DataSet):
-        old_dataset = self.exists(dataset)
+        old_dataset = self.exists(dataset.metadata)
         if old_dataset is None:
             return self.replace(dataset)
         else:
             new_data = pd.concat(
                 [
                     old_dataset.data,
-                    TimeRange(old_dataset.time_range.end, None).view(dataset),
+                    TimeRange(old_dataset.metadata.data_time_range.end, None).view(dataset.data),
                 ],
                 axis=0,
             )
             new_dataset = dataset.update_data(new_data)
-            self._cache[new_dataset] = new_dataset
+            self._cache[new_dataset.metadata] = new_dataset
             return True
 
     def merge(self, dataset: DataSet) -> bool:
-        old_dataset = self.exists(dataset)
+        old_dataset = self.exists(dataset.metadata)
         if old_dataset is None:
             return self.replace(dataset)
         else:
             new_data = old_dataset.data.combine_first(dataset.data)
             new_dataset = dataset.update_data(new_data)
-            self._cache[new_dataset] = new_dataset
+            self._cache[new_dataset.metadata] = new_dataset
             return True
