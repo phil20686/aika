@@ -31,7 +31,9 @@ class HashBackedPersistanceEngine(iPersistenceEngine):
             new_data = pd.concat(
                 [
                     old_dataset.data,
-                    TimeRange(old_dataset.metadata.data_time_range.end, None).view(dataset.data),
+                    TimeRange(old_dataset.metadata.data_time_range.end, None).view(
+                        dataset.data
+                    ),
                 ],
                 axis=0,
             )
