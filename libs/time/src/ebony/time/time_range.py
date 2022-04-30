@@ -1,52 +1,44 @@
+import attr
+import typing as t
+import numpy as np
+
 from ebony.time.timestamp import Timestamp
 import pandas as pd
 
-from ebony.utilities.pandas_utils import Tensor
+from ebony.utilities.pandas_utils import IndexTensor
 
 RESOLUTION = pd.Timedelta(nanoseconds=1)
 
 
+@attr.s(frozen=True, init=False, repr=False)
 class TimeRange:
     """
-    Represents a half-open interval (closed at the end) between two timestamps. Intended to work with ordered pandas
-    time-indexed dataframes, an are valid only across the same intervals as pd.Timestamp.
+    Represents a half-open interval (open at the end) between two timestamps.
+    Intended to work with ordered pandas time-indexed dataframes, and are valid only
+    across the same intervals as pd.Timestamp.
     """
 
-    strf_format = "'%Y-%m-%dT%H:%M:{seconds} [{tz}]'"
+    start = attr.ib()
+    end = attr.ib()
 
-    @classmethod
-    def _timestamp_repr(cls, ts: pd.Timestamp):
-        # TODO : Really this belongs on the timestamp class.
-        seconds = ts.second + ts.microsecond / 1e6 + ts.nanosecond / 1e9
-        if seconds < 10.0:
-            seconds_repr = f"0{seconds}"
-        else:
-            seconds_repr = str(seconds)
-        # this works because we are guaranteed olsen timezones.
-        return ts.strftime(cls.strf_format).format(seconds=seconds_repr, tz=ts.tz)
-
-    def __init__(self, start: pd.Timestamp, end: pd.Timestamp):
+    def __init__(
+        self, start: t.Union[pd.Timestamp, str], end: t.Union[pd.Timestamp, str]
+    ):
         if start is None:
-            self.start = pd.Timestamp.min.tz_localize("UTC")
+            start = pd.Timestamp.min.tz_localize("UTC")
         else:
-            self.start = Timestamp(start)
+            start = Timestamp(start)
         if end is None:
-            self.end = pd.Timestamp.max.tz_localize("UTC")
+            end = pd.Timestamp.max.tz_localize("UTC")
         else:
-            self.end = Timestamp(end)
-        if not self.start <= self.end:
+            end = Timestamp(end)
+        if start > end:
             raise ValueError("The start time must be before the end time")
 
-    def __eq__(self, other):
-        if isinstance(other, TimeRange):
-            return self.start == other.start and self.end == other.end
-        else:
-            return False
+        object.__setattr__(self, "start", start)
+        object.__setattr__(self, "end", start)
 
-    def __hash__(self):
-        return hash((self.start, self.end))
-
-    def view(self, tensor: Tensor, level=None) -> Tensor:
+    def view(self, tensor: IndexTensor, level=None) -> IndexTensor:
         """
         Constrains a pandas object to the given time range.
 
@@ -61,30 +53,55 @@ class TimeRange:
         -------
         A view of the pandas object constrained to the given time range.
         """
-        if level is None:
-            range_slice = slice(self.start + RESOLUTION, self.end)
-            if isinstance(tensor, pd.Series):
-                return tensor.loc[range_slice]
-            elif isinstance(tensor, pd.DataFrame):
-                return tensor.loc[range_slice, :]
+        if isinstance(tensor, pd.Index):
+            return self.view(tensor.to_series()).index
+
+        index = tensor.index
+
+        if isinstance(index, pd.MultiIndex):
+
+            if level is None:
+                raise ValueError("Must specify `level` if tensor is multi-indexed.")
+
+            level_values = index.get_level_values(level)
+            mask = (self.start >= level_values) & (level_values < self.end)
+            return tensor.loc[mask]
+
         else:
-            # /TODO I couldnt get it to make an index slice of an arbitary number
-            # of levels. in a clean way, this is good enough for now.
-            return tensor.loc[
-                tensor.index.get_level_values(level).map(lambda x: x in self)
-            ]
+
+            start, end = np.searchsorted(index, [self.start, self.end], side="left")
+
+            return tensor.iloc[start:end]
 
     @staticmethod
-    def from_pandas(tensor: Tensor, level=None):
-        values = tensor.index.get_level_values(level)
-        return TimeRange(values[0], values[-1])
+    def from_pandas(tensor: IndexTensor, level=None):
+        index = tensor if isinstance(tensor, pd.Index) else tensor.index
+        values = index.get_level_values(level)
+        return TimeRange(values[0], values[-1] + RESOLUTION)
 
     def __contains__(self, item):
         return self.start < item <= self.end
 
     def __repr__(self):
         """
-        For ease of use in notebooks it should repr into something that can then execute, i.e.
-        it maintains the contract eval(repr(tr)) == tr
+        For ease of use in notebooks it should repr into something that can then
+        execute, i.e. it maintains the contract eval(repr(tr)) == tr
         """
-        return f"TimeRange({self._timestamp_repr(self.start)}, {self._timestamp_repr(self.end)})"
+
+        start_str = self._timestamp_repr(self.start)
+        end_str = self._timestamp_repr(self.end)
+
+        return f"TimeRange('{start_str}', '{end_str}')"
+
+    @classmethod
+    def _timestamp_repr(cls, ts: pd.Timestamp):
+        # TODO : Really this belongs on the timestamp class.
+
+        seconds = ts.second + ts.microsecond / 1e6 + ts.nanosecond / 1e9
+        if seconds < 10.0:
+            seconds_repr = f"0{seconds}"
+        else:
+            seconds_repr = str(seconds)
+        # this works because we are guaranteed olson timezones.
+        str_format = "'%Y-%m-%dT%H:%M:{seconds} [{tz}]'"
+        return ts.strftime(str_format).format(seconds=seconds_repr, tz=ts.tz)
