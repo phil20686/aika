@@ -25,8 +25,6 @@ setup(
     install_requires=[
         "pandas>=1.2.0",
         "numpy",
-        # TODO: Figure out how to make `compile_requirements` respect extras, and move
-        # this to extras_require[test]
-        "pytest",
     ],
+    extras_require=dict(test=["pytest"]),
 )

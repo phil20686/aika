@@ -27,8 +27,6 @@ setup(
         "numpy",
         "ebony-time",
         "ebony-utilities",
-        # TODO: Figure out how to make `compile_requirements` respect extras, and move
-        # this to extras_require[test]
-        "pytest",
     ],
+    extras_require=dict(test=["pytest"]),
 )

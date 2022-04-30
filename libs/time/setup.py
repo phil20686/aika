@@ -26,8 +26,7 @@ setup(
         "pandas>=1.2.0",
         "numpy",
         "ebony-utilities",
-        # TODO: Figure out how to make `compile_requirements` respect extras, and move
-        # this to extras_require[test]
-        "pytest",
+        "attrs",
     ],
+    extras_require=dict(test=["pytest"]),
 )
