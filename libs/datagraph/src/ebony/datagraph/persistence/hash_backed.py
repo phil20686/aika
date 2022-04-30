@@ -2,7 +2,7 @@ from typing import Union
 
 import pandas as pd
 
-from ebony.data_graph.interface import iPersistenceEngine, DataSetDeclaration, DataSet
+from ebony.datagraph.interface import iPersistenceEngine, DataSetDeclaration, DataSet
 from ebony.time.time_range import TimeRange
 
 

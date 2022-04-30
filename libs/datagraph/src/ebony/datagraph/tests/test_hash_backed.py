@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
-from ebony.data_graph.interface import DataSet, DataSetDeclaration
-from ebony.data_graph.persistence.hash_backed import HashBackedPersistanceEngine
+from ebony.datagraph.interface import DataSet, DataSetDeclaration
+from ebony.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from ebony.time.tests.utils import assert_equal
 from ebony.time.timestamp import Timestamp
 
