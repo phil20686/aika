@@ -79,6 +79,14 @@ class TimeRange:
         values = index.get_level_values(level)
         return TimeRange(values[0], values[-1] + RESOLUTION)
 
+    def intersects(self, other: "TimeRange"):
+        if self.start <= other.start < self.end:
+            return True
+        elif other.start <= self.start < other.end:
+            return True
+        else:
+            return False
+
     def __contains__(self, item):
         return self.start < item <= self.end
 
