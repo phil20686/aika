@@ -8,14 +8,12 @@ parent_dir = Path(__file__).parent
 
 def get_requirements(path: Path):
     with open(path) as fobj:
-        return [
-            str(req)
-            for req in parse_requirements(fobj.read())
-        ]
+        return [str(req) for req in parse_requirements(fobj.read())]
+
 
 setup(
-    name='ebony-utilities',
-    setup_requires=['setuptools_scm'],
+    name="ebony-utilities",
+    setup_requires=["setuptools_scm"],
     use_scm_version=dict(
         root="../..",
         relative_to=__file__,
@@ -25,10 +23,10 @@ setup(
     packages=find_namespace_packages("src", include=["ebony.*"]),
     package_dir={"": "src"},
     install_requires=[
-        'pandas>=1.2.0',
-        'numpy',
+        "pandas>=1.2.0",
+        "numpy",
         # TODO: Figure out how to make `compile_requirements` respect extras, and move
         # this to extras_require[test]
-        'pytest',
+        "pytest",
     ],
 )
