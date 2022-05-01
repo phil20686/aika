@@ -27,6 +27,7 @@ setup(
         "numpy",
         "ebony-time",
         "attrs",
+        "frozendict",
     ],
     extras_require=dict(
         test=["pytest", "black", "isort"],
