@@ -22,7 +22,9 @@ class TimeRange:
     end = attr.ib()
 
     def __init__(
-        self, start: t.Union[pd.Timestamp, str], end: t.Union[pd.Timestamp, str]
+        self,
+        start: t.Union[pd.Timestamp, str, None],
+        end: t.Union[pd.Timestamp, str, None],
     ):
         if start is None:
             start = pd.Timestamp.min.tz_localize("UTC")
@@ -79,13 +81,25 @@ class TimeRange:
         values = index.get_level_values(level)
         return TimeRange(values[0], values[-1] + RESOLUTION)
 
-    def intersects(self, other: "TimeRange"):
+    def intersects(self, other: "TimeRange") -> bool:
         if self.start <= other.start < self.end:
             return True
         elif other.start <= self.start < other.end:
             return True
         else:
             return False
+
+    def contains(self, other) -> bool:
+        return self.start <= other.start and other.end <= self.end
+
+    def intersection(self, other: "TimeRange") -> "TimeRange":
+        if not self.intersects(other):
+            return TimeRange(pd.NaT, pd.NaT)
+
+        else:
+            return TimeRange(
+                start=max(self.start, other.start), end=min(self.end, other.end)
+            )
 
     def __contains__(self, item):
         return self.start < item <= self.end
