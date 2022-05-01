@@ -93,6 +93,17 @@ class UnionCalendar(ICalendar):
             [calendar.to_index(time_range) for calendar in self.calendars],
         )
 
+    @classmethod
+    def merge(cls, calendars: t.Iterable[ICalendar]):
+        flattened_calendars = set()
+        for calendar in calendars:
+            if isinstance(calendar, UnionCalendar):
+                flattened_calendars.update(calendar.calendars)
+            else:
+                flattened_calendars.add(calendar)
+
+        return cls(flattened_calendars)
+
 
 @attr.s(frozen=True)
 class OffsetCalendar(ICalendar):
