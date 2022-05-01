@@ -7,7 +7,7 @@ from pprint import pformat
 import attr
 import pandas as pd
 from frozendict import frozendict
-from pandas._libs.tslibs.offsets import BaseOffset
+from pandas.tseries.offsets import BaseOffset
 
 from ebony.datagraph.completion_checking import (
     ICompletionChecker,
@@ -18,6 +18,7 @@ from ebony.datagraph.interface import DataSetMetadata, IPersistenceEngine
 from ebony.time.calendars import UnionCalendar
 from ebony.time.time_range import TimeRange
 from ebony.utilities.abstract import abstract_attribute
+from ebony.utilities.pandas_utils import IndexTensor
 
 
 @attr.s
@@ -68,6 +69,16 @@ class ITask(ABC):
 
     time_series: bool = abstract_attribute()
 
+    @property
+    @abstractmethod
+    def dependencies(self) -> "t.Dict[str, Dependency]":
+        pass
+
+    @property
+    @abstractmethod
+    def output(self) -> DataSetMetadata:
+        pass
+
     @abstractmethod
     def run(self):
         pass
@@ -78,15 +89,7 @@ class ITask(ABC):
         pass
 
     @abstractmethod
-    def output(self) -> DataSetMetadata:
-        pass
-
-    @abstractmethod
     def read(self, time_range: t.Optional[TimeRange] = None) -> t.Any:
-        pass
-
-    @abstractmethod
-    def dependencies(self) -> "t.Dict[str, Dependency]":
         pass
 
 
@@ -98,27 +101,13 @@ class Task(ITask, ABC):
     version: str = attr.ib()
     persistence_engine: IPersistenceEngine = attr.ib()
 
-    time_level = abstract_attribute()
-
     def io_params(self):
         return frozendict(
             version=self.version,
         )
 
-    def output(self):
-        return DataSetMetadata(
-            name=f"{self.namespace}.{self.name}",
-            params=self.io_params(),
-            predecessors={
-                name: dep.task.output() for name, dep in self.dependencies().items()
-            },
-            time_level=self.time_level,
-        )
-
     def read(self, time_range: t.Optional[TimeRange] = None) -> t.Any:
-        return self.persistence_engine.read(
-            metadata=self.output(), time_range=time_range
-        )
+        return self.output.read(time_range=time_range)
 
 
 @attr.s(frozen=True)
@@ -140,17 +129,27 @@ class TimeSeriesTask(Task, ABC):
 
     def complete(self):
         return self.completion_checker.is_complete(
-            metadata=self.output(),
+            metadata=self.output,
             target_time_range=self.time_range,
+        )
+
+    @cached_property
+    def output(self):
+        return DataSetMetadata(
+            name=f"{self.namespace}.{self.name}",
             engine=self.persistence_engine,
+            static=False,
+            params=self.io_params(),
+            predecessors={
+                name: dep.task.output for name, dep in self.dependencies.items()
+            },
+            time_level=self.time_level,
         )
 
     def _infer_inherited_completion_checker(self):
 
         time_series_dependencies: t.Dict[str, Dependency[TimeSeriesTask]] = {
-            name: dep
-            for name, dep in self.dependencies().items()
-            if dep.task.time_series
+            name: dep for name, dep in self.dependencies.items() if dep.task.time_series
         }
 
         explicit_inheritors = set()
@@ -226,10 +225,22 @@ class TimeSeriesTask(Task, ABC):
 class StaticTask(Task, ABC):
 
     time_series = False
-    time_level = None
 
     def complete(self):
-        return self.persistence_engine.exists(self.output())
+        return self.output.exists()
+
+    @cached_property
+    def output(self):
+        return DataSetMetadata(
+            name=f"{self.namespace}.{self.name}",
+            engine=self.persistence_engine,
+            static=True,
+            params=self.io_params(),
+            predecessors={
+                name: dep.task.output for name, dep in self.dependencies.items()
+            },
+            time_level=None,
+        )
 
 
 @attr.s(frozen=True)
@@ -239,9 +250,9 @@ class FunctionWrapperMixin(Task, ABC):
     static_kwargs: frozendict[str, t.Any] = attr.ib()
     data_kwargs_deps: frozendict[str, Dependency] = attr.ib()
 
-    @abstractmethod
-    def get_data_kwargs(self) -> t.Dict[str, t.Any]:
-        pass
+    @cached_property
+    def dependencies(self) -> "t.Dict[str, Dependency]":
+        return self.data_kwargs_deps
 
     def run(self):
         task_data_kwargs = self.get_data_kwargs()
@@ -250,10 +261,15 @@ class FunctionWrapperMixin(Task, ABC):
 
         result = self.function(**kwargs)
 
-        self.persistence_engine.append(metadata=self.output(), data=result)
+        self.write_data(result)
 
-    def dependencies(self) -> "t.Dict[str, Dependency]":
-        return self.data_kwargs_deps
+    @abstractmethod
+    def get_data_kwargs(self) -> t.Dict[str, t.Any]:
+        pass
+
+    @abstractmethod
+    def write_data(self, data: t.Any) -> None:
+        pass
 
 
 @attr.s(frozen=True)
@@ -267,11 +283,17 @@ class TimeSeriesFunctionWrapper(FunctionWrapperMixin, TimeSeriesTask):
             for name, dep in self.data_kwargs_deps.items()
         }
 
+    def write_data(self, data: IndexTensor) -> None:
+        self.output.append(data=data, declared_time_range=self.time_range)
+
 
 @attr.s(frozen=True)
 class StaticFunctionWrapper(FunctionWrapperMixin, StaticTask):
     def get_data_kwargs(self) -> t.Dict[str, t.Any]:
         return {name: dep.read() for name, dep in self.data_kwargs_deps.items()}
+
+    def write_data(self, data: t.Any) -> None:
+        self.output.replace(data=data, declared_time_range=None)
 
 
 def task(function, *args, time_series: bool, **kwargs):
