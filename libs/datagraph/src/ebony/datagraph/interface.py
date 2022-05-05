@@ -13,6 +13,8 @@ class DataSetMetadata:
     """
     A `DataSetMetadata` object contains all the information to describe a dataset which
     may or may not exist.
+
+    \TODO - attr repr method and str method are terrible for deeply nested graphs, overwrite
     """
 
     name: str = attr.ib()

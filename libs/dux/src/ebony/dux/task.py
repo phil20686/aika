@@ -10,8 +10,8 @@ from frozendict import frozendict
 from pandas.tseries.offsets import BaseOffset
 
 from ebony.datagraph.completion_checking import (
-    ICompletionChecker,
     CalendarChecker,
+    ICompletionChecker,
     IrregularChecker,
 )
 from ebony.datagraph.interface import DataSetMetadata, IPersistenceEngine
@@ -156,8 +156,6 @@ class TimeSeriesTask(Task, ABC):
         explicit_non_inheritors = set()
 
         for name, dep in time_series_dependencies.items():
-            if not dep.task.time_series:
-                continue
             if dep.inherit_frequency:
                 explicit_inheritors.add(name)
             elif dep.inherit_frequency is not None:

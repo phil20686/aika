@@ -4,12 +4,9 @@ from abc import abstractmethod
 import pandas as pd
 from typing_extensions import Protocol
 
-from ebony.datagraph.interface import (
-    IPersistenceEngine,
-    DataSet,
-    DataSetMetadata,
-)
 from ebony.time.time_range import TimeRange
+
+from ebony.datagraph.interface import DataSet, DataSetMetadata, IPersistenceEngine
 
 
 class HashBackedPersistanceEngine(IPersistenceEngine):
@@ -139,8 +136,10 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             return True
 
     @staticmethod
-    def _append(existing, new):
-        new_data = TimeRange(existing.data_time_range.end, None).view(new.data)
+    def _append(existing: DataSet, new: DataSet):
+        new_data = TimeRange(existing.data_time_range.end, None).view(
+            new.data, level=new.metadata.time_level
+        )
 
         if new_data.empty:
             return existing
@@ -150,7 +149,8 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             data=pd.concat([existing.data, new_data], axis=0),
             declared_time_range=TimeRange(
                 existing.declared_time_range.start,
-                new.declared_time_range.end,
+                # it might merge nothing if the new time range is < existing.
+                max(new.declared_time_range.end, existing.declared_time_range.end),
             ),
         )
 

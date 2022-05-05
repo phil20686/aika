@@ -2,9 +2,10 @@ from abc import ABC
 
 import attr
 
-from ebony.datagraph.interface import DataSetMetadata
 from ebony.time.calendars import ICalendar
 from ebony.time.time_range import TimeRange
+
+from ebony.datagraph.interface import DataSetMetadata
 
 
 class ICompletionChecker(ABC):

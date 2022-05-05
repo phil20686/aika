@@ -1,9 +1,11 @@
-import pytest
 import pandas as pd
-from ebony.datagraph.interface import DataSet, DataSetDeclaration
-from ebony.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
+import pytest
+
 from ebony.time.tests.utils import assert_equal
 from ebony.time.timestamp import Timestamp
+
+from ebony.datagraph.interface import DataSet, DataSetDeclaration
+from ebony.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 
 leaf1 = DataSet.build(
     name="leaf1",
