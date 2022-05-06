@@ -101,6 +101,47 @@ class DataSetMetadata:
 #  usually be an unhashable pandas object
 @attr.s(frozen=True, eq=True, hash=False)
 class DataSet:
+    @classmethod
+    def build(
+        cls,
+        name: str,
+        data: IndexTensor,
+        params: t.Dict,
+        predecessors: t.Dict,
+        static: bool = False,
+        time_level: t.Optional[t.Union[str, int]] = None,
+        engine=None,
+        declared_time_range: t.Optional[TimeRange] = None,
+    ):
+        return cls(
+            metadata=DataSetMetadata(
+                name=name,
+                params=params,
+                predecessors=predecessors,
+                static=static,
+                time_level=time_level,
+                engine=engine,
+            ),
+            data=data,
+            declared_time_range=declared_time_range
+            or TimeRange.from_pandas(data, level=time_level),
+        )
+
+    @classmethod
+    def replace_engine(cls, dataset: "DataSet", engine):
+        """
+        Useful for testing,
+        """
+        return cls.build(
+            name=dataset.metadata.name,
+            data=dataset.data,
+            params=dataset.metadata.params,
+            predecessors=dataset.metadata.predecessors,
+            time_level=dataset.metadata.time_level,
+            static=dataset.metadata.static,
+            engine=engine,
+        )
+
     metadata: DataSetMetadata = attr.ib()
     # TODO: Remove below PyCharm exception once attrs 22.1 is released, fixing the bug
     #  mentioned here: https://github.com/python-attrs/attrs/issues/948
@@ -122,9 +163,7 @@ class DataSet:
 
     @property
     def data_time_range(self):
-        return TimeRange.from_pandas(
-            self.data_time_range, level=self.metadata.time_level
-        )
+        return TimeRange.from_pandas(self.data, level=self.metadata.time_level)
 
     def update(self, data, declared_time_range):
         """
