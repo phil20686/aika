@@ -87,11 +87,19 @@ class TimeRange:
             other.start <= self.start < other.end
         )
 
-    def contains(self, other) -> bool:
+    def contains(self, other: "TimeRange") -> bool:
         """
         Checks whether other is a sub interval of this time range.
         """
         return self.start <= other.start and other.end <= self.end
+
+    def union(self, other: "TimeRange"):
+        if not self.intersects(other):
+            return TimeRange(pd.NaT, pd.NaT)
+        else:
+            return TimeRange(
+                start=min(self.start, other.start), end=max(self.end, other.end)
+            )
 
     def intersection(self, other: "TimeRange") -> "TimeRange":
         if not self.intersects(other):
