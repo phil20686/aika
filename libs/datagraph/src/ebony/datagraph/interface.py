@@ -95,6 +95,15 @@ class DataSetMetadata:
             )
         )
 
+@attr.s(frozen=True, slots=True, cache_hash=True)
+class DatasetMetaDataStub(DataSetMetadata):
+    """
+    A stub class is different only because it stores only the hash and engine + top level parameters
+    directly, and will fetch the full predecessors when required.
+    """
+
+    predecessors: t.Dict[str, "DataSetMetadata"] = attr.ib(converter=frozendict)
+
 
 # TODO: split this into StaticDataSet and TimeSeriesDataSet?
 # TODO: does this need to be hashable? It will currently fail because `data` will
@@ -182,6 +191,20 @@ class IPersistenceEngine(ABC):
     # ----------------------------------------------------------------------------------
     # Read-only methods
     # ----------------------------------------------------------------------------------
+
+    @abstractmethod
+    def set_state(self) -> t.Dict[str, t.Any]:
+        raise NotImplementedError
+
+    @classmethod
+    def create_engine(cls, d : t.Dict[str, t.Any]):
+        if d["type"] == "hash_backed":
+            raise NotImplementedError("Cannot recreate an engine for in-memory storage")
+        elif d["type"] == "mongo":
+            from persistence.mongo_backed import MongoBackedPersistanceEngine
+            return MongoBackedPersistanceEngine.create_engine(d)
+        else:
+            raise NotImplementedError(f"No persistence engine found for {d['type']}")
 
     @abstractmethod
     def exists(self, metadata: DataSetMetadata) -> bool:
