@@ -10,7 +10,6 @@ def get_requirements(path: Path):
     with open(path) as fobj:
         return [str(req) for req in parse_requirements(fobj.read())]
 
-
 setup(
     name="ebony-dux",
     setup_requires=["setuptools_scm"],
