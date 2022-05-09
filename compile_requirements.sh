@@ -1,4 +1,5 @@
 set -e
+set pipefail
 
 > packages.in
 
@@ -11,6 +12,8 @@ do
   python setup.py --name >> ../../packages.in
   cd -
 done
+
+sed -i "" "s/$/[test]/g" packages.in
 
 # now that we have populated `wheels` with wheels for each package, we can point to it
 # with --find-links to ensure that each package can resolve all of its local

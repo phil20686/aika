@@ -7,3 +7,4 @@ libs/*/build/
 **/*.egg-info
 wheels/
 packages.in
+notebooks/scrapbooks

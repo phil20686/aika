@@ -12,19 +12,21 @@ def get_requirements(path: Path):
 
 
 setup(
-    name="ebony-utilities",
+    name="ebony-datagraph",
     setup_requires=["setuptools_scm"],
     use_scm_version=dict(
         root="../..",
         relative_to=__file__,
         write_to_template='__version__ = "{version}"',
-        write_to=parent_dir / "src/ebony/utilities/_version.py",
+        write_to=parent_dir / "src/ebony/datagraph/_version.py",
     ),
     packages=find_namespace_packages("src", include=["ebony.*"]),
     package_dir={"": "src"},
     install_requires=[
         "pandas>=1.2.0",
         "numpy",
+        "ebony-time",
+        "ebony-utilities",
     ],
     extras_require=dict(test=["pytest"]),
 )
