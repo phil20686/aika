@@ -1,5 +1,5 @@
 from pkg_resources import parse_requirements
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, find_namespace_packages
 from pathlib import Path
 
 
@@ -13,7 +13,6 @@ def get_requirements(path: Path):
             for req in parse_requirements(fobj.read())
         ]
 
-
 setup(
     name='ebony-dux',
     setup_requires=['setuptools_scm'],
@@ -23,7 +22,7 @@ setup(
         write_to_template='__version__ = "{version}"',
         write_to=parent_dir / "src/ebony/dux/_version.py",
     ),
-    packages=find_packages('src'),
+    packages=find_namespace_packages("src", include=["ebony.*"]),
     package_dir={"": "src"},
     install_requires=[
         'pandas>=1.2.0',
