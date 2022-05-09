@@ -2,31 +2,110 @@ import typing as t
 from abc import ABC, abstractmethod
 
 import attr
+import pandas as pd
 from frozendict import frozendict
 
 from ebony.time.time_range import TimeRange
 from ebony.utilities.pandas_utils import IndexTensor, equals
 
 
-@attr.s(frozen=True, slots=True, cache_hash=True)
 class DataSetMetadata:
     """
     A `DataSetMetadata` object contains all the information to describe a dataset which
     may or may not exist.
-
-    \TODO - attr repr method and str method are terrible for deeply nested graphs, overwrite
     """
 
-    name: str = attr.ib()
-    engine: "IPersistenceEngine" = attr.ib()
+    @classmethod
+    def replace_engine(
+        cls, metadata: "DataSetMetadata", engine, include_predecessors=False
+    ):
+        """
+        Useful for testing, not for production code.
 
-    # TODO: does static definitely belong here?
-    static: bool = attr.ib()
-    time_level = attr.ib()
+        """
+        if include_predecessors:
+            predecessors = {
+                name: cls.replace_engine(m, engine, include_predecessors)
+                for name, m in metadata.predecessors.items()
+            }
+        else:
+            predecessors = metadata.predecessors
 
-    # TODO: restrict this t.Any to a suitable parameter-type interface, e.g. Hashable
-    params: t.Dict[str, t.Any] = attr.ib(converter=frozendict)
-    predecessors: t.Dict[str, "DataSetMetadata"] = attr.ib(converter=frozendict)
+        return cls(
+            name=metadata.name,
+            static=metadata.static,
+            params=metadata.params,
+            predecessors=predecessors,
+            time_level=metadata.time_level,
+            engine=engine,
+        )
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        static: bool,
+        params: t.Dict[str, t.Any],
+        predecessors: t.Dict[str, "DataSetMetadata"],
+        time_level: t.Optional[t.Union[int, str]] = None,
+        engine: t.Optional["iPersitenceEngine"] = None,
+    ):
+        self._name = name
+        self._static = static
+        self._engine = engine
+        self._time_level = time_level
+        self._params = frozendict({k: params[k] for k in sorted(params)})
+        self._predecessors = frozendict(
+            {k: predecessors[k] for k in sorted(predecessors)}
+        )
+
+    def __eq__(self, other):
+        return all(
+            (
+                self._name == other.name,
+                self._static == other.static,
+                self._engine == other.engine,
+                self._time_level == other.time_level,
+                self._params == other.params,
+                self.__hash__() == other.__hash__(),
+            )
+        )
+
+    def __hash__(self):
+        return hash(
+            (
+                self._name,
+                self._static,
+                self._engine,
+                self._time_level,
+                self._params,
+            )
+            + tuple(hash(x) for x in self._predecessors.values())
+        )
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def static(self) -> bool:
+        return self._static
+
+    @property
+    def time_level(self) -> t.Union[str, int]:
+        return self._time_level
+
+    @property
+    def engine(self) -> "iPersistenceEngine":
+        return self._engine
+
+    @property
+    def params(self):
+        return self._params
+
+    @property
+    def predecessors(self) -> t.Dict[str, "DataSetMetadata"]:
+        return self._predecessors
 
     def exists(self):
         return self.engine.exists(self)
@@ -95,14 +174,36 @@ class DataSetMetadata:
             )
         )
 
-@attr.s(frozen=True, slots=True, cache_hash=True)
-class DatasetMetaDataStub(DataSetMetadata):
+
+class DatasetMetadataStub(DataSetMetadata):
     """
     A stub class is different only because it stores only the hash and engine + top level parameters
     directly, and will fetch the full predecessors when required.
     """
 
-    predecessors: t.Dict[str, "DataSetMetadata"] = attr.ib(converter=frozendict)
+    def __init__(
+        self,
+        *,
+        name: str,
+        static: bool,
+        params: t.Dict[str, t.Any],
+        hash: int,
+        time_level: t.Optional[t.Union[int, str]] = None,
+        engine: t.Optional["iPersitenceEngine"] = None,
+    ):
+        self._name = name
+        self._static = static
+        self._engine = engine
+        self._time_level = time_level
+        self._params = frozendict({k: params[k] for k in sorted(params)})
+        self._hash = hash
+
+    def __hash__(self):
+        return self._hash
+
+    @property
+    def predecessors(self) -> t.Dict[str, "DatasetMetadataStub"]:
+        return self.engine.get_predecessors_from_hash(self._name, self._hash)
 
 
 # TODO: split this into StaticDataSet and TimeSeriesDataSet?
@@ -137,18 +238,16 @@ class DataSet:
         )
 
     @classmethod
-    def replace_engine(cls, dataset: "DataSet", engine):
+    def replace_engine(cls, dataset: "DataSet", engine, include_predecessors=False):
         """
         Useful for testing,
         """
-        return cls.build(
-            name=dataset.metadata.name,
+        return cls(
             data=dataset.data,
-            params=dataset.metadata.params,
-            predecessors=dataset.metadata.predecessors,
-            time_level=dataset.metadata.time_level,
-            static=dataset.metadata.static,
-            engine=engine,
+            metadata=DataSetMetadata.replace_engine(
+                dataset.metadata, engine, include_predecessors
+            ),
+            declared_time_range=dataset.declared_time_range,
         )
 
     metadata: DataSetMetadata = attr.ib()
@@ -197,14 +296,26 @@ class IPersistenceEngine(ABC):
         raise NotImplementedError
 
     @classmethod
-    def create_engine(cls, d : t.Dict[str, t.Any]):
-        if d["type"] == "hash_backed":
+    def create_engine(cls, d: t.Dict[str, t.Any]):
+        engine_type = d.pop("type")
+        if engine_type == "hash_backed":
             raise NotImplementedError("Cannot recreate an engine for in-memory storage")
-        elif d["type"] == "mongo":
-            from persistence.mongo_backed import MongoBackedPersistanceEngine
-            return MongoBackedPersistanceEngine.create_engine(d)
+        elif engine_type == "mongodb":
+            from ebony.datagraph.persistence.mongo_backed import (
+                MongoBackedPersistanceEngine,
+            )
+
+            return MongoBackedPersistanceEngine._create_engine(d)
         else:
             raise NotImplementedError(f"No persistence engine found for {d['type']}")
+
+    @abstractmethod
+    def get_predecessors_from_hash(
+        self, name: str, hash: int
+    ) -> t.Dict[str, DatasetMetadataStub]:
+        """
+        Given a node name and the hash of a dataset, returns a dataset stub.
+        """
 
     @abstractmethod
     def exists(self, metadata: DataSetMetadata) -> bool:
@@ -446,3 +557,32 @@ class IPersistenceEngine(ABC):
         Note that this method is only supported for time-series datasets; if the
         specified dataset is static, a ValueError will be raised.
         """
+
+    @classmethod
+    def _append(cls, existing: DataSet, new: DataSet):
+        new_data = TimeRange(existing.data_time_range.end, None).view(
+            new.data, level=new.metadata.time_level
+        )
+
+        if new_data.empty:
+            return existing
+
+        return DataSet(
+            metadata=new.metadata,
+            data=pd.concat([existing.data, new_data], axis=0),
+            declared_time_range=TimeRange(
+                existing.declared_time_range.start,
+                # it might merge nothing if the new time range is < existing.
+                max(new.declared_time_range.end, existing.declared_time_range.end),
+            ),
+        )
+
+    @classmethod
+    def _merge(cls, existing: DataSet, new: DataSet) -> DataSet:
+        return DataSet(
+            metadata=existing.metadata,
+            data=existing.data.combine_first(new.data),
+            declared_time_range=existing.declared_time_range.union(
+                new.declared_time_range
+            ),
+        )

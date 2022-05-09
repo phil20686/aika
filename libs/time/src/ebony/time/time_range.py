@@ -1,11 +1,12 @@
-import attr
 import typing as t
 
-from ebony.time.timestamp import Timestamp
+import attr
+import numpy as np
 import pandas as pd
 
 from ebony.utilities.pandas_utils import IndexTensor
 
+from ebony.time.timestamp import Timestamp
 
 RESOLUTION = pd.Timedelta(nanoseconds=1)
 

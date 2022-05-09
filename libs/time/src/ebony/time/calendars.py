@@ -1,14 +1,13 @@
 import typing as t
+from abc import ABC, abstractmethod
 from functools import reduce
 
 import attr
 import pandas as pd
-from abc import ABC, abstractmethod
-
-from pandas._libs.tslibs.offsets import Week, Day, to_offset
+from pandas._libs.tslibs.offsets import Day, Week, to_offset
 
 from ebony.time.time_of_day import TimeOfDay
-from ebony.time.time_range import TimeRange, RESOLUTION
+from ebony.time.time_range import RESOLUTION, TimeRange
 
 
 class ICalendar(ABC):
