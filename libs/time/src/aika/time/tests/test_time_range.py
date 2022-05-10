@@ -1,9 +1,9 @@
 import pandas as pd
 import pytest
 
-from ebony.time.tests.utils import assert_call
-from ebony.time.time_range import TimeRange
-from ebony.time.timestamp import Timestamp
+from aika.time.tests.utils import assert_call
+from aika.time.time_range import TimeRange
+from aika.time.timestamp import Timestamp
 
 utc_index = pd.Index(
     Timestamp(x) for x in pd.date_range("2022-04-21", freq="H", periods=10)

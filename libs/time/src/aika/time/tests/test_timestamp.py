@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from ebony.time.tests.utils import assert_call
-from ebony.time.timestamp import Timestamp
+from aika.time.tests.utils import assert_call
+from aika.time.timestamp import Timestamp
 
 
 @pytest.mark.parametrize(

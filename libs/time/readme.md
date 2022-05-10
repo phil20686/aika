@@ -1,4 +1,4 @@
-# Ebony-Time
+# aika-Time
 
 Utility methods for working with timestamps and time series in the context of pandas. Principal components are:
 

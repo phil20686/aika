@@ -2,16 +2,16 @@ import pandas as pd
 import pytest
 from pandas._libs.tslibs.offsets import Hour, Minute
 
-from ebony.time.calendars import (
+from aika.time.calendars import (
     ICalendar,
     OffsetCalendar,
     TimeOfDayCalendar,
     UnionCalendar,
     Weekdays,
 )
-from ebony.time.time_of_day import TimeOfDay
-from ebony.time.time_range import RESOLUTION, TimeRange
-from ebony.time.timestamp import Timestamp
+from aika.time.time_of_day import TimeOfDay
+from aika.time.time_range import RESOLUTION, TimeRange
+from aika.time.timestamp import Timestamp
 
 
 @pytest.mark.parametrize(

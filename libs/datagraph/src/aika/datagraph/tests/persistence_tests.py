@@ -3,9 +3,9 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 
-from ebony.time.timestamp import Timestamp
+from aika.time.timestamp import Timestamp
 
-from ebony.datagraph.interface import DataSet
+from aika.datagraph.interface import DataSet
 
 leaf1 = DataSet.build(
     name="leaf1",

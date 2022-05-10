@@ -1,7 +1,8 @@
+from typing import TypeVar
+
 import numpy as np
 import pandas as pd
-from typing import TypeVar
-from pandas import Index, DataFrame, Series
+from pandas import DataFrame, Index, Series
 
 # these types can be used to make functions that return the same pandas type as they are given.
 Tensor = TypeVar("Tensor", DataFrame, Series)
@@ -15,7 +16,7 @@ def equals(left, right) -> bool:
     """
     if type(left) != type(right):
         return False
-    elif isinstance(left, (pd.Series, pd.DataFrame, pd.Series)):
+    elif isinstance(left, (pd.Series, pd.DataFrame, pd.Index)):
         return left.equals(right)
     elif isinstance(left, np.ndarray):
         return np.array_equal(left, right, equal_nan=True)

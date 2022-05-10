@@ -9,16 +9,16 @@ import pandas as pd
 from frozendict import frozendict
 from pandas.tseries.offsets import BaseOffset
 
-from ebony.datagraph.completion_checking import (
+from aika.datagraph.completion_checking import (
     CalendarChecker,
     ICompletionChecker,
     IrregularChecker,
 )
-from ebony.datagraph.interface import DataSetMetadata, IPersistenceEngine
-from ebony.time.calendars import UnionCalendar
-from ebony.time.time_range import TimeRange
-from ebony.utilities.abstract import abstract_attribute
-from ebony.utilities.pandas_utils import IndexTensor
+from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
+from aika.time.calendars import UnionCalendar
+from aika.time.time_range import TimeRange
+from aika.utilities.abstract import abstract_attribute
+from aika.utilities.pandas_utils import IndexTensor
 
 
 @attr.s

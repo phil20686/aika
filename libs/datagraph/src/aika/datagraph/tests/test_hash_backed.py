@@ -1,10 +1,10 @@
 import pytest
 
-from ebony.time.tests.utils import assert_equal
+from aika.time.tests.utils import assert_equal
 
-from ebony.datagraph.interface import DataSet
-from ebony.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
-from ebony.datagraph.tests.persistence_tests import append_tests, merge_tests
+from aika.datagraph.interface import DataSet
+from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
+from aika.datagraph.tests.persistence_tests import append_tests, merge_tests
 
 
 @pytest.mark.parametrize("list_of_datasets, expected_contents", append_tests)
