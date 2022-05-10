@@ -1,4 +1,4 @@
-# ebony
+# aika
 
 ## Repo structure
 
@@ -8,7 +8,7 @@ Dependencies for each package should be declared inline in the `install_requires
 of `setup.py`
 
 Note that because we are creating different packages and distributions under the same namespace,
-there must be no `__init__` under src/ebony, but only under src/ebony/package should have the first init,
+there must be no `__init__` under src/aika, but only under src/aika/package should have the first init,
 otherwise the modules will not be importable. See [python documentation](https://packaging.python.org/en/latest/guides/packaging-namespace-packages/) on namespace packages.
 
 ## Compiling dependencies

@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from ebony.time.tests.utils import assert_call, assert_equal
+from aika.time.tests.utils import assert_call, assert_equal
 
 
 @pytest.mark.parametrize(

@@ -2,11 +2,11 @@ import mongomock as mongomock
 import pymongo
 import pytest as pytest
 
-from ebony.time.tests.utils import assert_equal
+from aika.time.tests.utils import assert_equal
 
-from ebony.datagraph.interface import DataSet
-from ebony.datagraph.persistence.mongo_backed import MongoBackedPersistanceEngine
-from ebony.datagraph.tests.persistence_tests import append_tests, merge_tests
+from aika.datagraph.interface import DataSet
+from aika.datagraph.persistence.mongo_backed import MongoBackedPersistanceEngine
+from aika.datagraph.tests.persistence_tests import append_tests, merge_tests
 
 
 @mongomock.patch()

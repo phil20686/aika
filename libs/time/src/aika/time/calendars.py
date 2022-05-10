@@ -6,8 +6,8 @@ import attr
 import pandas as pd
 from pandas._libs.tslibs.offsets import Day, Week, to_offset
 
-from ebony.time.time_of_day import TimeOfDay
-from ebony.time.time_range import RESOLUTION, TimeRange
+from aika.time.time_of_day import TimeOfDay
+from aika.time.time_range import RESOLUTION, TimeRange
 
 
 class ICalendar(ABC):

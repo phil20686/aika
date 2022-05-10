@@ -12,20 +12,20 @@ def get_requirements(path: Path):
 
 
 setup(
-    name="ebony-time",
+    name="aika-time",
     setup_requires=["setuptools_scm"],
     use_scm_version=dict(
         root="../..",
         relative_to=__file__,
         write_to_template='__version__ = "{version}"',
-        write_to=parent_dir / "src/ebony/time/_version.py",
+        write_to=parent_dir / "src/aika/time/_version.py",
     ),
-    packages=find_namespace_packages("src", include=["ebony.*"]),
+    packages=find_namespace_packages("src", include=["aika.*"]),
     package_dir={"": "src"},
     install_requires=[
         "pandas>=1.2.0",
         "numpy",
-        "ebony-utilities",
+        "aika-utilities",
         "attrs",
     ],
     extras_require=dict(test=["pytest"]),

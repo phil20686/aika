@@ -5,8 +5,8 @@ import attr
 import pandas as pd
 from frozendict import frozendict
 
-from ebony.time.time_range import TimeRange
-from ebony.utilities.pandas_utils import IndexTensor, equals
+from aika.time.time_range import TimeRange
+from aika.utilities.pandas_utils import IndexTensor, equals
 
 
 class DataSetMetadata:
@@ -307,7 +307,7 @@ class IPersistenceEngine(ABC):
         if engine_type == "hash_backed":
             raise NotImplementedError("Cannot recreate an engine for in-memory storage")
         elif engine_type == "mongodb":
-            from ebony.datagraph.persistence.mongo_backed import (
+            from aika.datagraph.persistence.mongo_backed import (
                 MongoBackedPersistanceEngine,
             )
 

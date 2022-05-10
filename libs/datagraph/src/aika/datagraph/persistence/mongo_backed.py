@@ -5,9 +5,9 @@ import pymongo
 from bson.objectid import ObjectId
 from frozendict._frozendict import frozendict
 
-from ebony.time.time_range import TimeRange
+from aika.time.time_range import TimeRange
 
-from ebony.datagraph.interface import (
+from aika.datagraph.interface import (
     DataSet,
     DataSetMetadata,
     DatasetMetadataStub,
