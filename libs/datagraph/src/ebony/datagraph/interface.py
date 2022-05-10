@@ -12,7 +12,9 @@ from ebony.utilities.pandas_utils import IndexTensor, equals
 class DataSetMetadata:
     """
     A `DataSetMetadata` object contains all the information to describe a dataset which
-    may or may not exist.
+    may or may not exist. Note that dataset metadata equality is explicitly based on the hashes of predecessors.
+    hash() truncates the output of __hash__() so we try to use __hash__() throughout when eg writing meta data
+    to a database. Note that metadata.
     """
 
     @classmethod
@@ -240,7 +242,7 @@ class DataSet:
     @classmethod
     def replace_engine(cls, dataset: "DataSet", engine, include_predecessors=False):
         """
-        Useful for testing,
+        Useful for testing, allows test cases to be reused for testing different engines.
         """
         return cls(
             data=dataset.data,
@@ -271,6 +273,10 @@ class DataSet:
 
     @property
     def data_time_range(self):
+        """
+        Note that the data time range always applies to the data contained in this dataset object, which
+        may only be a subset of the data that is stored in the persistence engine.
+        """
         return TimeRange.from_pandas(self.data, level=self.metadata.time_level)
 
     def update(self, data, declared_time_range):
@@ -560,6 +566,10 @@ class IPersistenceEngine(ABC):
 
     @classmethod
     def _append(cls, existing: DataSet, new: DataSet):
+        """
+        This is the definitionally correct logic for appending two datasets, all implementations of append
+        by different engines must replicate this behaviour.
+        """
         new_data = TimeRange(existing.data_time_range.end, None).view(
             new.data, level=new.metadata.time_level
         )
@@ -579,6 +589,10 @@ class IPersistenceEngine(ABC):
 
     @classmethod
     def _merge(cls, existing: DataSet, new: DataSet) -> DataSet:
+        """
+        This is the definitionally correct logic for merging two datasets, all implementations of merge
+        by different engines must replicate this behaviour.
+        """
         return DataSet(
             metadata=existing.metadata,
             data=existing.data.combine_first(new.data),

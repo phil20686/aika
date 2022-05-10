@@ -77,10 +77,10 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             "static": metadata.static,
             "params": metadata.params,
             "engine": metadata.engine.set_state(),
-            "predecessors": {
-                name: self._serialise_metadata_as_stub(pred)
+            "predecessors": [
+                self._serialise_metadata_as_stub(pred) | {"param_name": name}
                 for name, pred in metadata.predecessors.items()
-            },
+            ],
         }
 
     def _serialise_data(self, dataset: DataSet):
@@ -107,8 +107,10 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             static=record["static"],
             params=record["params"],
             predecessors={
-                name: self._deserialise_metadata_as_stub(pred)
-                for name, pred in record["predecessors"].items()
+                pred_record["param_name"]: self._deserialise_metadata_as_stub(
+                    pred_record
+                )
+                for pred_record in record["predecessors"]
             },
             engine=IPersistenceEngine.create_engine(record["engine"]),
         )

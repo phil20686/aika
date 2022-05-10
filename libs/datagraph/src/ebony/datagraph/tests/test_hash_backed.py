@@ -4,17 +4,7 @@ from ebony.time.tests.utils import assert_equal
 
 from ebony.datagraph.interface import DataSet
 from ebony.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
-from ebony.datagraph.tests.persistence_tests import (
-    _insert_nans,
-    append_tests,
-    child,
-    leaf1,
-    leaf1_extended,
-    leaf1_final,
-    leaf1_with_nan,
-    leaf2,
-    merge_tests,
-)
+from ebony.datagraph.tests.persistence_tests import append_tests, merge_tests
 
 
 @pytest.mark.parametrize("list_of_datasets, expected_contents", append_tests)
