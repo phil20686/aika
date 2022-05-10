@@ -2,31 +2,112 @@ import typing as t
 from abc import ABC, abstractmethod
 
 import attr
+import pandas as pd
 from frozendict import frozendict
 
 from ebony.time.time_range import TimeRange
 from ebony.utilities.pandas_utils import IndexTensor, equals
 
 
-@attr.s(frozen=True, slots=True, cache_hash=True)
 class DataSetMetadata:
     """
     A `DataSetMetadata` object contains all the information to describe a dataset which
-    may or may not exist.
-
-    \TODO - attr repr method and str method are terrible for deeply nested graphs, overwrite
+    may or may not exist. Note that dataset metadata equality is explicitly based on the hashes of predecessors.
+    hash() truncates the output of __hash__() so we try to use __hash__() throughout when eg writing meta data
+    to a database. Note that metadata.
     """
 
-    name: str = attr.ib()
-    engine: "IPersistenceEngine" = attr.ib()
+    @classmethod
+    def replace_engine(
+        cls, metadata: "DataSetMetadata", engine, include_predecessors=False
+    ):
+        """
+        Useful for testing, not for production code.
 
-    # TODO: does static definitely belong here?
-    static: bool = attr.ib()
-    time_level = attr.ib()
+        """
+        if include_predecessors:
+            predecessors = {
+                name: cls.replace_engine(m, engine, include_predecessors)
+                for name, m in metadata.predecessors.items()
+            }
+        else:
+            predecessors = metadata.predecessors
 
-    # TODO: restrict this t.Any to a suitable parameter-type interface, e.g. Hashable
-    params: t.Dict[str, t.Any] = attr.ib(converter=frozendict)
-    predecessors: t.Dict[str, "DataSetMetadata"] = attr.ib(converter=frozendict)
+        return cls(
+            name=metadata.name,
+            static=metadata.static,
+            params=metadata.params,
+            predecessors=predecessors,
+            time_level=metadata.time_level,
+            engine=engine,
+        )
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        static: bool,
+        params: t.Dict[str, t.Any],
+        predecessors: t.Dict[str, "DataSetMetadata"],
+        time_level: t.Optional[t.Union[int, str]] = None,
+        engine: t.Optional["iPersitenceEngine"] = None,
+    ):
+        self._name = name
+        self._static = static
+        self._engine = engine
+        self._time_level = time_level
+        self._params = frozendict({k: params[k] for k in sorted(params)})
+        self._predecessors = frozendict(
+            {k: predecessors[k] for k in sorted(predecessors)}
+        )
+
+    def __eq__(self, other):
+        return all(
+            (
+                self._name == other.name,
+                self._static == other.static,
+                self._engine == other.engine,
+                self._time_level == other.time_level,
+                self._params == other.params,
+                self.__hash__() == other.__hash__(),
+            )
+        )
+
+    def __hash__(self):
+        return hash(
+            (
+                self._name,
+                self._static,
+                self._engine,
+                self._time_level,
+                self._params,
+            )
+            + tuple(hash(x) for x in self._predecessors.values())
+        )
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def static(self) -> bool:
+        return self._static
+
+    @property
+    def time_level(self) -> t.Union[str, int]:
+        return self._time_level
+
+    @property
+    def engine(self) -> "iPersistenceEngine":
+        return self._engine
+
+    @property
+    def params(self):
+        return self._params
+
+    @property
+    def predecessors(self) -> t.Dict[str, "DataSetMetadata"]:
+        return self._predecessors
 
     def exists(self):
         return self.engine.exists(self)
@@ -96,11 +177,81 @@ class DataSetMetadata:
         )
 
 
+class DatasetMetadataStub(DataSetMetadata):
+    """
+    A stub class is different only because it stores only the hash and engine + top level parameters
+    directly, and will fetch the full predecessors when required.
+    """
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        static: bool,
+        params: t.Dict[str, t.Any],
+        hash: int,
+        time_level: t.Optional[t.Union[int, str]] = None,
+        engine: t.Optional["iPersitenceEngine"] = None,
+    ):
+        self._name = name
+        self._static = static
+        self._engine = engine
+        self._time_level = time_level
+        self._params = frozendict({k: params[k] for k in sorted(params)})
+        self._hash = hash
+
+    def __hash__(self):
+        return self._hash
+
+    @property
+    def predecessors(self) -> t.Dict[str, "DatasetMetadataStub"]:
+        return self.engine.get_predecessors_from_hash(self._name, self._hash)
+
+
 # TODO: split this into StaticDataSet and TimeSeriesDataSet?
 # TODO: does this need to be hashable? It will currently fail because `data` will
 #  usually be an unhashable pandas object
 @attr.s(frozen=True, eq=True, hash=False)
 class DataSet:
+    @classmethod
+    def build(
+        cls,
+        name: str,
+        data: IndexTensor,
+        params: t.Dict,
+        predecessors: t.Dict,
+        static: bool = False,
+        time_level: t.Optional[t.Union[str, int]] = None,
+        engine=None,
+        declared_time_range: t.Optional[TimeRange] = None,
+    ):
+        return cls(
+            metadata=DataSetMetadata(
+                name=name,
+                params=params,
+                predecessors=predecessors,
+                static=static,
+                time_level=time_level,
+                engine=engine,
+            ),
+            data=data,
+            declared_time_range=declared_time_range
+            or TimeRange.from_pandas(data, level=time_level),
+        )
+
+    @classmethod
+    def replace_engine(cls, dataset: "DataSet", engine, include_predecessors=False):
+        """
+        Useful for testing, allows test cases to be reused for testing different engines.
+        """
+        return cls(
+            data=dataset.data,
+            metadata=DataSetMetadata.replace_engine(
+                dataset.metadata, engine, include_predecessors
+            ),
+            declared_time_range=dataset.declared_time_range,
+        )
+
     metadata: DataSetMetadata = attr.ib()
     # TODO: Remove below PyCharm exception once attrs 22.1 is released, fixing the bug
     #  mentioned here: https://github.com/python-attrs/attrs/issues/948
@@ -122,9 +273,11 @@ class DataSet:
 
     @property
     def data_time_range(self):
-        return TimeRange.from_pandas(
-            self.data_time_range, level=self.metadata.time_level
-        )
+        """
+        Note that the data time range always applies to the data contained in this dataset object, which
+        may only be a subset of the data that is stored in the persistence engine.
+        """
+        return TimeRange.from_pandas(self.data, level=self.metadata.time_level)
 
     def update(self, data, declared_time_range):
         """
@@ -143,6 +296,32 @@ class IPersistenceEngine(ABC):
     # ----------------------------------------------------------------------------------
     # Read-only methods
     # ----------------------------------------------------------------------------------
+
+    @abstractmethod
+    def set_state(self) -> t.Dict[str, t.Any]:
+        raise NotImplementedError
+
+    @classmethod
+    def create_engine(cls, d: t.Dict[str, t.Any]):
+        engine_type = d.pop("type")
+        if engine_type == "hash_backed":
+            raise NotImplementedError("Cannot recreate an engine for in-memory storage")
+        elif engine_type == "mongodb":
+            from ebony.datagraph.persistence.mongo_backed import (
+                MongoBackedPersistanceEngine,
+            )
+
+            return MongoBackedPersistanceEngine._create_engine(d)
+        else:
+            raise NotImplementedError(f"No persistence engine found for {d['type']}")
+
+    @abstractmethod
+    def get_predecessors_from_hash(
+        self, name: str, hash: int
+    ) -> t.Dict[str, DatasetMetadataStub]:
+        """
+        Given a node name and the hash of a dataset, returns a dataset stub.
+        """
 
     @abstractmethod
     def exists(self, metadata: DataSetMetadata) -> bool:
@@ -384,3 +563,40 @@ class IPersistenceEngine(ABC):
         Note that this method is only supported for time-series datasets; if the
         specified dataset is static, a ValueError will be raised.
         """
+
+    @classmethod
+    def _append(cls, existing: DataSet, new: DataSet):
+        """
+        This is the definitionally correct logic for appending two datasets, all implementations of append
+        by different engines must replicate this behaviour.
+        """
+        new_data = TimeRange(existing.data_time_range.end, None).view(
+            new.data, level=new.metadata.time_level
+        )
+
+        if new_data.empty:
+            return existing
+
+        return DataSet(
+            metadata=new.metadata,
+            data=pd.concat([existing.data, new_data], axis=0),
+            declared_time_range=TimeRange(
+                existing.declared_time_range.start,
+                # it might merge nothing if the new time range is < existing.
+                max(new.declared_time_range.end, existing.declared_time_range.end),
+            ),
+        )
+
+    @classmethod
+    def _merge(cls, existing: DataSet, new: DataSet) -> DataSet:
+        """
+        This is the definitionally correct logic for merging two datasets, all implementations of merge
+        by different engines must replicate this behaviour.
+        """
+        return DataSet(
+            metadata=existing.metadata,
+            data=existing.data.combine_first(new.data),
+            declared_time_range=existing.declared_time_range.union(
+                new.declared_time_range
+            ),
+        )

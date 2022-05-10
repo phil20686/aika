@@ -1,16 +1,16 @@
 import pandas as pd
 import pytest
-from pandas._libs.tslibs.offsets import Hour, BDay, Minute
+from pandas._libs.tslibs.offsets import Hour, Minute
 
 from ebony.time.calendars import (
-    TimeOfDayCalendar,
     ICalendar,
-    Weekdays,
     OffsetCalendar,
+    TimeOfDayCalendar,
     UnionCalendar,
+    Weekdays,
 )
 from ebony.time.time_of_day import TimeOfDay
-from ebony.time.time_range import TimeRange, RESOLUTION
+from ebony.time.time_range import RESOLUTION, TimeRange
 from ebony.time.timestamp import Timestamp
 
 

@@ -27,6 +27,7 @@ setup(
         "numpy",
         "ebony-time",
         "ebony-utilities",
+        "pymongo",
     ],
-    extras_require=dict(test=["pytest"]),
+    extras_require=dict(test=["pytest", "mongomock"]),
 )

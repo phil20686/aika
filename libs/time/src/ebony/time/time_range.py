@@ -1,11 +1,12 @@
-import attr
 import typing as t
-import numpy as np
 
-from ebony.time.timestamp import Timestamp
+import attr
+import numpy as np
 import pandas as pd
 
 from ebony.utilities.pandas_utils import IndexTensor
+
+from ebony.time.timestamp import Timestamp
 
 RESOLUTION = pd.Timedelta(nanoseconds=1)
 
@@ -38,7 +39,7 @@ class TimeRange:
             raise ValueError("The start time must be before the end time")
 
         object.__setattr__(self, "start", start)
-        object.__setattr__(self, "end", start)
+        object.__setattr__(self, "end", end)
 
     def view(self, tensor: IndexTensor, level=None) -> IndexTensor:
         """
@@ -66,12 +67,12 @@ class TimeRange:
                 raise ValueError("Must specify `level` if tensor is multi-indexed.")
 
             level_values = index.get_level_values(level)
-            mask = (self.start >= level_values) & (level_values < self.end)
+            mask = (self.start > level_values) & (level_values <= self.end)
             return tensor.loc[mask]
 
         else:
 
-            start, end = np.searchsorted(index, [self.start, self.end], side="left")
+            start, end = np.searchsorted(index, [self.start, self.end], side="right")
 
             return tensor.iloc[start:end]
 
@@ -79,18 +80,26 @@ class TimeRange:
     def from_pandas(tensor: IndexTensor, level=None):
         index = tensor if isinstance(tensor, pd.Index) else tensor.index
         values = index.get_level_values(level)
-        return TimeRange(values[0], values[-1] + RESOLUTION)
+        return TimeRange(values[0] - RESOLUTION, values[-1])
 
     def intersects(self, other: "TimeRange") -> bool:
-        if self.start <= other.start < self.end:
-            return True
-        elif other.start <= self.start < other.end:
-            return True
-        else:
-            return False
+        return (self.start <= other.start < self.end) or (
+            other.start <= self.start < other.end
+        )
 
-    def contains(self, other) -> bool:
+    def contains(self, other: "TimeRange") -> bool:
+        """
+        Checks whether other is a sub interval of this time range.
+        """
         return self.start <= other.start and other.end <= self.end
+
+    def union(self, other: "TimeRange"):
+        if not self.intersects(other):
+            return TimeRange(pd.NaT, pd.NaT)
+        else:
+            return TimeRange(
+                start=min(self.start, other.start), end=max(self.end, other.end)
+            )
 
     def intersection(self, other: "TimeRange") -> "TimeRange":
         if not self.intersects(other):
@@ -113,7 +122,7 @@ class TimeRange:
         start_str = self._timestamp_repr(self.start)
         end_str = self._timestamp_repr(self.end)
 
-        return f"TimeRange('{start_str}', '{end_str}')"
+        return f"TimeRange({start_str}, {end_str})"
 
     @classmethod
     def _timestamp_repr(cls, ts: pd.Timestamp):

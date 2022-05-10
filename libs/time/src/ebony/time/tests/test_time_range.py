@@ -1,5 +1,5 @@
-import pytest
 import pandas as pd
+import pytest
 
 from ebony.time.tests.utils import assert_call
 from ebony.time.time_range import TimeRange
@@ -157,3 +157,28 @@ def test_constructor_and_equality(start, end, expect, str_repr):
 )
 def test_view(time_range, tensor, level, expect):
     assert_call(time_range.view, expect, tensor=tensor, level=level)
+
+
+base = TimeRange("2000-01-01 00:00", "2000-01-02 00:00")
+subset = TimeRange("2000-01-01 10:00", "2000-01-01 12:00")
+empty = TimeRange("2000-01-01 00:00", "2000-01-01 00:00")
+
+
+@pytest.mark.parametrize(
+    "first, second, expect",
+    [(base, base, True), (base, subset, True), (subset, base, False)],
+)
+def test_contains(first, second, expect):
+    assert first.contains(second) == expect
+
+
+@pytest.mark.parametrize(
+    "time_range, ts, expect",
+    [
+        (base, base.start, False),
+        (base, base.end, True),
+        (base, subset.start, True),
+    ],
+)
+def test_in(time_range, ts, expect):
+    assert (ts in time_range) == expect

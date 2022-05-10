@@ -2,11 +2,17 @@ import typing as t
 from abc import abstractmethod
 
 import pandas as pd
+from frozendict._frozendict import frozendict
 from typing_extensions import Protocol
 
 from ebony.time.time_range import TimeRange
 
-from ebony.datagraph.interface import DataSet, DataSetMetadata, IPersistenceEngine
+from ebony.datagraph.interface import (
+    DataSet,
+    DataSetMetadata,
+    DatasetMetadataStub,
+    IPersistenceEngine,
+)
 
 
 class HashBackedPersistanceEngine(IPersistenceEngine):
@@ -20,8 +26,31 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
     def __init__(self):
         self._cache = {}
 
+    def set_state(self) -> t.Dict[str, t.Any]:
+        raise ValueError("Cannot persist an in-memory engine")
+
     def exists(self, metadata: DataSetMetadata) -> bool:
         return metadata in self._cache
+
+    def get_predecessors_from_hash(
+        self, name: str, hash: int
+    ) -> frozendict[str, DatasetMetadataStub]:
+        for metadata in self._cache.keys():
+            if metadata.__hash__() == hash and metadata.name == name:
+                return frozendict(
+                    {
+                        key: DatasetMetadataStub(
+                            name=meta.name,
+                            time_level=meta.time_level,
+                            static=meta.static,
+                            engine=meta.engine,
+                            params=meta.params,
+                            hash=meta.__hash__(),
+                        )
+                        for key, meta in metadata.predecessors
+                    }
+                )
+        raise ValueError("No Matching Dataset")
 
     def get_dataset(
         self,
@@ -134,32 +163,3 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             final_dataset = combine_method(existing=old_dataset, new=dataset)
             self._cache[final_dataset.metadata] = final_dataset
             return True
-
-    @staticmethod
-    def _append(existing: DataSet, new: DataSet):
-        new_data = TimeRange(existing.data_time_range.end, None).view(
-            new.data, level=new.metadata.time_level
-        )
-
-        if new_data.empty:
-            return existing
-
-        return DataSet(
-            metadata=new.metadata,
-            data=pd.concat([existing.data, new_data], axis=0),
-            declared_time_range=TimeRange(
-                existing.declared_time_range.start,
-                # it might merge nothing if the new time range is < existing.
-                max(new.declared_time_range.end, existing.declared_time_range.end),
-            ),
-        )
-
-    @staticmethod
-    def _merge(existing: DataSet, new: DataSet) -> DataSet:
-        return DataSet(
-            metadata=existing.metadata,
-            data=existing.data.combine_first(new.data),
-            declared_time_range=existing.declared_time_range.union(
-                new.declared_time_range
-            ),
-        )
