@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -7,6 +7,7 @@ from pandas import DataFrame, Index, Series
 # these types can be used to make functions that return the same pandas type as they are given.
 Tensor = TypeVar("Tensor", DataFrame, Series)
 IndexTensor = TypeVar("IndexTensor", DataFrame, Series, Index)
+Level = Union[int, str]
 
 
 def equals(left, right) -> bool:
