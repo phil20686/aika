@@ -26,10 +26,16 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
     the output of __hash__().
     """
 
-    def __init__(self, client: pymongo.MongoClient, database_name="datagraph"):
+    def __init__(
+        self,
+        client: pymongo.MongoClient,
+        database_name="datagraph",
+        collection_name="default",
+    ):
         self._client = client
         self._database_name = database_name
         self._database = self._client.get_database(database_name)
+        self._collection = self._database.get_collection(collection_name)
         self._serialise_mode = "pickle"
         self._hash_equality_sufficient = True
 
@@ -135,8 +141,8 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             raise NotImplementedError
 
     def _find_record_from_hash(self, name, hash, include_data=False):
-        return self._database.get_collection(name).find_one(
-            {"hash": hash}, None if include_data else {"data": False}
+        return self._collection.find_one(
+            {"name": name, "hash": hash}, None if include_data else {"data": False}
         )
 
     def get_predecessors_from_hash(
@@ -197,13 +203,16 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
     ) -> bool:
         record = self._find_record(dataset.metadata, include_data=False)
         if record is not None:
-            self._database.get_collection(dataset.metadata.name).update_one(
-                filter={"hash": dataset.metadata.__hash__()},
+            self._collection.update_one(
+                filter={
+                    "name": dataset.metadata.name,
+                    "hash": dataset.metadata.__hash__(),
+                },
                 update={"$set": self._serialise_data(dataset)},
             )
             return True
         else:
-            self._database.get_collection(dataset.metadata.name).insert_one(
+            self._collection.insert_one(
                 self._serialise_data(dataset)
                 | self._serialise_metadata(dataset.metadata)
             )
@@ -222,3 +231,13 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             self.replace(dataset)
         else:
             self.replace(self._merge(existing_dataset, dataset))
+
+    def find_successors(self, metadata: DataSetMetadata) -> t.Set[DataSetMetadata]:
+        records = self._collection.find(
+            {
+                "predecessors.name": metadata.name,
+                "predecessors.hash": metadata.__hash__(),
+            },
+            {"data": False},
+        )
+        return set((self._deserialise_meta_data(r) for r in records))

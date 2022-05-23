@@ -141,3 +141,5 @@ merge_tests = [
         {leaf1_final.metadata: leaf1_final},
     ),
 ]
+# list to insert, metadata to check, expected datasets
+find_successors_tests = [([leaf1, leaf2, child], leaf1.metadata, {child.metadata})]

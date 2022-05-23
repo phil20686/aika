@@ -163,3 +163,8 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             final_dataset = combine_method(existing=old_dataset, new=dataset)
             self._cache[final_dataset.metadata] = final_dataset
             return True
+
+    def find_successors(self, metadata: DataSetMetadata) -> t.Set[DataSetMetadata]:
+        return set(
+            (md for md in self._cache.keys() if md.is_immediate_predecessor(metadata))
+        )
