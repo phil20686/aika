@@ -34,6 +34,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
     ):
         self._client = client
         self._database_name = database_name
+        self._collection_name = collection_name
         self._database = self._client.get_database(database_name)
         self._collection = self._database.get_collection(collection_name)
         self._serialise_mode = "pickle"
@@ -63,6 +64,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         return {
             "type": "mongodb",
             "database_name": self._database_name,
+            "collection_name": self._collection_name,
         }
 
     def _serialise_metadata_as_stub(self, metadata: DataSetMetadata):
@@ -241,3 +243,24 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             {"data": False},
         )
         return set((self._deserialise_meta_data(r) for r in records))
+
+    def _delete_leaf(self, metadata: DataSetMetadata):
+        if not self.exists(metadata):
+            return False
+        else:
+            successors = self.find_successors(metadata)
+            if len(successors) > 0:
+                raise ValueError("Cannot delete a dataset that still has successors")
+            elif self._hash_equality_sufficient:
+                self._collection.delete_one(
+                    {"name": metadata.name, "hash": metadata.__hash__()}
+                )
+                return True
+            else:
+                raise NotImplementedError
+
+    def delete(self, metadata: DataSetMetadata, recursive=False):
+        if recursive:
+            for successor in self.find_successors(metadata):
+                self.delete(successor, recursive=True)
+        return self._delete_leaf(metadata)

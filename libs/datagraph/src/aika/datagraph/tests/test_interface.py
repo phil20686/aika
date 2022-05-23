@@ -16,6 +16,7 @@ from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from aika.datagraph.persistence.mongo_backed import MongoBackedPersistanceEngine
 from aika.datagraph.tests.persistence_tests import (
     append_tests,
+    deletion_tests,
     find_successors_tests,
     merge_tests,
 )
@@ -64,6 +65,22 @@ def _replace_engine(
         return result
 
 
+def _assert_engine_contains_expected(engine, expected):
+    # helper method to make sure that the persistance engine contains all the expected
+    # datasets.
+    for expected_dataset in expected:
+        assert engine.exists(expected_dataset.metadata)
+        persisted_dataset = engine.get_dataset(expected_dataset.metadata)
+        assert persisted_dataset.metadata == expected_dataset.metadata
+        assert hash(persisted_dataset.metadata) == hash(expected_dataset.metadata)
+        assert_equal(persisted_dataset.data, expected_dataset.data)
+        assert (
+            persisted_dataset.declared_time_range
+            == expected_dataset.declared_time_range
+        )
+        assert persisted_dataset.data_time_range == expected_dataset.declared_time_range
+
+
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, expected", append_tests)
 def test_append(engine_generator, datasets, expected):
@@ -74,19 +91,7 @@ def test_append(engine_generator, datasets, expected):
     for dataset in datasets:
         engine.append(dataset)
 
-    for metadata in expected.keys():
-        assert engine.exists(metadata)
-
-    for expected_dataset in expected.values():
-        persisted_dataset = engine.get_dataset(expected_dataset.metadata)
-        assert persisted_dataset.metadata == expected_dataset.metadata
-        assert hash(persisted_dataset.metadata) == hash(expected_dataset.metadata)
-        assert_equal(persisted_dataset.data, expected_dataset.data)
-        assert (
-            persisted_dataset.declared_time_range
-            == expected_dataset.declared_time_range
-        )
-        assert persisted_dataset.data_time_range == expected_dataset.declared_time_range
+    _assert_engine_contains_expected(engine, expected)
 
 
 @pytest.mark.parametrize("engine_generator", engine_generators)
@@ -99,19 +104,7 @@ def test_merge(engine_generator, datasets, expected):
     for dataset in datasets:
         engine.merge(dataset)
 
-    for metadata in expected.keys():
-        assert engine.exists(metadata)
-
-    for expected_dataset in expected.values():
-        persisted_dataset = engine.get_dataset(expected_dataset.metadata)
-        assert persisted_dataset.metadata == expected_dataset.metadata
-        assert hash(persisted_dataset.metadata) == hash(expected_dataset.metadata)
-        assert_equal(persisted_dataset.data, expected_dataset.data)
-        assert (
-            persisted_dataset.declared_time_range
-            == expected_dataset.declared_time_range
-        )
-        assert persisted_dataset.data_time_range == expected_dataset.declared_time_range
+    _assert_engine_contains_expected(engine, expected)
 
 
 @pytest.mark.parametrize("engine_generator", engine_generators)
@@ -122,4 +115,32 @@ def test_find_successors(engine_generator, datasets, metadata, expected):
     metadata = metadata.replace_engine(metadata, engine, include_predecessors=True)
     for dataset in datasets:
         engine.idempotent_insert(dataset)
+
     assert_call(engine.find_successors, _replace_engine(engine, expected), metadata)
+    assert_call(engine.find_successors, _replace_engine(engine, expected), metadata)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize(
+    "datasets, metadata, recursive, deletion_expected, remaining_datasets",
+    deletion_tests,
+)
+def test_delete(
+    engine_generator,
+    datasets,
+    metadata,
+    recursive,
+    deletion_expected,
+    remaining_datasets,
+):
+
+    engine = engine_generator()
+    datasets = _replace_engine(engine, datasets)
+    metadata = metadata.replace_engine(metadata, engine, include_predecessors=True)
+    remaining_datasets = _replace_engine(engine, remaining_datasets)
+
+    for dataset in datasets:
+        engine.idempotent_insert(dataset)
+
+    assert_call(engine.delete, deletion_expected, metadata, recursive)
+    _assert_engine_contains_expected(engine, remaining_datasets)

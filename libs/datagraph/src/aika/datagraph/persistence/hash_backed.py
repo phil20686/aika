@@ -168,3 +168,21 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
         return set(
             (md for md in self._cache.keys() if md.is_immediate_predecessor(metadata))
         )
+
+    def _delete_leaf(self, metadata: DataSetMetadata):
+
+        if not self.exists(metadata):
+            return False
+        else:
+            successors = self.find_successors(metadata)
+            if len(successors) > 0:
+                raise ValueError("Cannot delete a dataset that still has successors")
+            else:
+                self._cache.pop(metadata)
+                return True
+
+    def delete(self, metadata: DataSetMetadata, recursive=False):
+        if recursive:
+            for successor in self.find_successors(metadata):
+                self.delete(successor, recursive=True)
+        return self._delete_leaf(metadata)

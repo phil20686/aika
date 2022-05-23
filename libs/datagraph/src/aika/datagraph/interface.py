@@ -309,6 +309,9 @@ class IPersistenceEngine(ABC):
 
     @classmethod
     def create_engine(cls, d: t.Dict[str, t.Any]):
+        d = (
+            d.copy()
+        )  # should not alter the dict, which may be a database record of some type.
         engine_type = d.pop("type")
         if engine_type == "hash_backed":
             raise NotImplementedError("Cannot recreate an engine for in-memory storage")
@@ -607,23 +610,23 @@ class IPersistenceEngine(ABC):
             ),
         )
 
-    # @abstractmethod
-    # def delete(cls, metadata : DataSetMetadata, recursive=False):
-    #     """
-    #     This will delete the dataset, if it has successors then it will fail if recursive is false, or it will
-    #     delete all the children if possible.
-    #
-    #     Parameters
-    #     ----------
-    #     metadata : DataSetMetadata
-    #         The metadata of the dataset to delete.
-    #     recursive : bool
-    #         Whether to delete all successors of this dataset.
-    #
-    #     Returns
-    #     -------
-    #     bool : Whether any dataset was deleted
-    #     """
+    @abstractmethod
+    def delete(self, metadata: DataSetMetadata, recursive=False):
+        """
+        This will delete the dataset, if it has successors then it will fail if recursive is false, or it will
+        delete all the children if possible.
+
+        Parameters
+        ----------
+        metadata : DataSetMetadata
+            The metadata of the dataset to delete.
+        recursive : bool
+            Whether to delete all successors of this dataset.
+
+        Returns
+        -------
+        bool : Whether any dataset was deleted
+        """
 
     @abstractmethod
     def find_successors(self, metadata: DataSetMetadata) -> t.Set[DatasetMetadataStub]:
