@@ -75,7 +75,7 @@ append_tests = [
         [
             leaf1,
         ],
-        {leaf1: leaf1},
+        {leaf1},
     ),
     (
         [
@@ -83,7 +83,7 @@ append_tests = [
             leaf2,
             child,
         ],
-        {leaf1.metadata: leaf1, leaf2.metadata: leaf2, child.metadata: child},
+        {leaf1, leaf2, child},
     ),
     (
         [
@@ -91,7 +91,7 @@ append_tests = [
             leaf1_extended,
         ],
         {
-            leaf1_final.metadata: leaf1_final.update(
+            leaf1_final.update(
                 _insert_nans(leaf1_final.data, [(1, 1), (2, 2)]),
                 leaf1_final.declared_time_range,
             )
@@ -102,7 +102,7 @@ append_tests = [
             leaf1,
             leaf1_extended,
         ],
-        {leaf1_final.metadata: leaf1_final},
+        {leaf1_final},
     ),
 ]
 
@@ -111,7 +111,7 @@ merge_tests = [
         [
             leaf1,
         ],
-        {leaf1: leaf1},
+        {leaf1},
     ),
     (
         [
@@ -119,7 +119,7 @@ merge_tests = [
             leaf2,
             child,
         ],
-        {leaf1.metadata: leaf1, leaf2.metadata: leaf2, child.metadata: child},
+        {leaf1, leaf2, child},
     ),
     (
         [
@@ -127,7 +127,7 @@ merge_tests = [
             leaf1_extended,
         ],
         {
-            leaf1_final.metadata: leaf1_final.update(
+            leaf1_final.update(
                 leaf1_with_nan.data.combine_first(leaf1_extended.data),
                 leaf1_final.declared_time_range,
             )
@@ -138,6 +138,24 @@ merge_tests = [
             leaf1,
             leaf1_extended,
         ],
-        {leaf1_final.metadata: leaf1_final},
+        {leaf1_final},
     ),
+]
+# list to insert, metadata to check, expected datasets
+find_successors_tests = [
+    ([leaf1, leaf2, child], leaf1.metadata, {child.metadata}),
+    ([leaf1], leaf2.metadata, set()),
+]
+
+
+# list to insert,
+# metadata to delete,
+# recursive,
+# deletion_expectation,
+# remaining_datasets
+deletion_tests = [
+    ([leaf1, leaf2, child], child.metadata, True, True, {leaf1, leaf2}),
+    ([leaf1, leaf2, child], leaf2.metadata, False, ValueError, {leaf1, leaf2, child}),
+    ([leaf1, leaf2, child], leaf2.metadata, True, True, {leaf1}),
+    ([leaf1], leaf2.metadata, True, False, {leaf1}),
 ]

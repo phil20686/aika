@@ -109,6 +109,12 @@ class DataSetMetadata:
     def predecessors(self) -> t.Dict[str, "DataSetMetadata"]:
         return self._predecessors
 
+    def is_immediate_predecessor(self, metadata: "DataSetMetadata") -> bool:
+        """
+        Returns true if the given metadata represents one of the immediate predecessors.
+        """
+        return metadata in set(self._predecessors.values())
+
     def exists(self):
         return self.engine.exists(self)
 
@@ -303,6 +309,9 @@ class IPersistenceEngine(ABC):
 
     @classmethod
     def create_engine(cls, d: t.Dict[str, t.Any]):
+        d = (
+            d.copy()
+        )  # should not alter the dict, which may be a database record of some type.
         engine_type = d.pop("type")
         if engine_type == "hash_backed":
             raise NotImplementedError("Cannot recreate an engine for in-memory storage")
@@ -600,3 +609,37 @@ class IPersistenceEngine(ABC):
                 new.declared_time_range
             ),
         )
+
+    @abstractmethod
+    def delete(self, metadata: DataSetMetadata, recursive=False):
+        """
+        This will delete the dataset, if it has successors then it will fail if recursive is false, or it will
+        delete all the children if possible.
+
+        Parameters
+        ----------
+        metadata : DataSetMetadata
+            The metadata of the dataset to delete.
+        recursive : bool
+            Whether to delete all successors of this dataset.
+
+        Returns
+        -------
+        bool : Whether any dataset was deleted
+        """
+
+    @abstractmethod
+    def find_successors(self, metadata: DataSetMetadata) -> t.Set[DatasetMetadataStub]:
+        """
+        This method will find any successor datasets of a datasets.
+
+        Parameters
+        ----------
+        metadata : DataSetMetadata
+            The dataset to find the successors of.
+
+        Returns
+        -------
+        set : A list of dataset metadata stubs representing the children at depth one. There may be further
+        children.
+        """
