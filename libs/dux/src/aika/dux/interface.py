@@ -48,6 +48,7 @@ class Dependency(t.Generic[TaskType]):
         downstream_time_range: t.Optional[TimeRange] = None,
         default_lookback: t.Optional[pd.offsets.BaseOffset] = None,
     ):
+
         if not self.task.time_series or downstream_time_range is None:
             return self.task.read()
         else:
@@ -66,10 +67,26 @@ class Dependency(t.Generic[TaskType]):
 class ITask(ABC):
 
     time_series: bool = abstract_attribute()
-    name: str = attr.ib()
-    namespace: str = attr.ib()
-    version: str = attr.ib()
-    persistence_engine: IPersistenceEngine = attr.ib()
+
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def namespace(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def version(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def persistence_engine(self) -> IPersistenceEngine:
+        pass
 
     @property
     @abstractmethod
@@ -104,13 +121,24 @@ class IStaticTask(ITask, ABC):
     time_series = False
 
 
-class ITimeSeriesTask(ITask):
+class ITimeSeriesTask(ITask, ABC):
 
     time_series = True
-    time_range: TimeRange = attr.ib()
-    time_level = attr.ib(default=None)
-    default_lookback: t.Optional[pd.offsets.BaseOffset] = attr.ib(default=None)
-    _completion_checker: t.Optional[ICompletionChecker] = attr.ib(default=None)
+
+    @property
+    @abstractmethod
+    def time_range(self) -> TimeRange:
+        pass
+
+    @property
+    @abstractmethod
+    def time_level(self) -> t.Union[int, str, None]:
+        pass
+
+    @property
+    @abstractmethod
+    def default_lookback(self) -> t.Optional[pd.offsets.BaseOffset]:
+        pass
 
     @property
     @abstractmethod

@@ -45,7 +45,7 @@ class IrregularChecker(ICompletionChecker):
 
 
 def _infer_inherited_completion_checker(
-    self, dependencies: t.Dict[str, Dependency[ITimeSeriesTask]]
+    dependencies: t.Dict[str, Dependency[ITimeSeriesTask]]
 ):
 
     time_series_dependencies: t.Dict[str, Dependency[ITimeSeriesTask]] = {

@@ -5,17 +5,35 @@ from functools import cached_property, partial
 from pprint import pformat
 
 import attr
+import pandas as pd
 from frozendict import frozendict
 
-from aika.datagraph.interface import DataSetMetadata
+from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
+from aika.time.time_range import TimeRange
 from aika.utilities.pandas_utils import IndexTensor
 
 from aika.dux.completion_checking import _infer_inherited_completion_checker
-from aika.dux.interface import Dependency, IStaticTask, ITask, ITimeSeriesTask
+from aika.dux.interface import (
+    Dependency,
+    ICompletionChecker,
+    IStaticTask,
+    ITask,
+    ITimeSeriesTask,
+)
 
 
 @attr.s(frozen=True)
 class TimeSeriesTask(ITimeSeriesTask, ABC):
+
+    time_range: TimeRange = attr.ib()
+    name: str = attr.ib()
+    namespace: str = attr.ib()
+    version: str = attr.ib()
+    persistence_engine: IPersistenceEngine = attr.ib()
+    time_level = attr.ib(default=None)
+    default_lookback: t.Optional[pd.offsets.BaseOffset] = attr.ib(default=None)
+    _completion_checker: t.Optional[ICompletionChecker] = attr.ib(default=None)
+
     @cached_property
     def completion_checker(self):
         if self._completion_checker is not None:
@@ -39,6 +57,11 @@ class TimeSeriesTask(ITimeSeriesTask, ABC):
 
 @attr.s(frozen=True)
 class StaticTask(IStaticTask, ABC):
+    name: str = attr.ib()
+    namespace: str = attr.ib()
+    version: str = attr.ib()
+    persistence_engine: IPersistenceEngine = attr.ib()
+
     def complete(self):
         return self.output.exists()
 
