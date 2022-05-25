@@ -7,6 +7,7 @@ import pandas as pd
 from frozendict import frozendict
 
 from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
+from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from aika.time.time_range import TimeRange
 
 from aika.dux.completion_checking import _infer_inherited_completion_checker
@@ -25,11 +26,11 @@ class TimeSeriesTask(ITimeSeriesTask, ABC):
         *,
         func: callable,
         time_range: TimeRange,
-        completion_checker: t.Optional[ICompletionChecker],
         name: str,
         persistence_engine: IPersistenceEngine,
         time_level=None,
         namespace: t.Optional[str] = "no_namespace",
+        completion_checker: t.Optional[ICompletionChecker] = None,
         default_lookback: t.Optional[pd.offsets.BaseOffset] = None,
         version: t.Optional[str] = "none",
         **kwargs,  # the arguments to the actual function
@@ -131,7 +132,7 @@ class TimeSeriesTask(ITimeSeriesTask, ABC):
     def persistence_engine(self) -> IPersistenceEngine:
         return self._persistence_engine
 
-    def _dependencies_are_complete(self) -> bool:
+    def dependencies_are_complete(self) -> bool:
         return all([dep.task.complete() for dep in self._dependencies.values()])
 
     def run(self):
@@ -148,3 +149,48 @@ class TimeSeriesTask(ITimeSeriesTask, ABC):
                 declared_time_range=self.time_range,
             )
         return self.output
+
+
+class ResearchRunner:
+    """
+    This class will allow tasks to run immediately on addition. Its just a cheap
+    way to make sure that we minimise the bumf.
+
+    """
+
+    def __init__(
+        self,
+        time_range: TimeRange,
+        lookback: pd.offsets.BaseOffset,
+        namespace: str = "research",
+        engine: IPersistenceEngine = None,
+        autorun=True,
+    ):
+        self._time_range = time_range
+        self._lookback = lookback
+        self._namespace = namespace
+        self._engine = HashBackedPersistanceEngine() if engine is None else engine
+        self._tasks = {}
+        self._autorun = autorun
+
+    def add_timeseries_task(self, name, func, **kwargs):
+        new_task = TimeSeriesTask(
+            func=func,
+            name=name,
+            time_range=kwargs.pop("time_range", self._time_range),
+            namespace=kwargs.pop("namespace", self._namespace),
+            persistence_engine=kwargs.pop("engine", self._engine),
+            default_lookback=kwargs.pop("default_lookback", self._lookback),
+            **kwargs,
+        )
+        self._tasks.setdefault(name, []).append(new_task)
+        if self._autorun:
+            new_task.run()
+
+        return new_task
+
+    def recursive_run(self, task):
+        if not task.dependencies_are_complete():
+            for dep in task.dependencies.values():
+                dep.task.recursive_run()
+        return task.run()

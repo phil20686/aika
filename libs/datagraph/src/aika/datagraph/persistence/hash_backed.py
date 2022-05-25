@@ -64,7 +64,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
                 raise ValueError("time_range must be null for static datasets")
             else:
                 result = result.update(
-                    data=time_range.view(result.data),
+                    data=time_range.view(result.data, result.metadata.time_level),
                     declared_time_range=time_range.intersection(
                         result.declared_time_range
                     ),
@@ -75,6 +75,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
     def read(self, metadata: DataSetMetadata, time_range: t.Optional[TimeRange] = None):
         dataset = self.get_dataset(metadata, time_range=time_range)
         if dataset is None:
+            # TODO - should this not raise an error?
             return None
         else:
             return dataset.data

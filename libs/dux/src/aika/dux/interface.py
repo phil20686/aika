@@ -107,6 +107,10 @@ class ITask(ABC):
     def run(self):
         pass
 
+    @abstractmethod
+    def dependencies_are_complete(self):
+        pass
+
     # TODO: have `complete` return a `CompleteResult`
     @abstractmethod
     def complete(self) -> bool:

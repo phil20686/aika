@@ -36,6 +36,7 @@ leaf_task = TimeSeriesTask(
 
 leaf_task.run()
 
+
 child_task = TimeSeriesTask(
     func=_moving_average,
     data=leaf_task,
@@ -50,3 +51,4 @@ child_task = TimeSeriesTask(
 child_task.run()
 
 print(engine.read(child_task.output))
+print(child_task.complete())
