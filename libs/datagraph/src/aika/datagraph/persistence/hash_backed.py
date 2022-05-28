@@ -2,7 +2,7 @@ import typing as t
 from abc import abstractmethod
 
 import pandas as pd
-from frozendict._frozendict import frozendict
+from frozendict import frozendict
 from typing_extensions import Protocol
 
 from aika.time.time_range import TimeRange
@@ -64,7 +64,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
                 raise ValueError("time_range must be null for static datasets")
             else:
                 result = result.update(
-                    data=time_range.view(result.data),
+                    data=time_range.view(result.data, result.metadata.time_level),
                     declared_time_range=time_range.intersection(
                         result.declared_time_range
                     ),
