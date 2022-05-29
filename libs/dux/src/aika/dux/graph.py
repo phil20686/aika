@@ -1,14 +1,16 @@
 import inspect
 from abc import ABC, abstractmethod
+from functools import cached_property
 from pprint import pformat
 
 import attr
 import typing as t
 
-from aika.dux import StaticFunctionWrapper
+import networkx as nx
+
+from aika.dux import StaticFunctionWrapper, ITask
 from aika.dux.concrete import (
     FunctionWrapperMixin,
-    task,
     TimeSeriesFunctionWrapper,
     FunctionWrapperUtils,
 )
@@ -20,15 +22,18 @@ class IGraphContextParams(ABC):
     def as_dict(self) -> t.Dict[str, t.Any]:
         pass
 
+    @abstractmethod
+    def update(self, **overrides) -> "IGraphContextParams":
+        pass
 
-ParamsType = t.TypeVar("ParamsType", bound=IGraphContextParams)
-FROM_CONTEXT = object()
+
+P = t.TypeVar("P", bound=IGraphContextParams)
 
 
 @attr.s(frozen=True)
-class GraphContext(t.Generic[ParamsType]):
+class GraphContext(t.Generic[P]):
 
-    params: ParamsType = attr.ib()
+    params: P = attr.ib()
 
     def _task(
         self,
@@ -61,9 +66,8 @@ class GraphContext(t.Generic[ParamsType]):
                 "be specified either explicitly, or included in the context params."
             )
 
-        return task(
+        return task_cls.factory(
             function,
-            task_cls,
             **kwargs,
             **from_context,
         )
@@ -73,3 +77,50 @@ class GraphContext(t.Generic[ParamsType]):
 
     def static_task(self, function, *args, **kwargs):
         return self._task(function, *args, **kwargs, task_cls=StaticFunctionWrapper)
+
+    def update(self, **overrides) -> "GraphContext[P]":
+        return GraphContext(params=self.params.update(**overrides))
+
+
+class TaskModule:
+    @cached_property
+    def all_tasks(self) -> t.AbstractSet[ITask]:
+
+        result = set()
+
+        for value in self.__dict__.values():
+            if isinstance(value, ITask):
+                result.add(value)
+            elif isinstance(value, TaskModule):
+                result.update(value.all_tasks)
+
+        return result
+
+
+class Graph:
+    def __init__(self, tasks: t.Collection[ITask]):
+        nodes = set()
+        edges = set()
+        frontier = set(tasks)
+
+        while frontier:
+            task = frontier.pop()
+            nodes.add(task)
+
+            for dep in task.dependencies.values():
+                if dep.task not in nodes:
+                    frontier.add(dep.task)
+
+                edges.add((dep.task, task))
+
+        self.graph = nx.DiGraph(edges)
+
+    @cached_property
+    def sinks(self) -> t.AbstractSet[ITask]:
+        return frozenset(
+            node for node in self.graph.nodes if not list(self.graph.successors(node))
+        )
+
+    def run(self):
+        for task in self.sinks:
+            task.run_recursively()

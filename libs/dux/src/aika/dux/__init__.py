@@ -9,5 +9,6 @@ from .concrete import (
     FunctionWrapperMixin,
     TimeSeriesFunctionWrapper,
     StaticFunctionWrapper,
-    task,
+    time_series_task,
+    static_task,
 )

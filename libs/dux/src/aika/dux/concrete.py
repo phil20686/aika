@@ -1,7 +1,7 @@
 import inspect
 import typing as t
 from abc import ABC, abstractmethod
-from functools import cached_property, partial
+from functools import cached_property
 from pprint import pformat
 
 import attr
@@ -208,6 +208,11 @@ class TimeSeriesFunctionWrapper(FunctionWrapperMixin, TimeSeriesTaskBase):
     scalar_func_kwargs: frozendict[str, t.Any] = attr.ib()
     func_dependencies: frozendict[str, Dependency] = attr.ib()
 
+    # noinspection PyStatementEffect
+    def __attrs_post_init__(self):
+        self.completion_checker
+        self.output
+
     @cached_property
     def io_params(self):
         return frozendict(
@@ -238,6 +243,10 @@ class StaticFunctionWrapper(FunctionWrapperMixin, StaticTaskBase):
     function: t.Callable[..., t.Any] = attr.ib()
     scalar_func_kwargs: frozendict[str, t.Any] = attr.ib()
     func_dependencies: frozendict[str, Dependency] = attr.ib()
+
+    # noinspection PyStatementEffect
+    def __attrs_post_init__(self):
+        self.output
 
     @cached_property
     def io_params(self):
