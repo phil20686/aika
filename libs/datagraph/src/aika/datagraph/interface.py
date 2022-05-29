@@ -17,28 +17,25 @@ class DataSetMetadata:
     to a database. Note that metadata.
     """
 
-    @classmethod
-    def replace_engine(
-        cls, metadata: "DataSetMetadata", engine, include_predecessors=False
-    ):
+    def replace_engine(self, engine, include_predecessors=False):
         """
         Useful for testing, not for production code.
 
         """
         if include_predecessors:
             predecessors = {
-                name: cls.replace_engine(m, engine, include_predecessors)
-                for name, m in metadata.predecessors.items()
+                name: m.replace_engine(engine, include_predecessors)
+                for name, m in self.predecessors.items()
             }
         else:
-            predecessors = metadata.predecessors
+            predecessors = self.predecessors
 
-        return cls(
-            name=metadata.name,
-            static=metadata.static,
-            params=metadata.params,
+        return type(self)(
+            name=self.name,
+            static=self.static,
+            params=self.params,
             predecessors=predecessors,
-            time_level=metadata.time_level,
+            time_level=self.time_level,
             engine=engine,
         )
 
@@ -78,7 +75,6 @@ class DataSetMetadata:
             (
                 self._name,
                 self._static,
-                self._engine,
                 self._time_level,
                 self._params,
             )
@@ -242,20 +238,19 @@ class DataSet:
             ),
             data=data,
             declared_time_range=declared_time_range
-            or TimeRange.from_pandas(data, level=time_level),
+            or (None if static else TimeRange.from_pandas(data, level=time_level)),
         )
 
-    @classmethod
-    def replace_engine(cls, dataset: "DataSet", engine, include_predecessors=False):
+    def replace_engine(self, engine, include_predecessors=False):
         """
         Useful for testing, allows test cases to be reused for testing different engines.
         """
-        return cls(
-            data=dataset.data,
+        return type(self)(
+            data=self.data,
             metadata=DataSetMetadata.replace_engine(
-                dataset.metadata, engine, include_predecessors
+                self.metadata, engine, include_predecessors
             ),
-            declared_time_range=dataset.declared_time_range,
+            declared_time_range=self.declared_time_range,
         )
 
     metadata: DataSetMetadata = attr.ib()

@@ -151,12 +151,15 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         self, name: str, hash: int
     ) -> t.Dict[str, DatasetMetadataStub]:
         record = self._find_record_from_hash(name, hash, include_data=False)
-        return frozendict(
-            {
-                name: self._deserialise_metadata_as_stub(pred_record)
-                for name, pred_record in record["predecessors"].items()
-            }
-        )
+        if record is not None:
+            return frozendict(
+                {
+                    name: self._deserialise_metadata_as_stub(pred_record)
+                    for name, pred_record in record["predecessors"].items()
+                }
+            )
+        else:
+            raise ValueError(f"No datasets {name} {hash}")
 
     def exists(self, metadata: DataSetMetadata) -> bool:
         return (
@@ -168,27 +171,41 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         metadata: DataSetMetadata,
         time_range: t.Optional[TimeRange] = None,
     ) -> DataSet:
+        if metadata.static and time_range is not None:
+            raise ValueError("time_range must be None for static datasets")
         record = self._find_record(metadata, include_data=True)
         if record is not None:
             return DataSet(
                 metadata=self._deserialise_meta_data(record),
-                **self._deserialise_data(record, time_range)
+                **self._deserialise_data(record, time_range),
             )
 
     def read(
         self, metadata: DataSetMetadata, time_range: t.Optional[TimeRange] = None
     ) -> t.Any:
-        return self.get_dataset(metadata, time_range).data
+        dataset = self.get_dataset(metadata, time_range)
+        if dataset is None:
+            return None
+        else:
+            return dataset.data
 
     def get_data_time_range(self, metadata: DataSetMetadata) -> t.Optional[TimeRange]:
-        record = self._find_record(metadata, include_data=False)
-        return eval(record["data_time_range"])
+        if metadata.static:
+            raise ValueError("No declared time range for static data")
+        else:
+            record = self._find_record(metadata, include_data=False)
+            if record is not None:
+                return eval(record["data_time_range"])
 
     def get_declared_time_range(
         self, metadata: DataSetMetadata
     ) -> t.Optional[TimeRange]:
-        record = self._find_record(metadata, include_data=False)
-        return eval(record["declared_time_range"])
+        if metadata.static:
+            raise ValueError("No declared time range for static data")
+        else:
+            record = self._find_record(metadata, include_data=False)
+            if record is not None:
+                return eval(record["declared_time_range"])
 
     def idempotent_insert(
         self,
