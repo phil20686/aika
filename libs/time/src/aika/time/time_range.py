@@ -1,6 +1,5 @@
-import typing as t
-
 import attr
+import typing as t
 import numpy as np
 import pandas as pd
 
@@ -35,7 +34,7 @@ class TimeRange:
             end = pd.Timestamp.max.tz_localize("UTC")
         else:
             end = Timestamp(end)
-        if start > end:
+        if start >= end:
             raise ValueError("The start time must be before the end time")
 
         object.__setattr__(self, "start", start)
@@ -57,7 +56,7 @@ class TimeRange:
         A view of the pandas object constrained to the given time range.
         """
         if isinstance(tensor, pd.Index):
-            return self.view(tensor.to_series()).index
+            return self.view(tensor.to_series(), level=level).index
 
         index = tensor.index
 
@@ -67,12 +66,12 @@ class TimeRange:
                 raise ValueError("Must specify `level` if tensor is multi-indexed.")
 
             level_values = index.get_level_values(level)
-            mask = (self.start > level_values) & (level_values <= self.end)
+            mask = (self.start <= level_values) & (level_values < self.end)
             return tensor.loc[mask]
 
         else:
 
-            start, end = np.searchsorted(index, [self.start, self.end], side="right")
+            start, end = np.searchsorted(index, [self.start, self.end], side="left")
 
             return tensor.iloc[start:end]
 
@@ -80,12 +79,18 @@ class TimeRange:
     def from_pandas(tensor: IndexTensor, level=None):
         index = tensor if isinstance(tensor, pd.Index) else tensor.index
         values = index.get_level_values(level)
-        return TimeRange(values[0] - RESOLUTION, values[-1])
+        if values.empty:
+            return TimeRange(pd.NaT, pd.NaT)
+        else:
+            return TimeRange(values[0], values[-1] + RESOLUTION)
 
     def intersects(self, other: "TimeRange") -> bool:
-        return (self.start <= other.start < self.end) or (
-            other.start <= self.start < other.end
-        )
+        if self.start <= other.start < self.end:
+            return True
+        elif other.start <= self.start < other.end:
+            return True
+        else:
+            return False
 
     def contains(self, other: "TimeRange") -> bool:
         """

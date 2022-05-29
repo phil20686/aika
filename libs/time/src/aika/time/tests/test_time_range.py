@@ -1,19 +1,20 @@
+import typing as t
 import pandas as pd
 import pytest
 
-from aika.time.tests.utils import assert_call
+from aika.time.tests.utils import assert_call, assert_equal
 from aika.time.time_range import TimeRange
 from aika.time.timestamp import Timestamp
+from aika.utilities.pandas_utils import Tensor, IndexTensor
 
-utc_index = pd.Index(
-    Timestamp(x) for x in pd.date_range("2022-04-21", freq="H", periods=10)
-)
-ny_index = pd.Index(
-    [
-        pd.Timestamp(x, tz="America/New_York")
-        for x in pd.date_range("2022-04-21", freq="H", periods=10)
-    ]
-)
+
+def timestamp_index(*args, tz=None, **kwargs):
+    if tz is None:
+        tz = "UTC"
+    return pd.date_range(*args, **kwargs, tz=tz)
+
+
+empty_ts_index = pd.DatetimeIndex([], dtype=pd.DatetimeTZDtype(tz="UTC"))
 
 
 @pytest.mark.parametrize(
@@ -72,104 +73,176 @@ def test_constructor_and_equality(start, end, expect, str_repr):
         assert val == tr2 == expect
 
 
-@pytest.mark.parametrize("level", [None, 0])
 @pytest.mark.parametrize(
     "time_range, tensor, expect",
     [
         (
             TimeRange("2020-01-01", "2020-01-10"),
-            pd.Series(1.0, index=utc_index),
+            pd.Series(
+                1.0, index=timestamp_index(start="2022-04-21", freq="H", periods=10)
+            ),
             pd.Series(
                 dtype=float,
-                index=pd.DatetimeIndex(
-                    [],
-                    dtype=pd.DatetimeTZDtype.construct_from_string(
-                        "datetime64[ns, UTC]"
-                    ),
-                ),
+                index=empty_ts_index,
             ),
         ),
         (
             TimeRange("2022-04-21T00:00", "2022-04-21T02:00:00"),
-            pd.Series(1.0, index=utc_index),
+            pd.Series(
+                1.0, index=timestamp_index(start="2022-04-21", freq="H", periods=10)
+            ),
             pd.Series(
                 1.0,
                 dtype=float,
                 index=[
+                    Timestamp("2022-04-21T00:00:00"),
                     Timestamp("2022-04-21T01:00:00"),
-                    Timestamp("2022-04-21T02:00:00"),
                 ],
             ),
         ),
         (
             TimeRange("2022-04-21T10:00", "2022-04-21T12:00:00"),
-            pd.Series(1.0, index=ny_index),
+            pd.Series(
+                1.0,
+                index=timestamp_index(
+                    start="2022-04-21", freq="H", periods=10, tz="America/New_York"
+                ),
+            ),
             pd.Series(
                 1.0,
                 dtype=float,
                 index=[
+                    Timestamp("2022-04-21T06:00:00 [America/New_York]"),
                     Timestamp("2022-04-21T07:00:00 [America/New_York]"),
-                    Timestamp("2022-04-21T08:00:00 [America/New_York]"),
-                ],
-            ),
-        ),
-        (
-            TimeRange("2020-01-01", "2020-01-10"),
-            pd.DataFrame(1.0, index=utc_index, columns=list("ABC")),
-            pd.DataFrame(
-                columns=list("ABC"),
-                dtype=float,
-                index=pd.DatetimeIndex(
-                    [],
-                    dtype=pd.DatetimeTZDtype.construct_from_string(
-                        "datetime64[ns, UTC]"
-                    ),
-                ),
-            ),
-        ),
-        (
-            TimeRange("2022-04-21T00:00", "2022-04-21T02:00:00"),
-            pd.DataFrame(1.0, index=utc_index, columns=list("ABC")),
-            pd.DataFrame(
-                1.0,
-                dtype=float,
-                index=[
-                    Timestamp("2022-04-21T01:00:00"),
-                    Timestamp("2022-04-21T02:00:00"),
-                ],
-                columns=list("ABC"),
-            ),
-        ),
-        (
-            TimeRange("2022-04-21T10:00", "2022-04-21T12:00:00"),
-            pd.DataFrame(1.0, index=ny_index, columns=list("ABC")),
-            pd.DataFrame(
-                1.0,
-                dtype=float,
-                columns=list("ABC"),
-                index=[
-                    Timestamp("2022-04-21T07:00:00 [America/New_York]"),
-                    Timestamp("2022-04-21T08:00:00 [America/New_York]"),
                 ],
             ),
         ),
     ],
 )
-def test_view(time_range, tensor, level, expect):
-    assert_call(time_range.view, expect, tensor=tensor, level=level)
+@pytest.mark.parametrize(
+    "tensor_type",
+    [
+        pytest.param(lambda s: s, id="Series"),
+        pytest.param(lambda s: pd.DataFrame(dict(A=s, B=s + 1, C=-s)), id="DataFrame"),
+        pytest.param(lambda s: s.index, id="Index"),
+    ],
+)
+@pytest.mark.parametrize(
+    "index_transform, level",
+    [
+        pytest.param(
+            lambda ix: ix,
+            0,
+            id="single index, level=0",
+        ),
+        pytest.param(
+            lambda ix: ix,
+            None,
+            id="single index, level=None",
+        ),
+        pytest.param(
+            lambda ix: pd.MultiIndex.from_arrays(
+                [ix - pd.Timedelta(hours=1), ix], names=["start", "end"]
+            ),
+            "end",
+            id="bar index, level=end",
+        ),
+        pytest.param(
+            lambda ix: pd.MultiIndex.from_arrays(
+                [ix, ix + pd.Timedelta(hours=1)], names=["start", "end"]
+            ),
+            "start",
+            id="bar index, level=start",
+        ),
+        pytest.param(
+            lambda ix: pd.MultiIndex.from_arrays(
+                [
+                    pd.DatetimeIndex(
+                        [Timestamp("2022-04-01")] * len(ix),
+                        dtype=pd.DatetimeTZDtype(tz="UTC"),
+                    ),
+                    ix,
+                ],
+                names=["reference_date", "observation_timestamp"],
+            ),
+            "observation_timestamp",
+            id="bitemporal index, level=observation_timestamp",
+        ),
+    ],
+)
+def test_view(
+    index_transform: t.Callable[[pd.Index], pd.Index],
+    tensor_type: t.Callable[[pd.Series], IndexTensor],
+    time_range: TimeRange,
+    tensor: pd.Series,
+    level: t.Union[int, None],
+    expect: pd.Series,
+):
+    tensor = tensor.copy()
+    tensor.index = index_transform(tensor.index)
+    tensor = tensor_type(tensor)
+
+    expect = expect.copy()
+    expect.index = index_transform(expect.index)
+    expect = tensor_type(expect)
+
+    result = time_range.view(tensor, level=level)
+    assert_equal_kwargs = (
+        dict() if isinstance(result, pd.Index) else dict(check_freq=False)
+    )
+    assert_equal(result, expect, **assert_equal_kwargs)
 
 
 base = TimeRange("2000-01-01 00:00", "2000-01-02 00:00")
-subset = TimeRange("2000-01-01 10:00", "2000-01-01 12:00")
-empty = TimeRange("2000-01-01 00:00", "2000-01-01 00:00")
+strict_subset = TimeRange("2000-01-01 10:00", "2000-01-01 12:00")
+prefix = TimeRange(base.start, strict_subset.end)
+suffix = TimeRange(strict_subset.start, base.end)
+
+disjoint = TimeRange("2000-01-03", "2000-01-04")
+superset = TimeRange("1999-12-31", "2000-01-03")
+overlaps_start = TimeRange("1999-12-31", "2000-01-01 12:00")
+overlaps_end = TimeRange("2000-01-01 12:00", "2000-01-03")
 
 
 @pytest.mark.parametrize(
     "first, second, expect",
-    [(base, base, True), (base, subset, True), (subset, base, False)],
+    [
+        (base, base, True),
+        (base, strict_subset, True),
+        (base, prefix, True),
+        (base, suffix, True),
+        (base, disjoint, False),
+        (base, superset, False),
+        (base, overlaps_start, False),
+        (base, overlaps_end, False),
+        (prefix, strict_subset, True),
+        (suffix, strict_subset, True),
+        (strict_subset, base, False),
+        (strict_subset, prefix, False),
+        (strict_subset, suffix, False),
+        (prefix, suffix, False),
+    ],
 )
 def test_contains(first, second, expect):
     assert first.contains(second) == expect
+
+
+@pytest.mark.parametrize(
+    "first, second, expect",
+    [
+        (base, base, True),
+        (base, strict_subset, True),
+        (base, prefix, True),
+        (base, suffix, True),
+        (base, disjoint, False),
+        (base, superset, True),
+        (base, overlaps_start, True),
+        (base, overlaps_end, True),
+    ],
+)
+def test_intersects(first, second, expect):
+    assert first.intersects(second) == expect
+    assert second.intersects(first) == expect
 
 
 @pytest.mark.parametrize(
@@ -177,7 +250,7 @@ def test_contains(first, second, expect):
     [
         (base, base.start, False),
         (base, base.end, True),
-        (base, subset.start, True),
+        (base, strict_subset.start, True),
     ],
 )
 def test_in(time_range, ts, expect):
