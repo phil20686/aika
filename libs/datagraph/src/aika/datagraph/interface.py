@@ -568,8 +568,7 @@ class IPersistenceEngine(ABC):
         specified dataset is static, a ValueError will be raised.
         """
 
-    @classmethod
-    def _append(cls, existing: DataSet, new: DataSet):
+    def _append(self, existing: DataSet, new: DataSet):
         """
         This is the definitionally correct logic for appending two datasets, all implementations of append
         by different engines must replicate this behaviour.
@@ -591,14 +590,13 @@ class IPersistenceEngine(ABC):
             ),
         )
 
-    @classmethod
-    def _merge(cls, existing: DataSet, new: DataSet) -> DataSet:
+    def _merge(self, existing: DataSet, new: DataSet) -> DataSet:
         """
         This is the definitionally correct logic for merging two datasets, all implementations of merge
         by different engines must replicate this behaviour.
         """
         return DataSet(
-            metadata=existing.metadata,
+            metadata=new.metadata,
             data=existing.data.combine_first(new.data),
             declared_time_range=existing.declared_time_range.union(
                 new.declared_time_range

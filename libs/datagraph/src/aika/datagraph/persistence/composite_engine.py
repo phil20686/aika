@@ -84,13 +84,15 @@ class CompositeEngine(IPersistenceEngine):
         if self.exists(dataset.metadata):
             return True
         else:
-            self._writeable.idempotent_insert(dataset)
+            return self._writeable.idempotent_insert(dataset)
 
     def replace(
         self,
         dataset: DataSet,
     ) -> bool:
-        return self._writeable.replace(dataset)
+        exists = self.exists(dataset.metadata)
+        self._writeable.replace(dataset)
+        return exists
 
     def append(
         self,
