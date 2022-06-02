@@ -42,10 +42,10 @@ class IrregularChecker(ICompletionChecker):
         return declared_time_range.end >= target_time_range.end
 
 
-def infer_inherited_completion_checker(task):
+def infer_inherited_completion_checker(dependencies: t.Mapping[str, Dependency]):
 
     time_series_dependencies: t.Dict[str, Dependency[ITimeSeriesTask]] = {
-        name: dep for name, dep in task.dependencies.items() if dep.task.time_series
+        name: dep for name, dep in dependencies.items() if dep.task.time_series
     }
 
     explicit_inheritors = set()
@@ -70,9 +70,8 @@ def infer_inherited_completion_checker(task):
 
     if len(completion_checkers) == 0:
         raise ValueError(
-            f"Task {task.name} in namespace {task.namespace} has no dependencies "
-            "to inherit its completion_checker from; completion_checker must be "
-            "specified explicitly for this task."
+            f"Task has no dependencies to inherit its completion_checker from; "
+            f"completion_checker must be specified explicitly for this task."
         )
 
     elif len(completion_checkers) == 1:
@@ -102,14 +101,13 @@ def infer_inherited_completion_checker(task):
         irregular = set(completion_checkers) - regular
 
         raise ValueError(
-            f"Task {task.name} in namespace {task.namespace} has inconsistent "
-            f"completion checkers among its dependencies; dependencies {regular} "
-            f"all have {CalendarChecker.__name__} completion checkers, while "
-            f"dependencies {irregular} have {IrregularChecker.__name__} "
-            "completion checkers. These cannot be generically combined, so an "
-            "inherited completion checker cannot be inferred.\n"
-            "To fix this, either specify `completion_checker` explicitly for this "
-            "task, or update the `inherit_frequency` settings on the dependencies "
-            "to ensure that the dependencies being inherited from have a "
+            f"Task has inconsistent completion checkers among its dependencies; "
+            f"dependencies {regular} all have {CalendarChecker.__name__} completion "
+            f"checkers, while dependencies {irregular} have "
+            f"{IrregularChecker.__name__} completion checkers. These cannot be "
+            f"generically combined, so an inherited completion checker cannot be "
+            f"inferred.\n To fix this, either specify `completion_checker` explicitly "
+            f"for this task, or update the `inherit_frequency` settings on the "
+            f"dependencies to ensure that the dependencies being inherited from have a "
             "are either all regular or all irregular."
         )
