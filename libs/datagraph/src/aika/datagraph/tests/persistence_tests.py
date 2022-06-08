@@ -3,6 +3,7 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 
+from aika.time.time_range import TimeRange
 from aika.time.timestamp import Timestamp
 
 from aika.datagraph.interface import DataSet
@@ -68,6 +69,14 @@ child = DataSet.build(
     ),
     params={"bananas": "some", "apples": 3.0},
     predecessors={"foo": leaf1.metadata, "bar": leaf2.metadata},
+)
+
+static_leaf1 = DataSet.build(
+    name="static_leaf1",
+    data=pd.DataFrame(np.random.randn(20, 12)),
+    static=True,
+    params={"rows": 12, "foo": 34.5634},
+    predecessors={},
 )
 
 append_tests = [
@@ -158,4 +167,32 @@ deletion_tests = [
     ([leaf1, leaf2, child], leaf2.metadata, False, ValueError, {leaf1, leaf2, child}),
     ([leaf1, leaf2, child], leaf2.metadata, True, True, {leaf1}),
     ([leaf1], leaf2.metadata, True, False, {leaf1}),
+]
+
+# list to insert
+# function
+# func kwargs
+# expect
+error_condition_tests = [
+    ([], "get_predecessors_from_hash", {"name": "foo", "hash": 1}, ValueError),
+    ([], "get_dataset", {"metadata": leaf1.metadata}, None),
+    ([], "get_dataset", {"metadata": static_leaf1.metadata}, None),
+    (
+        [],
+        "read",
+        {"metadata": static_leaf1.metadata, "time_range": TimeRange(None, None)},
+        ValueError,
+    ),
+    ([], "read", {"metadata": leaf1.metadata}, None),
+    ([], "read", {"metadata": static_leaf1.metadata}, None),
+    (
+        [],
+        "read",
+        {"metadata": static_leaf1.metadata, "time_range": TimeRange(None, None)},
+        ValueError,
+    ),
+    ([], "get_data_time_range", {"metadata": leaf1.metadata}, None),
+    ([], "get_data_time_range", {"metadata": static_leaf1.metadata}, ValueError),
+    ([], "get_declared_time_range", {"metadata": leaf1.metadata}, None),
+    ([], "get_declared_time_range", {"metadata": static_leaf1.metadata}, ValueError),
 ]
