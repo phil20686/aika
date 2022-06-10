@@ -2,7 +2,7 @@ from typing import Dict, Optional
 
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal, assert_index_equal, assert_series_equal
+from pandas._testing import assert_frame_equal, assert_index_equal, assert_series_equal
 
 
 def assert_equal(value, expect, **kwargs):
