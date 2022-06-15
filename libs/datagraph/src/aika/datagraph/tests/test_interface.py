@@ -9,7 +9,7 @@ import mongomock as mongomock
 import pymongo
 import pytest
 
-from aika.time.tests.utils import assert_call, assert_equal
+from aika.utilities.testing import assert_call, assert_equal
 
 from aika.datagraph.interface import DataSet, DataSetMetadata, IPersistenceEngine
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
