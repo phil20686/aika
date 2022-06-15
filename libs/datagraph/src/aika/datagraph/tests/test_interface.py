@@ -36,7 +36,10 @@ def _mongo_backend_generator():
     return engine
 
 
-engine_generators = [HashBackedPersistanceEngine, _mongo_backend_generator]
+engine_generators = [
+    # HashBackedPersistanceEngine,
+    _mongo_backend_generator
+]
 
 datasets_typevar = TypeVar(
     "datasets_typevar",

@@ -151,12 +151,15 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         self, name: str, hash: int
     ) -> t.Dict[str, DatasetMetadataStub]:
         record = self._find_record_from_hash(name, hash, include_data=False)
-        return frozendict(
-            {
-                name: self._deserialise_metadata_as_stub(pred_record)
-                for name, pred_record in record["predecessors"].items()
-            }
-        )
+        if record is not None:
+            return frozendict(
+                {
+                    name: self._deserialise_metadata_as_stub(pred_record)
+                    for name, pred_record in record["predecessors"].items()
+                }
+            )
+        else:
+            raise ValueError(f"No datasets {name} {hash}")
 
     def exists(self, metadata: DataSetMetadata) -> bool:
         return (
