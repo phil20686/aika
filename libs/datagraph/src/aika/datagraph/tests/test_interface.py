@@ -9,7 +9,7 @@ import mongomock as mongomock
 import pymongo
 import pytest
 
-from aika.time.tests.utils import assert_call, assert_equal
+from aika.utilities.testing import assert_call, assert_equal
 
 from aika.datagraph.interface import DataSet, DataSetMetadata, IPersistenceEngine
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
@@ -17,6 +17,7 @@ from aika.datagraph.persistence.mongo_backed import MongoBackedPersistanceEngine
 from aika.datagraph.tests.persistence_tests import (
     append_tests,
     deletion_tests,
+    error_condition_tests,
     find_successors_tests,
     merge_tests,
 )
@@ -52,7 +53,7 @@ def _replace_engine(
 ) -> datasets_typevar:
     if isinstance(datasets, list):
         return [
-            dataset.replace_engine(dataset, engine, include_predecessors=True)
+            dataset.replace_engine(engine, include_predecessors=True)
             for dataset in datasets
         ]
     elif isinstance(datasets, set):
@@ -60,7 +61,7 @@ def _replace_engine(
     else:
         result = {}
         for dataset in datasets.values():
-            dataset = dataset.replace_engine(dataset, engine, include_predecessors=True)
+            dataset = dataset.replace_engine(engine, include_predecessors=True)
             result[dataset.metadata] = dataset
         return result
 
@@ -112,7 +113,7 @@ def test_merge(engine_generator, datasets, expected):
 def test_find_successors(engine_generator, datasets, metadata, expected):
     engine = engine_generator()
     datasets = _replace_engine(engine, datasets)
-    metadata = metadata.replace_engine(metadata, engine, include_predecessors=True)
+    metadata = metadata.replace_engine(engine, include_predecessors=True)
     for dataset in datasets:
         engine.idempotent_insert(dataset)
 
@@ -136,7 +137,7 @@ def test_delete(
 
     engine = engine_generator()
     datasets = _replace_engine(engine, datasets)
-    metadata = metadata.replace_engine(metadata, engine, include_predecessors=True)
+    metadata = metadata.replace_engine(engine, include_predecessors=True)
     remaining_datasets = _replace_engine(engine, remaining_datasets)
 
     for dataset in datasets:
@@ -144,3 +145,21 @@ def test_delete(
 
     assert_call(engine.delete, deletion_expected, metadata, recursive)
     _assert_engine_contains_expected(engine, remaining_datasets)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize(
+    "datasets_to_insert, func_name, func_kwargs, expect",
+    error_condition_tests,
+)
+def test_error_conditions(
+    engine_generator, datasets_to_insert, func_name, func_kwargs, expect
+):
+    engine = engine_generator()
+    datasets = _replace_engine(engine, datasets_to_insert)
+    for dataset in datasets:
+        engine.idempotent_insert(dataset)
+    if "metadata" in func_kwargs:
+        func_kwargs["metadata"] = func_kwargs["metadata"].replace_engine(engine)
+    func = getattr(engine, func_name)
+    assert_call(func, expect, **func_kwargs)

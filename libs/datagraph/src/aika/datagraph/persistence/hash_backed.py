@@ -1,7 +1,6 @@
 import typing as t
 from abc import abstractmethod
 
-import pandas as pd
 from frozendict import frozendict
 from typing_extensions import Protocol
 

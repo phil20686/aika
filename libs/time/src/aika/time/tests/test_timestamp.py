@@ -1,7 +1,8 @@
 import pandas as pd
 import pytest
 
-from aika.time.tests.utils import assert_call
+from aika.utilities.testing import assert_call
+
 from aika.time.timestamp import Timestamp
 
 
