@@ -3,17 +3,15 @@ from pprint import pprint
 import pandas as pd
 
 from aika import dux
-from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from aika.dux import CalendarChecker
-from aika.dux.context import GraphContext, Defaults
-from aika.dux.graph import (
-    TaskModule,
-    Graph,
-)
+from aika.dux.context import Defaults, GraphContext
+from aika.dux.graph import Graph, TaskModule
 from aika.dux.runners import LocalRunner
 from aika.time.calendars import TimeOfDayCalendar
 from aika.time.time_of_day import TimeOfDay
 from aika.time.time_range import TimeRange
+
+from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 
 
 def generate_index(time_range: TimeRange, time_of_day: TimeOfDay):

@@ -1,12 +1,13 @@
-import attr
+import re
 import typing as t
+
+import attr
 import numpy as np
 import pandas as pd
 
+from aika.time.timestamp import Timestamp
 from aika.utilities.pandas_utils import IndexTensor
 
-from aika.time.timestamp import Timestamp
-import re
 RESOLUTION = pd.Timedelta(nanoseconds=1)
 
 
@@ -35,7 +36,9 @@ class TimeRange:
         else:
             end = Timestamp(end)
         if start >= end:
-            raise ValueError(f"The start time {start} must be before the end time {end}")
+            raise ValueError(
+                f"The start time {start} must be before the end time {end}"
+            )
 
         object.__setattr__(self, "start", start)
         object.__setattr__(self, "end", end)
@@ -136,11 +139,7 @@ class TimeRange:
         # split = re.split(r'\+|\-', s)
         # print(split)
         # return "-".join(split[:-1])
-        string_repr = "-".join(
-            re.split(
-                r'\+|\-', ts.isoformat()
-            )[:-1]
-        )
+        string_repr = "-".join(re.split(r"\+|\-", ts.isoformat())[:-1])
         return f"'{string_repr} [{ts.tz}]'"
         # # TODO : Really this belongs on the timestamp class.
         #

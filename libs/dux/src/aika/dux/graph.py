@@ -1,11 +1,10 @@
 import inspect
+import typing as t
 from abc import ABC, abstractmethod
 from functools import cached_property
 from pprint import pformat
 
 import attr
-import typing as t
-
 import networkx as nx
 
 from aika.dux.interface import ITask

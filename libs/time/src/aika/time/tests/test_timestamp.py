@@ -1,9 +1,8 @@
 import pandas as pd
 import pytest
 
-from aika.utilities.testing import assert_call
-
 from aika.time.timestamp import Timestamp
+from aika.utilities.testing import assert_call
 
 
 @pytest.mark.parametrize(
@@ -32,13 +31,13 @@ from aika.time.timestamp import Timestamp
         (
             # Test microsecond second resolution
             "2020-01-01T12:00:00.000001",
-            pd.Timestamp(year=2020, month=1, day=1, hour=12, microsecond=1, tz="UTC")
+            pd.Timestamp(year=2020, month=1, day=1, hour=12, microsecond=1, tz="UTC"),
         ),
         (
             # Test nanosecond second resolution
             "2020-01-01T12:00:00.000000001",
-            pd.Timestamp(year=2020, month=1, day=1, hour=12, nanosecond=1, tz="UTC")
-        )
+            pd.Timestamp(year=2020, month=1, day=1, hour=12, nanosecond=1, tz="UTC"),
+        ),
     ],
 )
 def test_timestamp_constructor(ts, expect):

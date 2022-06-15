@@ -1,13 +1,11 @@
 from ._version import __version__
-
-from .interface import ICompletionChecker, ITask, ITimeSeriesTask, IStaticTask
-from .completion_checking import ICompletionChecker, IrregularChecker, CalendarChecker
-
+from .completion_checking import CalendarChecker, ICompletionChecker, IrregularChecker
+from .interface import ICompletionChecker, IStaticTask, ITask, ITimeSeriesTask
 from .task import (
-    TaskBase,
-    TimeSeriesTaskBase,
-    StaticTaskBase,
     FunctionWrapperMixin,
-    TimeSeriesFunctionWrapper,
     StaticFunctionWrapper,
+    StaticTaskBase,
+    TaskBase,
+    TimeSeriesFunctionWrapper,
+    TimeSeriesTaskBase,
 )

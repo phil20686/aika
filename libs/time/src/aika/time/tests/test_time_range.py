@@ -1,11 +1,12 @@
 import typing as t
+
 import pandas as pd
 import pytest
 
-from aika.utilities.testing import assert_call, assert_equal
-from aika.time.time_range import TimeRange, RESOLUTION
+from aika.time.time_range import RESOLUTION, TimeRange
 from aika.time.timestamp import Timestamp
-from aika.utilities.pandas_utils import Tensor, IndexTensor
+from aika.utilities.pandas_utils import IndexTensor, Tensor
+from aika.utilities.testing import assert_call, assert_equal
 
 
 def timestamp_index(*args, tz=None, **kwargs):
@@ -30,7 +31,7 @@ empty_ts_index = pd.DatetimeIndex([], dtype=pd.DatetimeTZDtype(tz="UTC"))
             "2021-01-01T12:00",
             Timestamp("2021-01-01T12:00") + RESOLUTION,
             TimeRange("2021-01-01T12:00", "2021-01-01T12:00:00.000000001"),
-            "TimeRange('2021-01-01T12:00:00 [UTC]', '2021-01-01T12:00:00.000000001 [UTC]')"
+            "TimeRange('2021-01-01T12:00:00 [UTC]', '2021-01-01T12:00:00.000000001 [UTC]')",
         ),
         (
             "2020-01-01T12:00 [UTC]",

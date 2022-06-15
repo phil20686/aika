@@ -1,10 +1,12 @@
 import typing as t
 
 import attr
-from aika.datagraph.interface import DataSetMetadata
+
 from aika.dux.interface import Dependency, ICompletionChecker, ITimeSeriesTask
-from aika.time.calendars import UnionCalendar, ICalendar
+from aika.time.calendars import ICalendar, UnionCalendar
 from aika.time.time_range import TimeRange
+
+from aika.datagraph.interface import DataSetMetadata
 
 
 @attr.s(frozen=True)

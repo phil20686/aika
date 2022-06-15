@@ -2,10 +2,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from aika.utilities.testing import assert_call
-
 from aika.time.alignment import causal_match, causal_resample
 from aika.time.timestamp import Timestamp
+from aika.utilities.testing import assert_call
 
 
 class PdIndex:

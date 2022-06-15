@@ -8,18 +8,18 @@ import attr
 import pandas as pd
 from frozendict import frozendict
 
-from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
 from aika.dux.interface import (
     Dependency,
-    ITask,
     ICompletionChecker,
-    ITimeSeriesTask,
     IStaticTask,
+    ITask,
+    ITimeSeriesTask,
 )
-
 from aika.time.time_range import TimeRange
 from aika.utilities.abstract import abstract_attribute
 from aika.utilities.pandas_utils import IndexTensor
+
+from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
 
 
 class TaskBase(ITask, ABC):
