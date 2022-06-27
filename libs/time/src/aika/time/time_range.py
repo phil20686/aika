@@ -5,8 +5,9 @@ import attr
 import numpy as np
 import pandas as pd
 
-from aika.time.timestamp import Timestamp
 from aika.utilities.pandas_utils import IndexTensor
+
+from aika.time.timestamp import Timestamp
 
 RESOLUTION = pd.Timedelta(nanoseconds=1)
 
@@ -134,26 +135,5 @@ class TimeRange:
 
     @classmethod
     def _timestamp_repr(cls, ts: pd.Timestamp):
-        # s = ts.isoformat()
-        # print(str(ts.tz))
-        # split = re.split(r'\+|\-', s)
-        # print(split)
-        # return "-".join(split[:-1])
         string_repr = "-".join(re.split(r"\+|\-", ts.isoformat())[:-1])
         return f"'{string_repr} [{ts.tz}]'"
-        # # TODO : Really this belongs on the timestamp class.
-        #
-        # seconds = ts.second + ts.microsecond / 1e6 + ts.nanosecond / 1e9
-        # if seconds < 10.0:
-        #     seconds_repr = f"0{seconds}"
-        # else:
-        #     seconds_repr = str(seconds)
-        # # this works because we are guaranteed olson timezones.
-        # str_format = "'%Y-%m-%dT%H:%M:{seconds} [{tz}]'"
-        # print("{:.9f}".format(seconds))
-        # print(repr(ts))
-        # print(str(ts))
-        # print(
-        #     ts.isoformat()
-        # )
-        # return ts.strftime(str_format).format(seconds=seconds_repr, tz=ts.tz)
