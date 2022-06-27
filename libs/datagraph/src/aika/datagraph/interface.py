@@ -8,6 +8,8 @@ from frozendict import frozendict
 from aika.time.time_range import TimeRange
 from aika.utilities.pandas_utils import IndexTensor, equals
 
+from aika.datagraph.utils import normalize_parameters
+
 
 class DataSetMetadata:
     """
@@ -53,7 +55,8 @@ class DataSetMetadata:
         self._static = static
         self._engine = engine
         self._time_level = time_level
-        self._params = frozendict({k: params[k] for k in sorted(params)})
+        # self._params = frozendict({k: params[k] for k in sorted(params)})
+        self._params = normalize_parameters(params)
         self._predecessors = frozendict(
             {k: predecessors[k] for k in sorted(predecessors)}
         )
@@ -99,7 +102,7 @@ class DataSetMetadata:
         return self._engine
 
     @property
-    def params(self):
+    def params(self) -> frozendict:
         return self._params
 
     @property
@@ -279,7 +282,10 @@ class DataSet:
         Note that the data time range always applies to the data contained in this dataset object, which
         may only be a subset of the data that is stored in the persistence engine.
         """
-        return TimeRange.from_pandas(self.data, level=self.metadata.time_level)
+        if self.metadata.static:
+            return None
+        else:
+            return TimeRange.from_pandas(self.data, level=self.metadata.time_level)
 
     def update(self, data, declared_time_range):
         """

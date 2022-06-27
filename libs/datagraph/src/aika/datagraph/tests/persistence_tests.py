@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
+from frozendict._frozendict import frozendict
 
 from aika.time.time_range import TimeRange
 from aika.time.timestamp import Timestamp
@@ -195,4 +196,31 @@ error_condition_tests = [
     ([], "get_data_time_range", {"metadata": static_leaf1.metadata}, ValueError),
     ([], "get_declared_time_range", {"metadata": leaf1.metadata}, None),
     ([], "get_declared_time_range", {"metadata": static_leaf1.metadata}, ValueError),
+]
+
+# input params
+# read params
+param_fidelity_tests = [
+    (
+        {"foo": 1.0},
+        frozendict({"foo": 1.0}),
+    ),
+    (
+        {"foo": 1},
+        frozendict({"foo": 1}),
+    ),
+    (
+        frozendict({"foo": 1}),
+        frozendict({"foo": 1}),
+    ),
+    ({"foo": list("BAC")}, frozendict({"foo": tuple(list("BAC"))})),
+    ({"foo": tuple("BAC")}, frozendict({"foo": tuple("BAC")})),
+    (
+        {"foo": [(1, 2), [1.0, 2.0]], "bar": ((1, 2), (1.0, 2.0))},
+        frozendict({"foo": ((1, 2), (1.0, 2.0)), "bar": ((1, 2), (1.0, 2.0))}),
+    ),
+    (
+        {"foo": {"bar": [1, 2, [3, 4]]}},
+        frozendict({"foo": frozendict({"bar": (1, 2, (3, 4))})}),
+    ),
 ]
