@@ -8,6 +8,11 @@ import attr
 import pandas as pd
 from frozendict import frozendict
 
+from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
+from aika.time.time_range import TimeRange
+from aika.utilities.abstract import abstract_attribute
+from aika.utilities.pandas_utils import IndexTensor
+
 from aika.dux.interface import (
     Dependency,
     ICompletionChecker,
@@ -15,11 +20,6 @@ from aika.dux.interface import (
     ITask,
     ITimeSeriesTask,
 )
-from aika.time.time_range import TimeRange
-from aika.utilities.abstract import abstract_attribute
-from aika.utilities.pandas_utils import IndexTensor
-
-from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
 
 
 class TaskBase(ITask, ABC):
@@ -139,14 +139,14 @@ class TimeSeriesFunctionWrapper(FunctionWrapperMixin, TimeSeriesTaskBase):
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
 class StaticFunctionWrapper(FunctionWrapperMixin, StaticTaskBase):
 
-    name: str
-    namespace: str
-    version: str = None
-    persistence_engine: IPersistenceEngine = None
+    name: str = attr.ib()
+    namespace: str = attr.ib()
+    version: str = attr.ib()
+    persistence_engine: IPersistenceEngine = attr.ib()
 
-    function: t.Callable[..., t.Any]
-    scalar_kwargs: frozendict[str, t.Any]
-    dependencies: frozendict[str, Dependency]
+    function: t.Callable[..., t.Any] = attr.ib()
+    scalar_kwargs: frozendict[str, t.Any] = attr.ib()
+    dependencies: frozendict[str, Dependency] = attr.ib()
 
     def __attrs_post_init__(self):
         self.validate()
