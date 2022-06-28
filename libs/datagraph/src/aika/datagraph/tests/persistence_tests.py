@@ -41,6 +41,20 @@ leaf1_extended = DataSet.build(
     params={"foo": 1.0, "bar": "baz"},
     predecessors={},
 )
+# make sure that in these cases the declared data time range expands correctly when the additional data
+# does not go all the way back to the start.
+leaf1_extended_late_start = DataSet.build(
+    name="leaf1",
+    data=pd.DataFrame(
+        1.1,
+        columns=list("ABC"),
+        index=[Timestamp(x) for x in pd.date_range(start="2021-01-05", periods=8)],
+    ),
+    params={"foo": 1.0, "bar": "baz"},
+    predecessors={},
+)
+
+
 leaf1_final = DataSet.build(
     name="leaf1",
     data=pd.DataFrame(
@@ -80,6 +94,11 @@ static_leaf1 = DataSet.build(
     predecessors={},
 )
 
+# add
+# replace
+# expect
+replace_tests = [([leaf1_extended], leaf1, {leaf1})]
+
 append_tests = [
     (
         [
@@ -111,6 +130,13 @@ append_tests = [
         [
             leaf1,
             leaf1_extended,
+        ],
+        {leaf1_final},
+    ),
+    (
+        [
+            leaf1,
+            leaf1_extended_late_start,
         ],
         {leaf1_final},
     ),
@@ -150,6 +176,13 @@ merge_tests = [
         ],
         {leaf1_final},
     ),
+    (
+        [
+            leaf1,
+            leaf1_extended_late_start,
+        ],
+        {leaf1_final},
+    ),
 ]
 # list to insert, metadata to check, expected datasets
 find_successors_tests = [
@@ -178,6 +211,8 @@ error_condition_tests = [
     ([], "get_predecessors_from_hash", {"name": "foo", "hash": 1}, ValueError),
     ([], "get_dataset", {"metadata": leaf1.metadata}, None),
     ([], "get_dataset", {"metadata": static_leaf1.metadata}, None),
+    ([], "append", {"dataset": static_leaf1}, ValueError("Can only append for")),
+    ([], "merge", {"dataset": static_leaf1}, ValueError("Can only merge for")),
     (
         [],
         "read",
@@ -196,6 +231,18 @@ error_condition_tests = [
     ([], "get_data_time_range", {"metadata": static_leaf1.metadata}, ValueError),
     ([], "get_declared_time_range", {"metadata": leaf1.metadata}, None),
     ([], "get_declared_time_range", {"metadata": static_leaf1.metadata}, ValueError),
+]
+
+# datasets_to_insert
+# metadata to find
+# expected predecessors
+
+predecessor_from_hash_tests = [
+    (
+        [leaf1, leaf2, child],
+        child.metadata,
+        {"foo": leaf1.metadata, "bar": leaf2.metadata},
+    )
 ]
 
 # input params

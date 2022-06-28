@@ -9,10 +9,16 @@ import mongomock as mongomock
 import pandas as pd
 import pymongo
 import pytest
+from frozendict import frozendict
 
 from aika.utilities.testing import assert_call, assert_equal
 
-from aika.datagraph.interface import DataSet, DataSetMetadata, IPersistenceEngine
+from aika.datagraph.interface import (
+    DataSet,
+    DataSetMetadata,
+    DatasetMetadataStub,
+    IPersistenceEngine,
+)
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from aika.datagraph.persistence.mongo_backed import MongoBackedPersistanceEngine
 from aika.datagraph.tests.persistence_tests import (
@@ -22,6 +28,8 @@ from aika.datagraph.tests.persistence_tests import (
     find_successors_tests,
     merge_tests,
     param_fidelity_tests,
+    predecessor_from_hash_tests,
+    replace_tests,
 )
 
 
@@ -50,6 +58,19 @@ datasets_typevar = TypeVar(
 )
 
 
+def _assert_stub_equals_real(stub: DatasetMetadataStub, metadata: DataSetMetadata):
+    assert_equal(
+        stub.__hash__(),
+        metadata.__hash__(),
+    )
+    assert_equal(stub.engine, metadata.engine)
+    assert_equal(stub.name, metadata.name)
+    assert_equal(stub.static, metadata.static)
+    assert_equal(stub.time_level, metadata.time_level)
+    assert_equal(stub.params, metadata.params)
+    assert_equal(stub.predecessors, metadata.predecessors)
+
+
 def _replace_engine(
     engine: IPersistenceEngine, datasets: datasets_typevar
 ) -> datasets_typevar:
@@ -73,15 +94,22 @@ def _assert_engine_contains_expected(engine, expected):
     # datasets.
     for expected_dataset in expected:
         assert engine.exists(expected_dataset.metadata)
+        assert expected_dataset.metadata.exists()
         persisted_dataset = engine.get_dataset(expected_dataset.metadata)
         assert persisted_dataset.metadata == expected_dataset.metadata
         assert hash(persisted_dataset.metadata) == hash(expected_dataset.metadata)
         assert_equal(persisted_dataset.data, expected_dataset.data)
+        assert_equal(expected_dataset.metadata.read(), expected_dataset.data)
         assert (
             persisted_dataset.declared_time_range
             == expected_dataset.declared_time_range
+            == expected_dataset.metadata.get_declared_time_range()
         )
-        assert persisted_dataset.data_time_range == expected_dataset.declared_time_range
+        assert (
+            persisted_dataset.data_time_range
+            == expected_dataset.declared_time_range
+            == expected_dataset.metadata.get_data_time_range()
+        )
 
 
 @pytest.mark.parametrize("engine_generator", engine_generators)
@@ -98,6 +126,21 @@ def test_append(engine_generator, datasets, expected):
 
 
 @pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize("datasets, expected", append_tests)
+def test_append_via_metadata(engine_generator, datasets, expected):
+    engine = engine_generator()
+    expected = _replace_engine(engine, expected)
+    datasets = _replace_engine(engine, datasets)
+
+    for dataset in datasets:
+        dataset.metadata.append(
+            declared_time_range=dataset.declared_time_range, data=dataset.data
+        )
+
+    _assert_engine_contains_expected(engine, expected)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, expected", merge_tests)
 def test_merge(engine_generator, datasets, expected):
     engine = engine_generator()
@@ -108,6 +151,86 @@ def test_merge(engine_generator, datasets, expected):
         engine.merge(dataset)
 
     _assert_engine_contains_expected(engine, expected)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize("datasets, expected", merge_tests)
+def test_merge_via_dataset(engine_generator, datasets, expected):
+    engine = engine_generator()
+    datasets = _replace_engine(engine, datasets)
+    expected = _replace_engine(engine, expected)
+
+    for dataset in datasets:
+        dataset.metadata.merge(
+            declared_time_range=dataset.declared_time_range, data=dataset.data
+        )
+
+    _assert_engine_contains_expected(engine, expected)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize("datasets, replacement, expected", replace_tests)
+def test_replace(engine_generator, datasets, replacement, expected):
+    engine = engine_generator()
+    datasets = _replace_engine(engine, datasets)
+    replacement = replacement.replace_engine(engine, include_predecessors=True)
+    expected = _replace_engine(engine, expected)
+
+    for dataset in datasets:
+        engine.idempotent_insert(dataset)
+
+    engine.replace(replacement)
+
+    _assert_engine_contains_expected(engine, expected)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize("datasets, replacement, expected", replace_tests)
+def test_replace_via_metadata(engine_generator, datasets, replacement, expected):
+    engine = engine_generator()
+    datasets = _replace_engine(engine, datasets)
+    replacement = replacement.replace_engine(engine, include_predecessors=True)
+    expected = _replace_engine(engine, expected)
+
+    for dataset in datasets:
+        engine.idempotent_insert(dataset)
+
+    replacement.metadata.replace(
+        declared_time_range=replacement.declared_time_range, data=replacement.data
+    )
+
+    _assert_engine_contains_expected(engine, expected)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize(
+    "datasets, target, expected_predecessors", predecessor_from_hash_tests
+)
+def test_get_predecessors_from_hash(
+    engine_generator, datasets, target, expected_predecessors
+):
+    engine = engine_generator()
+    datasets = _replace_engine(engine, datasets)
+    target = target.replace_engine(engine, include_predecessors=True)
+    expected_predecessors = frozendict(
+        {
+            name: value.replace_engine(engine)
+            for name, value in expected_predecessors.items()
+        }
+    )
+
+    for dataset in datasets:
+        engine.append(dataset)
+
+    result = engine.get_predecessors_from_hash(target.name, target.__hash__())
+    # note that this is only required because of the mongomock situation in this test.
+    # they natively create new connections but in this case that means that they cannot "see" the contents of
+    # mongo mock so we need to put back in the engine that actually contains the data.
+    for r in result.values():
+        r._engine = engine
+
+    for name, expected in expected_predecessors.items():
+        _assert_stub_equals_real(result[name], expected)
 
 
 @pytest.mark.parametrize("engine_generator", engine_generators)
@@ -161,8 +284,10 @@ def test_error_conditions(
     datasets = _replace_engine(engine, datasets_to_insert)
     for dataset in datasets:
         engine.idempotent_insert(dataset)
-    if "metadata" in func_kwargs:
-        func_kwargs["metadata"] = func_kwargs["metadata"].replace_engine(engine)
+    for name in ["metadata", "dataset"]:
+        if name in func_kwargs:
+            func_kwargs[name] = func_kwargs[name].replace_engine(engine)
+
     func = getattr(engine, func_name)
     assert_call(func, expect, **func_kwargs)
 

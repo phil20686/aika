@@ -307,7 +307,7 @@ class IPersistenceEngine(ABC):
 
     @abstractmethod
     def set_state(self) -> t.Dict[str, t.Any]:
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @classmethod
     def create_engine(cls, d: t.Dict[str, t.Any]):
@@ -316,7 +316,9 @@ class IPersistenceEngine(ABC):
         )  # should not alter the dict, which may be a database record of some type.
         engine_type = d.pop("type")
         if engine_type == "hash_backed":
-            raise NotImplementedError("Cannot recreate an engine for in-memory storage")
+            raise NotImplementedError(
+                "Cannot recreate an engine for in-memory storage"
+            )  # pragma: no cover
         elif engine_type == "mongodb":
             from aika.datagraph.persistence.mongo_backed import (
                 MongoBackedPersistanceEngine,
@@ -324,7 +326,9 @@ class IPersistenceEngine(ABC):
 
             return MongoBackedPersistanceEngine._create_engine(d)
         else:
-            raise NotImplementedError(f"No persistence engine found for {d['type']}")
+            raise NotImplementedError(
+                f"No persistence engine found for {d['type']}"
+            )  # pragma: no cover
 
     @abstractmethod
     def get_predecessors_from_hash(
