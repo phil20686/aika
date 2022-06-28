@@ -26,7 +26,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
         self._cache = {}
 
     def set_state(self) -> t.Dict[str, t.Any]:
-        raise ValueError("Cannot persist an in-memory engine")
+        raise ValueError("Cannot persist an in-memory engine")  # pragma: no cover
 
     def exists(self, metadata: DataSetMetadata) -> bool:
         return metadata in self._cache
@@ -46,7 +46,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
                             params=meta.params,
                             hash=meta.__hash__(),
                         )
-                        for key, meta in metadata.predecessors
+                        for key, meta in metadata.predecessors.items()
                     }
                 )
         raise ValueError("No Matching Dataset")
@@ -149,8 +149,6 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
 
         Return True iff an existing dataset was found.
         """
-        if dataset.metadata.static:
-            raise ValueError("Can only append for time-series data")
 
         old_dataset = self._cache.get(dataset.metadata)
         if old_dataset is None:

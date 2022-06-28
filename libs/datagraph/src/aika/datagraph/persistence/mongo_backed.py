@@ -103,7 +103,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             static=record["static"],
             params=record["params"],
             hash=record["hash"],
-            time_level=record["hash"],
+            time_level=record["time_level"],
             engine=IPersistenceEngine.create_engine(record["engine"]),
         )
 
@@ -153,8 +153,10 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         if record is not None:
             return frozendict(
                 {
-                    name: self._deserialise_metadata_as_stub(pred_record)
-                    for name, pred_record in record["predecessors"].items()
+                    pred_record["param_name"]: self._deserialise_metadata_as_stub(
+                        pred_record
+                    )
+                    for pred_record in record["predecessors"]
                 }
             )
         else:
@@ -237,6 +239,8 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             return False
 
     def append(self, dataset):
+        if dataset.metadata.static:
+            raise ValueError("Can only append for time-series data")
         existing_dataset = self.get_dataset(dataset.metadata)
         if existing_dataset is None:
             return self.replace(dataset)
@@ -244,6 +248,8 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             return self.replace(self._append(existing_dataset, dataset))
 
     def merge(self, dataset):
+        if dataset.metadata.static:
+            raise ValueError("Can only merge for time-series data")
         existing_dataset = self.get_dataset(dataset.metadata)
         if existing_dataset is None:
             self.replace(dataset)

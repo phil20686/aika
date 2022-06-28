@@ -49,7 +49,7 @@ def assert_call(func, expect, *args, test_kwargs: Optional[Dict] = None, **kwarg
         with pytest.raises(expect):
             func(*args, **kwargs)
     elif isinstance(expect, Exception):
-        with pytest.raises(expect, match=str(expect)):
+        with pytest.raises(type(expect), match=str(expect)):
             func(*args, **kwargs)
     else:
         if test_kwargs is None:

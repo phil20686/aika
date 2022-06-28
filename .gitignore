@@ -9,3 +9,6 @@ wheels/
 packages.in
 notebooks/scrapbooks
 .ipynb_checkpoints/
+htmlcov
+.coverage
+.pytest_cache
