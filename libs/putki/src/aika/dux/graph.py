@@ -7,7 +7,7 @@ from pprint import pformat
 import attr
 import networkx as nx
 
-from aika.dux.interface import ITask
+from aika.putki.interface import ITask
 
 
 class TaskModule:

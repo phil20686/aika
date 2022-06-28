@@ -13,7 +13,7 @@ from aika.time.time_range import TimeRange
 from aika.utilities.abstract import abstract_attribute
 from aika.utilities.pandas_utils import IndexTensor
 
-from aika.dux.interface import (
+from aika.putki.interface import (
     Dependency,
     ICompletionChecker,
     IStaticTask,

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from aika.dux.graph import Graph
+from aika.putki.graph import Graph
 
 
 class IGraphRunner(ABC):

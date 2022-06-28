@@ -31,7 +31,7 @@ jobs:
         python -m pip install -e ./libs/utilities
         python -m pip install -e ./libs/time
         python -m pip install -e ./libs/datagraph
-        python -m pip install -e ./libs/dux
+        python -m pip install -e ./libs/putki
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
