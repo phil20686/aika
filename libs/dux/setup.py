@@ -1,5 +1,5 @@
 from pkg_resources import parse_requirements
-from setuptools import setup, find_packages, find_namespace_packages
+from setuptools import setup, find_namespace_packages
 from pathlib import Path
 
 
@@ -9,6 +9,7 @@ parent_dir = Path(__file__).parent
 def get_requirements(path: Path):
     with open(path) as fobj:
         return [str(req) for req in parse_requirements(fobj.read())]
+
 
 setup(
     name="aika-dux",

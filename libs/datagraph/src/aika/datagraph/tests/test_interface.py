@@ -3,7 +3,7 @@ The tests here should be a complete set of interface tests for persistent engine
 any backend
 """
 import multiprocessing
-from typing import Dict, List, Set, TypeVar, Union
+from typing import Dict, List, Set, TypeVar
 
 import mongomock as mongomock
 import pymongo

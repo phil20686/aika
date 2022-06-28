@@ -651,7 +651,7 @@ def test_causal_match_multiindex(
         ),
     ],
 )
-def test_causal_match_multiindex(
+def test_causal_resample_multiindex(
     data,
     data_level,
     index,

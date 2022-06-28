@@ -17,11 +17,11 @@ from aika.time.timestamp import Timestamp
 @pytest.mark.parametrize(
     "calendar",
     [
-        TimeOfDayCalendar(TimeOfDay.from_str(f"15:45")),
-        TimeOfDayCalendar(TimeOfDay.from_str(f"15:45 [Europe/London]")),
-        TimeOfDayCalendar(TimeOfDay.from_str(f"15:45 [America/New_York]")),
+        TimeOfDayCalendar(TimeOfDay.from_str("15:45")),
+        TimeOfDayCalendar(TimeOfDay.from_str("15:45 [Europe/London]")),
+        TimeOfDayCalendar(TimeOfDay.from_str("15:45 [America/New_York]")),
         TimeOfDayCalendar(
-            TimeOfDay.from_str(f"15:45 [Europe/London]"),
+            TimeOfDay.from_str("15:45 [Europe/London]"),
             weekdays=(Weekdays.MON, Weekdays.THU),
         ),
         OffsetCalendar("5MIN"),
@@ -29,8 +29,8 @@ from aika.time.timestamp import Timestamp
         OffsetCalendar(Hour()),
         UnionCalendar(
             {
-                TimeOfDayCalendar(TimeOfDay.from_str(f"15:47 [Europe/London]")),
-                TimeOfDayCalendar(TimeOfDay.from_str(f"15:47 [America/New_York]")),
+                TimeOfDayCalendar(TimeOfDay.from_str("15:47 [Europe/London]")),
+                TimeOfDayCalendar(TimeOfDay.from_str("15:47 [America/New_York]")),
                 OffsetCalendar("5MIN"),
             }
         ),
@@ -117,34 +117,34 @@ _timezones = [
             for timestamp, expect in [
                 #
                 (
-                    pd.Timestamp(f"2022-04-28 15:46", tz=tz),  # Thursday
-                    pd.Timestamp(f"2022-04-23 15:45", tz=tz),  # Saturday
+                    pd.Timestamp("2022-04-28 15:46", tz=tz),  # Thursday
+                    pd.Timestamp("2022-04-23 15:45", tz=tz),  # Saturday
                 ),
                 (
-                    pd.Timestamp(f"2022-04-29 15:44", tz=tz),  # Friday, before time
-                    pd.Timestamp(f"2022-04-23 15:45", tz=tz),  # Saturday
+                    pd.Timestamp("2022-04-29 15:44", tz=tz),  # Friday, before time
+                    pd.Timestamp("2022-04-23 15:45", tz=tz),  # Saturday
                 ),
                 (
-                    pd.Timestamp(f"2022-04-29 15:46", tz=tz),  # Friday, after time
-                    pd.Timestamp(f"2022-04-29 15:45", tz=tz),  # Friday
+                    pd.Timestamp("2022-04-29 15:46", tz=tz),  # Friday, after time
+                    pd.Timestamp("2022-04-29 15:45", tz=tz),  # Friday
                 ),
                 (
-                    pd.Timestamp(f"2022-04-30 15:44", tz=tz),  # Saturday, before time
-                    pd.Timestamp(f"2022-04-29 15:45", tz=tz),  # Friday
+                    pd.Timestamp("2022-04-30 15:44", tz=tz),  # Saturday, before time
+                    pd.Timestamp("2022-04-29 15:45", tz=tz),  # Friday
                 ),
                 (
                     pd.Timestamp(
-                        f"2022-04-30 15:46", tz=tz
+                        "2022-04-30 15:46", tz=tz
                     ),  # Saturday, after specified time
-                    pd.Timestamp(f"2022-04-30 15:45", tz=tz),  # Saturday
+                    pd.Timestamp("2022-04-30 15:45", tz=tz),  # Saturday
                 ),
                 (
-                    pd.Timestamp(f"2022-05-01 15:46", tz=tz),  # Sunday
-                    pd.Timestamp(f"2022-04-30 15:45", tz=tz),  # Saturday
+                    pd.Timestamp("2022-05-01 15:46", tz=tz),  # Sunday
+                    pd.Timestamp("2022-04-30 15:45", tz=tz),  # Saturday
                 ),
                 (
-                    pd.Timestamp(f"2022-05-02 15:46", tz=tz),  # Monday
-                    pd.Timestamp(f"2022-04-30 15:45", tz=tz),  # Saturday
+                    pd.Timestamp("2022-05-02 15:46", tz=tz),  # Monday
+                    pd.Timestamp("2022-04-30 15:45", tz=tz),  # Saturday
                 ),
             ]
         ],
@@ -153,11 +153,11 @@ _timezones = [
                 UnionCalendar(
                     {
                         TimeOfDayCalendar(
-                            TimeOfDay.from_str(f"15:45 [Europe/London]"),
+                            TimeOfDay.from_str("15:45 [Europe/London]"),
                             weekdays=[Weekdays.FRI],
                         ),
-                        TimeOfDayCalendar(TimeOfDay.from_str(f"09:20 [UTC]")),
-                        TimeOfDayCalendar(TimeOfDay.from_str(f"09:30 [UTC]")),
+                        TimeOfDayCalendar(TimeOfDay.from_str("09:20 [UTC]")),
+                        TimeOfDayCalendar(TimeOfDay.from_str("09:30 [UTC]")),
                     }
                 ),
                 timestamp,
