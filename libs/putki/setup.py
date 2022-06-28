@@ -12,13 +12,13 @@ def get_requirements(path: Path):
 
 
 setup(
-    name="aika-dux",
+    name="aika-putki",
     setup_requires=["setuptools_scm"],
     use_scm_version=dict(
         root="../..",
         relative_to=__file__,
         write_to_template='__version__ = "{version}"',
-        write_to=parent_dir / "src/aika/dux/_version.py",
+        write_to=parent_dir / "src/aika/putki/_version.py",
     ),
     packages=find_namespace_packages("src", include=["aika.*"]),
     package_dir={"": "src"},

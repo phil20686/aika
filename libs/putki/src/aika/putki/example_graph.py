@@ -2,16 +2,16 @@ from pprint import pprint
 
 import pandas as pd
 
-from aika import dux
+from aika import putki
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from aika.time.calendars import TimeOfDayCalendar
 from aika.time.time_of_day import TimeOfDay
 from aika.time.time_range import TimeRange
 
-from aika.dux import CalendarChecker
-from aika.dux.context import Defaults, GraphContext
-from aika.dux.graph import Graph, TaskModule
-from aika.dux.runners import LocalRunner
+from aika.putki import CalendarChecker
+from aika.putki.context import Defaults, GraphContext
+from aika.putki.graph import Graph, TaskModule
+from aika.putki.runners import LocalRunner
 
 
 def generate_index(time_range: TimeRange, time_of_day: TimeOfDay):
@@ -70,7 +70,7 @@ class AllTasks(TaskModule):
 
 
 defaults = Defaults(
-    version=dux.__version__,
+    version=putki.__version__,
     persistence_engine=HashBackedPersistanceEngine(),
     time_range=TimeRange("2021", "2022"),
 )

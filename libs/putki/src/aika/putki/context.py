@@ -9,10 +9,10 @@ from frozendict import frozendict
 from aika.datagraph.interface import IPersistenceEngine
 from aika.time.time_range import TimeRange
 
-from aika.dux import ICompletionChecker
-from aika.dux.completion_checking import infer_inherited_completion_checker
-from aika.dux.interface import Dependency, ITask
-from aika.dux.task import StaticFunctionWrapper, TimeSeriesFunctionWrapper
+from aika.putki import ICompletionChecker
+from aika.putki.completion_checking import infer_inherited_completion_checker
+from aika.putki.interface import Dependency, ITask
+from aika.putki.task import StaticFunctionWrapper, TimeSeriesFunctionWrapper
 
 
 @attr.s(frozen=True, auto_attribs=True)
