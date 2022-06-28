@@ -8,3 +8,4 @@ libs/*/build/
 wheels/
 packages.in
 notebooks/scrapbooks
+.ipynb_checkpoints/

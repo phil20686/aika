@@ -29,7 +29,19 @@ from aika.time.timestamp import Timestamp
             pd.Timestamp(year=2016, month=6, day=3, hour=12, tz="America/New_York"),
             pd.Timestamp(year=2016, month=6, day=3, hour=12, tz="America/New_York"),
         ),
+        (
+            # Test microsecond second resolution
+            "2020-01-01T12:00:00.000001",
+            pd.Timestamp(year=2020, month=1, day=1, hour=12, microsecond=1, tz="UTC"),
+        ),
+        (
+            # Test nanosecond second resolution
+            "2020-01-01T12:00:00.000000001",
+            pd.Timestamp(year=2020, month=1, day=1, hour=12, nanosecond=1, tz="UTC"),
+        ),
     ],
 )
 def test_timestamp_constructor(ts, expect):
+    print(Timestamp(ts))
+    print(expect)
     assert_call(Timestamp, expect, ts)

@@ -6,6 +6,7 @@ import multiprocessing
 from typing import Dict, List, Set, TypeVar
 
 import mongomock as mongomock
+import pandas as pd
 import pymongo
 import pytest
 
@@ -20,6 +21,7 @@ from aika.datagraph.tests.persistence_tests import (
     error_condition_tests,
     find_successors_tests,
     merge_tests,
+    param_fidelity_tests,
 )
 
 
@@ -163,3 +165,25 @@ def test_error_conditions(
         func_kwargs["metadata"] = func_kwargs["metadata"].replace_engine(engine)
     func = getattr(engine, func_name)
     assert_call(func, expect, **func_kwargs)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize("input_params, output_params", param_fidelity_tests)
+def test_parameter_fidelity(input_params, output_params, engine_generator):
+    engine = engine_generator()
+    metadata = DataSetMetadata(
+        name="test", static=True, predecessors={}, engine=engine, params=input_params
+    )
+    # assert making a dataset gets the expected result.
+    assert_equal(metadata.params, output_params)
+    assert_equal(hash(metadata.params), hash(output_params))
+
+    # assert that data with this params can be written
+    metadata.idempotent_insert(
+        None,
+        pd.DataFrame(1.0, columns=list("ABC"), index=range(10)),
+    )
+    # and then recovered
+    new_dataset = metadata.get_dataset(None)
+    assert_equal(new_dataset.metadata.params, output_params)
+    assert_equal(hash(new_dataset.metadata.params), hash(output_params))

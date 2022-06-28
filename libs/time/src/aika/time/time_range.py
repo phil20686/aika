@@ -1,3 +1,4 @@
+import re
 import typing as t
 
 import attr
@@ -35,8 +36,10 @@ class TimeRange:
             end = pd.Timestamp.max.tz_localize("UTC")
         else:
             end = Timestamp(end)
-        if start > end:
-            raise ValueError("The start time must be before the end time")
+        if start >= end:
+            raise ValueError(
+                f"The start time {start} must be before the end time {end}"
+            )
 
         object.__setattr__(self, "start", start)
         object.__setattr__(self, "end", end)
@@ -57,7 +60,7 @@ class TimeRange:
         A view of the pandas object constrained to the given time range.
         """
         if isinstance(tensor, pd.Index):
-            return self.view(tensor.to_series()).index
+            return self.view(tensor.to_series(), level=level).index
 
         index = tensor.index
 
@@ -67,12 +70,12 @@ class TimeRange:
                 raise ValueError("Must specify `level` if tensor is multi-indexed.")
 
             level_values = index.get_level_values(level)
-            mask = (self.start > level_values) & (level_values <= self.end)
+            mask = (self.start <= level_values) & (level_values < self.end)
             return tensor.loc[mask]
 
         else:
 
-            start, end = np.searchsorted(index, [self.start, self.end], side="right")
+            start, end = np.searchsorted(index, [self.start, self.end], side="left")
 
             return tensor.iloc[start:end]
 
@@ -80,12 +83,18 @@ class TimeRange:
     def from_pandas(tensor: IndexTensor, level=None):
         index = tensor if isinstance(tensor, pd.Index) else tensor.index
         values = index.get_level_values(level)
-        return TimeRange(values[0] - RESOLUTION, values[-1])
+        if values.empty:
+            return TimeRange(pd.NaT, pd.NaT)
+        else:
+            return TimeRange(values[0], values[-1] + RESOLUTION)
 
     def intersects(self, other: "TimeRange") -> bool:
-        return (self.start <= other.start < self.end) or (
-            other.start <= self.start < other.end
-        )
+        if self.start <= other.start < self.end:
+            return True
+        elif other.start <= self.start < other.end:
+            return True
+        else:
+            return False
 
     def contains(self, other: "TimeRange") -> bool:
         """
@@ -126,13 +135,5 @@ class TimeRange:
 
     @classmethod
     def _timestamp_repr(cls, ts: pd.Timestamp):
-        # TODO : Really this belongs on the timestamp class.
-
-        seconds = ts.second + ts.microsecond / 1e6 + ts.nanosecond / 1e9
-        if seconds < 10.0:
-            seconds_repr = f"0{seconds}"
-        else:
-            seconds_repr = str(seconds)
-        # this works because we are guaranteed olson timezones.
-        str_format = "'%Y-%m-%dT%H:%M:{seconds} [{tz}]'"
-        return ts.strftime(str_format).format(seconds=seconds_repr, tz=ts.tz)
+        string_repr = "-".join(re.split(r"\+|\-", ts.isoformat())[:-1])
+        return f"'{string_repr} [{ts.tz}]'"
