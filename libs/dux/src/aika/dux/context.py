@@ -6,13 +6,13 @@ import attr
 import pandas as pd
 from frozendict import frozendict
 
+from aika.datagraph.interface import IPersistenceEngine
+from aika.time.time_range import TimeRange
+
 from aika.dux import ICompletionChecker
 from aika.dux.completion_checking import infer_inherited_completion_checker
 from aika.dux.interface import Dependency, ITask
 from aika.dux.task import StaticFunctionWrapper, TimeSeriesFunctionWrapper
-from aika.time.time_range import TimeRange
-
-from aika.datagraph.interface import IPersistenceEngine
 
 
 @attr.s(frozen=True, auto_attribs=True)
@@ -158,7 +158,6 @@ class GraphContext:
         }
 
         sig.bind(**scalar_kwargs, **dependencies)
-
         return task_cls(
             namespace=self.namespace,
             function=function,

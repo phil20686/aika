@@ -5,10 +5,9 @@ import attr
 import pandas as pd
 from pandas._libs.tslibs import BaseOffset
 
+from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
 from aika.time.time_range import TimeRange
 from aika.utilities.abstract import abstract_attribute
-
-from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
 
 TaskType = t.TypeVar("TaskType", bound="ITask")
 

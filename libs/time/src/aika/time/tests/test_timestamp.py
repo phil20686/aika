@@ -1,8 +1,9 @@
 import pandas as pd
 import pytest
 
-from aika.time.timestamp import Timestamp
 from aika.utilities.testing import assert_call
+
+from aika.time.timestamp import Timestamp
 
 
 @pytest.mark.parametrize(

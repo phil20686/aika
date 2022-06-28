@@ -2,11 +2,11 @@ import typing as t
 
 import attr
 
-from aika.dux.interface import Dependency, ICompletionChecker, ITimeSeriesTask
+from aika.datagraph.interface import DataSetMetadata
 from aika.time.calendars import ICalendar, UnionCalendar
 from aika.time.time_range import TimeRange
 
-from aika.datagraph.interface import DataSetMetadata
+from aika.dux.interface import Dependency, ICompletionChecker, ITimeSeriesTask
 
 
 @attr.s(frozen=True)
