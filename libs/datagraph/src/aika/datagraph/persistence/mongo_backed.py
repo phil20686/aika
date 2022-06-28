@@ -2,7 +2,6 @@ import pickle
 import typing as t
 
 import pymongo
-from bson.objectid import ObjectId
 from frozendict._frozendict import frozendict
 
 from aika.time.time_range import TimeRange

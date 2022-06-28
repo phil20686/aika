@@ -49,7 +49,7 @@ class DataSetMetadata:
         params: t.Dict[str, t.Any],
         predecessors: t.Dict[str, "DataSetMetadata"],
         time_level: t.Optional[t.Union[int, str]] = None,
-        engine: t.Optional["iPersitenceEngine"] = None,
+        engine: t.Optional["IPersistenceEngine"] = None,
     ):
         self._name = name
         self._static = static
@@ -98,7 +98,7 @@ class DataSetMetadata:
         return self._time_level
 
     @property
-    def engine(self) -> "iPersistenceEngine":
+    def engine(self) -> "IPersistenceEngine":
         return self._engine
 
     @property
@@ -197,7 +197,7 @@ class DatasetMetadataStub(DataSetMetadata):
         params: t.Dict[str, t.Any],
         hash: int,
         time_level: t.Optional[t.Union[int, str]] = None,
-        engine: t.Optional["iPersitenceEngine"] = None,
+        engine: t.Optional["IPersistenceEngine"] = None,
     ):
         self._name = name
         self._static = static
