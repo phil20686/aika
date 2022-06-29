@@ -54,8 +54,9 @@ class DataSetMetadata:
         self._name = name
         self._static = static
         self._engine = engine
+        if static and time_level is not None:
+            raise ValueError("Cannot specify a time level on static data")
         self._time_level = time_level
-        # self._params = frozendict({k: params[k] for k in sorted(params)})
         self._params = normalize_parameters(params)
         self._predecessors = frozendict(
             {k: predecessors[k] for k in sorted(predecessors)}
@@ -268,7 +269,9 @@ class DataSet:
     def validate_declared_time_range(self, attribute, value):
         if self.metadata.static:
             if value is not None:
-                raise ValueError(f"{attribute} must be None for static data")
+                raise ValueError(f"{attribute.name} must be None for static data")
+        elif value is None:
+            raise ValueError("Must declare a time range for non-static dataset.")
         else:
             if not value.contains(self.data_time_range):
                 raise ValueError(

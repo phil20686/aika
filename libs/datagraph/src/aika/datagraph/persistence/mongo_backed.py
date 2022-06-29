@@ -51,7 +51,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
                 )
             )
         else:
-            return NotImplemented
+            return NotImplemented  # pragma: no cover
 
     @classmethod
     def _create_engine(cls, d: t.Dict[str, t.Any]):
@@ -139,7 +139,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
                 meta_data.name, meta_data.__hash__(), include_data=include_data
             )
         else:
-            raise NotImplementedError
+            raise NotImplementedError  # pragma: no cover
 
     def _find_record_from_hash(self, name, hash, include_data=False):
         return self._collection.find_one(
@@ -279,7 +279,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
                 )
                 return True
             else:
-                raise NotImplementedError
+                raise NotImplementedError  # pragma: no cover
 
     def delete(self, metadata: DataSetMetadata, recursive=False):
         if recursive:

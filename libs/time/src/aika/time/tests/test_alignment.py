@@ -36,6 +36,13 @@ class AikaIndex:
     "data, index, contemp, fill_limit, expected",
     [
         (
+            pd.Series(range(10), index=PdIndex.date_index, dtype=float),
+            pd.DatetimeIndex([], name="time"),
+            True,
+            None,
+            pd.Series(None, index=pd.DatetimeIndex([], name="time"), dtype=float),
+        ),
+        (
             pd.Series(
                 range(10),
                 index=PdIndex.date_index,
@@ -311,6 +318,12 @@ def test_causal_match_single_index(data, index, contemp, fill_limit, expected):
                 range(10),
                 index=PdIndex.date_index,
             ),
+        ),
+        (
+            pd.Series(range(10), index=PdIndex.date_index, dtype=float),
+            pd.DatetimeIndex([], name="time"),
+            True,
+            pd.Series(None, index=pd.DatetimeIndex([], name="time"), dtype=float),
         ),
         (
             pd.Series(
@@ -614,6 +627,22 @@ def test_causal_match_multiindex(
 @pytest.mark.parametrize(
     "data, data_level, index, index_level, contemp, expect",
     [
+        (  # index_level must be given if you have a multiindex to align on.
+            pd.Series(range(10), index=PdIndex.date_index),
+            None,
+            pd.MultiIndex.from_product([list("ABC"), PdIndex.date_index]),
+            None,
+            True,
+            ValueError,
+        ),
+        (
+            pd.Series(range(20), index=PdIndex.duplicated_hourly_index),
+            None,
+            pd.MultiIndex.from_product([list("ABC"), PdIndex.date_index]),
+            1,
+            True,
+            ValueError,
+        ),
         (
             pd.Series(range(10), index=PdIndex.date_index),
             None,

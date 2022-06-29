@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from pandas._libs.tslibs.offsets import Hour, Minute
+from pandas.tseries.offsets import Hour, Minute, Week
 
 from aika.time.calendars import (
     ICalendar,
@@ -150,15 +150,19 @@ _timezones = [
         ],
         *[
             (
-                UnionCalendar(
-                    {
+                UnionCalendar.merge(
+                    [
                         TimeOfDayCalendar(
                             TimeOfDay.from_str("15:45 [Europe/London]"),
                             weekdays=[Weekdays.FRI],
                         ),
-                        TimeOfDayCalendar(TimeOfDay.from_str("09:20 [UTC]")),
-                        TimeOfDayCalendar(TimeOfDay.from_str("09:30 [UTC]")),
-                    }
+                        UnionCalendar(
+                            {
+                                TimeOfDayCalendar(TimeOfDay.from_str("09:20 [UTC]")),
+                                TimeOfDayCalendar(TimeOfDay.from_str("09:30 [UTC]")),
+                            }
+                        ),
+                    ]
                 ),
                 timestamp,
                 expect,
@@ -255,3 +259,4 @@ def test_latest_point_before(calendar, timestamp, tz, expect):
     localized_timestamp = timestamp.tz_convert(tz)
     result = calendar.latest_point_before(localized_timestamp)
     assert result == expect
+    assert calendar.to_index(TimeRange(timestamp - Week(), timestamp))[-1] == result
