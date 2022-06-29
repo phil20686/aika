@@ -13,20 +13,20 @@ class _DateLike(Protocol):
     @property
     @abstractmethod
     def day(self) -> int:
-        pass
+        pass  # pragma: no cover
 
     @property
     @abstractmethod
     def month(self) -> int:
-        pass
+        pass  # pragma: no cover
 
     @property
     @abstractmethod
     def year(self) -> int:
-        pass
+        pass  # pragma: no cover
 
 
-def _parse_timezone(tz_or_str: t.Union[datetime.tzinfo, str]):
+def _parse_timezone(tz_or_str: t.Union[datetime.tzinfo, str]) -> datetime.tzinfo:
     if isinstance(tz_or_str, str):
         return pytz.timezone(tz_or_str)
     else:

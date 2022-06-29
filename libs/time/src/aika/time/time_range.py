@@ -8,6 +8,7 @@ import pandas as pd
 from aika.utilities.pandas_utils import IndexTensor
 
 from aika.time.timestamp import Timestamp
+from aika.time.utilities import _get_index_level
 
 RESOLUTION = pd.Timedelta(nanoseconds=1)
 
@@ -81,10 +82,22 @@ class TimeRange:
 
     @staticmethod
     def from_pandas(tensor: IndexTensor, level=None):
-        index = tensor if isinstance(tensor, pd.Index) else tensor.index
-        values = index.get_level_values(level)
+        """
+        Extracts a time range from the index (level) of a given pandas object.
+
+        Notes
+        -----
+
+        Index must be ordered in the given level.
+
+        Returns
+        -------
+        TimeRange: a time range such that the "view" would extract this exact range from
+        a larger dataframe. I.e. the same as a time range (min, max+RESOLUTION).
+        """
+        values = _get_index_level(tensor, level)
         if values.empty:
-            return TimeRange(pd.NaT, pd.NaT)
+            raise ValueError("Cannot extract time range from empty index")
         else:
             return TimeRange(values[0], values[-1] + RESOLUTION)
 
@@ -104,7 +117,7 @@ class TimeRange:
 
     def union(self, other: "TimeRange"):
         if not self.intersects(other):
-            return TimeRange(pd.NaT, pd.NaT)
+            raise ValueError("Cannot union non-intersecting time ranges")
         else:
             return TimeRange(
                 start=min(self.start, other.start), end=max(self.end, other.end)
@@ -112,8 +125,7 @@ class TimeRange:
 
     def intersection(self, other: "TimeRange") -> "TimeRange":
         if not self.intersects(other):
-            return TimeRange(pd.NaT, pd.NaT)
-
+            raise ValueError("Cannot give intersection of non-intersecting time-ranges")
         else:
             return TimeRange(
                 start=max(self.start, other.start), end=min(self.end, other.end)

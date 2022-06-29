@@ -29,31 +29,31 @@ def assert_equal(value, expect, **kwargs):
         assert value == expect
 
 
+def _is_exception_type(expect):
+    return isinstance(expect, type) and issubclass(expect, Exception)
+
+
+def _is_exception_instance(expect):
+    return isinstance(expect, Exception)
+
+
 def assert_or_raise(func, expect, *args, **kwargs):
     """
     Calls func(*args, **kwargs) and asserts that you get the expected error. If no error is specified,
     returns the value of func(*args, **kwargs)
     """
-    if isinstance(expect, type) and issubclass(expect, Exception):
+    if _is_exception_type(expect):
         with pytest.raises(expect):
             func(*args, **kwargs)
-    elif isinstance(expect, Exception):
-        with pytest.raises(expect, match=str(expect)):
+    elif _is_exception_instance(expect):
+        with pytest.raises(type(expect), match=str(expect)):
             func(*args, **kwargs)
     else:
         return func(*args, **kwargs)
 
 
 def assert_call(func, expect, *args, test_kwargs: Optional[Dict] = None, **kwargs):
-    if isinstance(expect, type) and issubclass(expect, Exception):
-        with pytest.raises(expect):
-            func(*args, **kwargs)
-    elif isinstance(expect, Exception):
-        with pytest.raises(type(expect), match=str(expect)):
-            func(*args, **kwargs)
-    else:
-        if test_kwargs is None:
-            test_kwargs = {}
-        val = func(*args, **kwargs)
-        assert_equal(val, expect, **test_kwargs)
-        return val
+    val = assert_or_raise(func, expect, *args, **kwargs)
+    if not (_is_exception_type(expect) or _is_exception_instance(expect)):
+        assert_equal(val, expect, **(test_kwargs or {}))
+    return val

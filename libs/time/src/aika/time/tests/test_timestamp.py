@@ -39,9 +39,12 @@ from aika.time.timestamp import Timestamp
             "2020-01-01T12:00:00.000000001",
             pd.Timestamp(year=2020, month=1, day=1, hour=12, nanosecond=1, tz="UTC"),
         ),
+        (
+            # test error condition,
+            1235,
+            ValueError("Input not recognised"),
+        ),
     ],
 )
 def test_timestamp_constructor(ts, expect):
-    print(Timestamp(ts))
-    print(expect)
     assert_call(Timestamp, expect, ts)

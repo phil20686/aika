@@ -201,6 +201,69 @@ def test_view(
     assert_equal(result, expect, **assert_equal_kwargs)
 
 
+@pytest.mark.parametrize(
+    "tr, tensor, level, expect",
+    [
+        (
+            TimeRange("2000-01-01 00:00", "2000-01-04 00:00"),
+            pd.Series(
+                1.0,
+                index=pd.MultiIndex.from_product(
+                    [
+                        list("ABC"),
+                        pd.date_range(
+                            start="1999-12-20 12:00",
+                            end="2000-01-05",
+                            freq="D",
+                            tz="UTC",
+                        ),
+                    ],
+                    names=("foo", "time_index"),
+                ),
+            ),
+            "time_index",
+            pd.Series(
+                1.0,
+                index=pd.MultiIndex.from_product(
+                    [
+                        list("ABC"),
+                        pd.date_range(
+                            start="2000-01-01 12:00",
+                            end="2000-01-04 00:00",
+                            freq="D",
+                            tz="UTC",
+                        ),
+                    ],
+                    names=("foo", "time_index"),
+                ),
+            ),
+        ),
+        (
+            TimeRange("2000-01-01 00:00", "2000-01-04 00:00"),
+            pd.Series(
+                1.0,
+                index=pd.MultiIndex.from_product(
+                    [
+                        list("ABC"),
+                        pd.date_range(
+                            start="1999-12-20 12:00",
+                            end="2000-01-05",
+                            freq="D",
+                            tz="UTC",
+                        ),
+                    ],
+                    names=("foo", "time_index"),
+                ),
+            ),
+            None,
+            ValueError("Must specify `level` if tensor is multi-indexed."),
+        ),
+    ],
+)
+def test_view_error(tr, tensor, level, expect):
+    assert_call(tr.view, expect, tensor, level)
+
+
 base = TimeRange("2000-01-01 00:00", "2000-01-02 00:00")
 strict_subset = TimeRange("2000-01-01 10:00", "2000-01-01 12:00")
 prefix = TimeRange(base.start, strict_subset.end)
@@ -249,8 +312,8 @@ def test_contains(first, second, expect):
     ],
 )
 def test_intersects(first, second, expect):
-    assert first.intersects(second) == expect
-    assert second.intersects(first) == expect
+    assert_call(first.intersects, expect, second)
+    assert_call(second.intersects, expect, first)
 
 
 @pytest.mark.parametrize(
@@ -263,3 +326,66 @@ def test_intersects(first, second, expect):
 )
 def test_in(time_range, ts, expect):
     assert (ts in time_range) == expect
+
+
+@pytest.mark.parametrize(
+    "index_tensor, level, expect",
+    [
+        (
+            pd.DataFrame(),
+            None,
+            ValueError("Cannot extract time range from empty index"),
+        ),
+        (
+            timestamp_index(start="2012-01-01 00:00", freq="H", periods=10),
+            None,
+            TimeRange("2012-01-01 00:00", "2012-01-01 09:00:00.000000001"),
+        ),
+    ],
+)
+def test_from_pandas(index_tensor: IndexTensor, level, expect):
+    assert_call(TimeRange.from_pandas, expect, index_tensor, level)
+
+
+@pytest.mark.parametrize(
+    "first, second, expect",
+    [
+        (base, strict_subset, base),
+        (base, disjoint, ValueError("Cannot union non-intersecting time ranges")),
+        (base, superset, superset),
+        (base, overlaps_start, TimeRange(overlaps_start.start, base.end)),
+        (base, overlaps_end, TimeRange(base.start, overlaps_end.end)),
+    ],
+)
+def test_union(first, second, expect):
+    assert_call(
+        first.union,
+        expect,
+        second,
+    )
+    # because union is symmetric
+    assert_call(second.union, expect, first)
+
+
+@pytest.mark.parametrize(
+    "first, second, expect",
+    [
+        (base, strict_subset, strict_subset),
+        (
+            base,
+            disjoint,
+            ValueError("Cannot give intersection of non-intersecting time-ranges"),
+        ),
+        (base, superset, base),
+        (base, overlaps_start, TimeRange(base.start, overlaps_start.end)),
+        (base, overlaps_end, TimeRange(overlaps_end.start, base.end)),
+    ],
+)
+def test_intersection(first, second, expect):
+    assert_call(
+        first.intersection,
+        expect,
+        second,
+    )
+    # because union is symmetric
+    assert_call(second.intersection, expect, first)

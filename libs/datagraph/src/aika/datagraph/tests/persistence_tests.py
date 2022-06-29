@@ -109,6 +109,13 @@ append_tests = [
     (
         [
             leaf1,
+            leaf1,
+        ],
+        {leaf1},
+    ),
+    (
+        [
+            leaf1,
             leaf2,
             child,
         ],
@@ -210,6 +217,7 @@ deletion_tests = [
 error_condition_tests = [
     ([], "get_predecessors_from_hash", {"name": "foo", "hash": 1}, ValueError),
     ([], "get_dataset", {"metadata": leaf1.metadata}, None),
+    ([leaf2], "get_dataset", {"metadata": leaf1.metadata}, None),
     ([], "get_dataset", {"metadata": static_leaf1.metadata}, None),
     ([], "append", {"dataset": static_leaf1}, ValueError("Can only append for")),
     ([], "merge", {"dataset": static_leaf1}, ValueError("Can only merge for")),
@@ -270,4 +278,25 @@ param_fidelity_tests = [
         {"foo": {"bar": [1, 2, [3, 4]]}},
         frozendict({"foo": frozendict({"bar": (1, 2, (3, 4))})}),
     ),
+]
+
+# datasets to insert
+# metadata to get
+# time range
+# expected data
+get_dataset_tests = [
+    ([leaf1], leaf1.metadata, None, leaf1.data),
+    (
+        [leaf1],
+        leaf1.metadata,
+        TimeRange("2021-01-03 12:00", None),
+        leaf1.data.loc["2021-01-04":],
+    ),
+]
+
+# datasets to insert
+# expected
+idempotent_insert_tests = [
+    ([leaf1, leaf1_extended], {leaf1}),
+    ([leaf1, leaf2, child, leaf1_extended], {leaf1, leaf2, child}),
 ]

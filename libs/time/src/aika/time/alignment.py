@@ -8,25 +8,7 @@ import pandas as pd
 
 from aika.utilities.pandas_utils import IndexTensor, Level, Tensor
 
-
-def _get_index(index_tensor: IndexTensor) -> pd.Index:
-    """
-    Just a unified api equivalent to pd.DataFrame.index except that it also works when given an index object directly.
-    """
-    if hasattr(index_tensor, "index"):
-        return index_tensor.index
-    else:
-        return index_tensor
-
-
-def _get_index_level(index_tensor: IndexTensor, level: Optional[Level] = None):
-    """
-    Unified API to the level values of an index that works on all kinds of pandas objects
-    """
-    index = _get_index(index_tensor)
-    if index.nlevels > 1 and level is None:
-        raise ValueError("A level must be given if passed a multi index")
-    return index.get_level_values(0 if level is None else level)
+from aika.time.utilities import _get_index, _get_index_level
 
 
 def _reindex_by_level(tensor: Tensor, level: Optional[Level]) -> Tensor:
@@ -164,10 +146,14 @@ def causal_resample(
     -------
     IndexTensor : The data object reindexed to have the same index as `index`
     """
+    target_index = _get_index_level(index, index_level)
+    if target_index.empty:
+        # returns an empty version of the tensor with indexes preserved.
+        result = data.iloc[:0]
+        result.index = target_index
+        return result
 
     data = _reindex_by_level(data, data_level)
-
-    target_index = _get_index_level(index, index_level)
     unique_target_index = target_index.drop_duplicates()
     data = _shorten_data(data, contemp, unique_target_index[-1])
 

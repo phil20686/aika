@@ -26,6 +26,8 @@ from aika.datagraph.tests.persistence_tests import (
     deletion_tests,
     error_condition_tests,
     find_successors_tests,
+    get_dataset_tests,
+    idempotent_insert_tests,
     merge_tests,
     param_fidelity_tests,
     predecessor_from_hash_tests,
@@ -82,11 +84,7 @@ def _replace_engine(
     elif isinstance(datasets, set):
         return set(_replace_engine(engine, list(datasets)))
     else:
-        result = {}
-        for dataset in datasets.values():
-            dataset = dataset.replace_engine(engine, include_predecessors=True)
-            result[dataset.metadata] = dataset
-        return result
+        raise ValueError("Cannot replace unrecognised type")  # pragma: no cover
 
 
 def _assert_engine_contains_expected(engine, expected):
@@ -312,3 +310,32 @@ def test_parameter_fidelity(input_params, output_params, engine_generator):
     new_dataset = metadata.get_dataset(None)
     assert_equal(new_dataset.metadata.params, output_params)
     assert_equal(hash(new_dataset.metadata.params), hash(output_params))
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize(
+    "datasets, target, time_range, expected_data", get_dataset_tests
+)
+def test_get_dataset(engine_generator, datasets, target, time_range, expected_data):
+    engine = engine_generator()
+    datasets = _replace_engine(engine, datasets)
+    target = target.replace_engine(engine, include_predecessors=True)
+    for dataset in datasets:
+        engine.idempotent_insert(dataset)
+
+    result = engine.get_dataset(target, time_range)
+    assert_equal(target, result.metadata)
+    assert_equal(result.data, expected_data)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize("datasets, expected", idempotent_insert_tests)
+def test_idempotent_insert(engine_generator, datasets, expected):
+    engine = engine_generator()
+    expected = _replace_engine(engine, expected)
+    datasets = _replace_engine(engine, datasets)
+
+    for dataset in datasets:
+        engine.idempotent_insert(dataset)
+
+    _assert_engine_contains_expected(engine, expected)
