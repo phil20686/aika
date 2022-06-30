@@ -41,6 +41,10 @@ class IrregularChecker(ICompletionChecker):
             return False
 
         declared_time_range = metadata.get_declared_time_range()
+        if not declared_time_range.intersects(target_time_range):
+            raise ValueError(
+                "Increments should not be run with non-overlapping time ranges."
+            )
         return declared_time_range.end >= target_time_range.end
 
 
@@ -80,14 +84,14 @@ def infer_inherited_completion_checker(dependencies: t.Mapping[str, Dependency])
         (result,) = completion_checkers.values()
         return result
 
-    elif all(isinstance(cc, CalendarChecker) for cc in completion_checkers):
+    elif all(isinstance(cc, CalendarChecker) for cc in completion_checkers.values()):
         completion_checkers: t.Dict[str, CalendarChecker]
         calendar = UnionCalendar.merge(
             [cc.calendar for cc in completion_checkers.values()]
         )
         return CalendarChecker(calendar)
 
-    elif all(isinstance(cc, IrregularChecker) for cc in completion_checkers):
+    elif all(isinstance(cc, IrregularChecker) for cc in completion_checkers.values()):
         # note that this branch is technically redundant since IrregularChecker()
         # is a singleton and hence this case will always be covered by the len == 1
         # branch.

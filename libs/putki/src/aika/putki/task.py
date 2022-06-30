@@ -73,12 +73,6 @@ class FunctionWrapperMixin(ITask, ABC):
     scalar_kwargs: frozendict[str, t.Any] = abstract_attribute()
     dependencies: frozendict[str, Dependency] = abstract_attribute()
 
-    def run(self):
-        data_kwargs = self.get_data_kwargs()
-        func_kwargs = self.scalar_kwargs | data_kwargs
-        result = self.function(**func_kwargs)
-        self.write_data(result)
-
     @abstractmethod
     def get_data_kwargs(self) -> t.Dict[str, t.Any]:
         pass
@@ -117,6 +111,14 @@ class TimeSeriesFunctionWrapper(FunctionWrapperMixin, TimeSeriesTaskBase):
     def __attrs_post_init__(self):
         self.validate()
 
+    def run(self):
+        data_kwargs = self.get_data_kwargs()
+        func_kwargs = self.scalar_kwargs | data_kwargs
+        result = self.function(**func_kwargs)
+        # a time series task should never write data outside of the targeted
+        # time range.
+        self.write_data(self.time_range.view(result, level=self.time_level))
+
     @cached_property
     def io_params(self):
         return frozendict(
@@ -150,6 +152,12 @@ class StaticFunctionWrapper(FunctionWrapperMixin, StaticTaskBase):
 
     def __attrs_post_init__(self):
         self.validate()
+
+    def run(self):
+        data_kwargs = self.get_data_kwargs()
+        func_kwargs = self.scalar_kwargs | data_kwargs
+        result = self.function(**func_kwargs)
+        self.write_data(result)
 
     @cached_property
     def io_params(self):
