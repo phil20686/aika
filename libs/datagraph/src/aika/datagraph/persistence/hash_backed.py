@@ -1,3 +1,4 @@
+import re
 import typing as t
 from abc import abstractmethod
 
@@ -184,3 +185,12 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             for successor in self.find_successors(metadata):
                 self.delete(successor, recursive=True)
         return self._delete_leaf(metadata)
+
+    def find(self, match: str, version: t.Optional[str] = None):
+        names = []
+        for metadata in self._cache.keys():
+            if re.match(match, metadata.name) and (
+                (version is None) or (version == metadata.version)
+            ):
+                names.append(metadata.name)
+        return list(sorted(names))

@@ -26,6 +26,7 @@ from aika.datagraph.tests.persistence_tests import (
     deletion_tests,
     error_condition_tests,
     find_successors_tests,
+    find_tests,
     get_dataset_tests,
     idempotent_insert_tests,
     merge_tests,
@@ -344,3 +345,15 @@ def test_idempotent_insert(engine_generator, datasets, expected):
         engine.idempotent_insert(dataset)
 
     _assert_engine_contains_expected(engine, expected)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize("datasets, pattern, version, expected", find_tests)
+def test_find(engine_generator, datasets, pattern, version, expected):
+    engine = engine_generator()
+    datasets = _replace_engine(engine, datasets)
+
+    for dataset in datasets:
+        engine.idempotent_insert(dataset)
+
+    assert_call(engine.find, expected, pattern, version=version)
