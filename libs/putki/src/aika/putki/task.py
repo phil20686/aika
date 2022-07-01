@@ -39,6 +39,7 @@ class TimeSeriesTaskBase(ITimeSeriesTask, TaskBase, ABC):
         return DataSetMetadata(
             name=f"{self.namespace}.{self.name}",
             engine=self.persistence_engine,
+            version=self.version,
             static=False,
             params=self.io_params,
             predecessors={
@@ -58,6 +59,7 @@ class StaticTaskBase(IStaticTask, TaskBase, ABC):
             name=f"{self.namespace}.{self.name}",
             engine=self.persistence_engine,
             static=True,
+            version=self.version,
             params=self.io_params,
             predecessors={
                 name: dep.task.output for name, dep in self.dependencies.items()

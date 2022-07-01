@@ -295,7 +295,12 @@ def test_error_conditions(
 def test_parameter_fidelity(input_params, output_params, engine_generator):
     engine = engine_generator()
     metadata = DataSetMetadata(
-        name="test", static=True, predecessors={}, engine=engine, params=input_params
+        name="test",
+        static=True,
+        version="foo",
+        predecessors={},
+        engine=engine,
+        params=input_params,
     )
     # assert making a dataset gets the expected result.
     assert_equal(metadata.params, output_params)
