@@ -72,6 +72,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             "hash": metadata.__hash__(),
             "time_level": metadata.time_level,
             "static": metadata.static,
+            "version": metadata.version,
             "params": metadata.params,
             "engine": metadata.engine.set_state(),
         }
@@ -83,6 +84,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             "time_level": metadata.time_level,
             "static": metadata.static,
             "params": metadata.params,
+            "version": metadata.version,
             "engine": metadata.engine.set_state(),
             "predecessors": [
                 self._serialise_metadata_as_stub(pred) | {"param_name": name}
@@ -102,6 +104,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             name=record["name"],
             static=record["static"],
             params=record["params"],
+            version=record["version"],
             hash=record["hash"],
             time_level=record["time_level"],
             engine=IPersistenceEngine.create_engine(record["engine"]),
@@ -113,6 +116,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             time_level=record["time_level"],
             static=record["static"],
             params=record["params"],
+            version=record["version"],
             predecessors={
                 pred_record["param_name"]: self._deserialise_metadata_as_stub(
                     pred_record

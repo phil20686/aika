@@ -39,6 +39,7 @@ class TimeSeriesTaskBase(ITimeSeriesTask, TaskBase, ABC):
         return DataSetMetadata(
             name=f"{self.namespace}.{self.name}",
             engine=self.persistence_engine,
+            version=self.version,
             static=False,
             params=self.io_params,
             predecessors={
@@ -58,6 +59,7 @@ class StaticTaskBase(IStaticTask, TaskBase, ABC):
             name=f"{self.namespace}.{self.name}",
             engine=self.persistence_engine,
             static=True,
+            version=self.version,
             params=self.io_params,
             predecessors={
                 name: dep.task.output for name, dep in self.dependencies.items()
@@ -72,12 +74,6 @@ class FunctionWrapperMixin(ITask, ABC):
     function: t.Callable[..., t.Any] = abstract_attribute()
     scalar_kwargs: frozendict[str, t.Any] = abstract_attribute()
     dependencies: frozendict[str, Dependency] = abstract_attribute()
-
-    def run(self):
-        data_kwargs = self.get_data_kwargs()
-        func_kwargs = self.scalar_kwargs | data_kwargs
-        result = self.function(**func_kwargs)
-        self.write_data(result)
 
     @abstractmethod
     def get_data_kwargs(self) -> t.Dict[str, t.Any]:
@@ -117,6 +113,14 @@ class TimeSeriesFunctionWrapper(FunctionWrapperMixin, TimeSeriesTaskBase):
     def __attrs_post_init__(self):
         self.validate()
 
+    def run(self):
+        data_kwargs = self.get_data_kwargs()
+        func_kwargs = self.scalar_kwargs | data_kwargs
+        result = self.function(**func_kwargs)
+        # a time series task should never write data outside of the targeted
+        # time range.
+        self.write_data(self.time_range.view(result, level=self.time_level))
+
     @cached_property
     def io_params(self):
         return frozendict(
@@ -150,6 +154,12 @@ class StaticFunctionWrapper(FunctionWrapperMixin, StaticTaskBase):
 
     def __attrs_post_init__(self):
         self.validate()
+
+    def run(self):
+        data_kwargs = self.get_data_kwargs()
+        func_kwargs = self.scalar_kwargs | data_kwargs
+        result = self.function(**func_kwargs)
+        self.write_data(result)
 
     @cached_property
     def io_params(self):

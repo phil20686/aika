@@ -36,6 +36,7 @@ class DataSetMetadata:
             name=self.name,
             static=self.static,
             params=self.params,
+            version=self.version,
             predecessors=predecessors,
             time_level=self.time_level,
             engine=engine,
@@ -46,6 +47,7 @@ class DataSetMetadata:
         *,
         name: str,
         static: bool,
+        version: str,
         params: t.Dict[str, t.Any],
         predecessors: t.Dict[str, "DataSetMetadata"],
         time_level: t.Optional[t.Union[int, str]] = None,
@@ -54,6 +56,7 @@ class DataSetMetadata:
         self._name = name
         self._static = static
         self._engine = engine
+        self._version = version
         if static and time_level is not None:
             raise ValueError("Cannot specify a time level on static data")
         self._time_level = time_level
@@ -68,6 +71,7 @@ class DataSetMetadata:
                 self._name == other.name,
                 self._static == other.static,
                 self._engine == other.engine,
+                self._version == other._version,
                 self._time_level == other.time_level,
                 self._params == other.params,
                 self.__hash__() == other.__hash__(),
@@ -80,6 +84,7 @@ class DataSetMetadata:
                 self._name,
                 self._static,
                 self._time_level,
+                self._version,
                 self._engine,
                 self._params,
             )
@@ -97,6 +102,10 @@ class DataSetMetadata:
     @property
     def time_level(self) -> t.Union[str, int]:
         return self._time_level
+
+    @property
+    def version(self):
+        return self._version
 
     @property
     def engine(self) -> "IPersistenceEngine":
@@ -197,12 +206,14 @@ class DatasetMetadataStub(DataSetMetadata):
         static: bool,
         params: t.Dict[str, t.Any],
         hash: int,
+        version: str,
         time_level: t.Optional[t.Union[int, str]] = None,
         engine: t.Optional["IPersistenceEngine"] = None,
     ):
         self._name = name
         self._static = static
         self._engine = engine
+        self._version = version
         self._time_level = time_level
         self._params = frozendict({k: params[k] for k in sorted(params)})
         self._hash = hash
@@ -227,6 +238,7 @@ class DataSet:
         data: IndexTensor,
         params: t.Dict,
         predecessors: t.Dict,
+        version: str = "no_version",
         static: bool = False,
         time_level: t.Optional[t.Union[str, int]] = None,
         engine=None,
@@ -238,6 +250,7 @@ class DataSet:
                 params=params,
                 predecessors=predecessors,
                 static=static,
+                version=version,
                 time_level=time_level,
                 engine=engine,
             ),

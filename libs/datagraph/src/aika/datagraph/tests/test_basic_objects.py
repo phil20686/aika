@@ -9,11 +9,12 @@ from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 
 
 @pytest.mark.parametrize(
-    "name, static, params, predecessors, time_level, engine, expect",
+    "name, static, version, params, predecessors, time_level, engine, expect",
     [
         (
             "foo",
             True,
+            "test",
             {"bar": 1},
             {},
             "something",
@@ -23,7 +24,7 @@ from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
     ],
 )
 def test_datasetmetadata_constructor(
-    name, static, params, predecessors, time_level, engine, expect
+    name, static, version, params, predecessors, time_level, engine, expect
 ):
     assert_call(
         DataSetMetadata,
@@ -31,6 +32,7 @@ def test_datasetmetadata_constructor(
         name=name,
         static=static,
         params=params,
+        version=version,
         predecessors=predecessors,
         time_level=time_level,
         engine=engine,
@@ -44,6 +46,7 @@ def test_datasetmetadata_constructor(
             DataSetMetadata(
                 name="foo",
                 static=True,
+                version="0.0",
                 params={"bar": 1.0},
                 predecessors={},
                 time_level=None,
@@ -58,6 +61,7 @@ def test_datasetmetadata_constructor(
                 name="foo",
                 static=False,
                 params={"bar": 1.0},
+                version="0.0",
                 predecessors={},
                 time_level=None,
                 engine=HashBackedPersistanceEngine(),
@@ -71,6 +75,7 @@ def test_datasetmetadata_constructor(
                 name="foo",
                 static=False,
                 params={"bar": 1.0},
+                version="0.0",
                 predecessors={},
                 time_level=None,
                 engine=HashBackedPersistanceEngine(),

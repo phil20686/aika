@@ -21,14 +21,14 @@ class ICompletionChecker(ABC):
         pass
 
 
-@attr.s
-class CompleteResult:
-
-    value: bool = attr.ib()
-    reason: t.Optional[str] = attr.ib()
-
-    def __bool__(self):
-        return self.value
+# @attr.s
+# class CompleteResult:
+#
+#     value: bool = attr.ib()
+#     reason: t.Optional[str] = attr.ib()
+#
+#     def __bool__(self):
+#         return self.value
 
 
 @attr.s(frozen=True)

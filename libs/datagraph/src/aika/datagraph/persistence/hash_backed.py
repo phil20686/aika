@@ -42,6 +42,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
                             name=meta.name,
                             time_level=meta.time_level,
                             static=meta.static,
+                            version=meta.version,
                             engine=meta.engine,
                             params=meta.params,
                             hash=meta.__hash__(),
