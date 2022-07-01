@@ -290,3 +290,16 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             for successor in self.find_successors(metadata):
                 self.delete(successor, recursive=True)
         return self._delete_leaf(metadata)
+
+    def find(self, match: str, version: t.Optional[str] = None):
+        search_terms = {"name": {"$regex": match}}
+        if version is not None:
+            search_terms["version"] = version
+        return list(
+            sorted(
+                [
+                    record["name"]
+                    for record in self._collection.find(search_terms, {"name": True})
+                ]
+            )
+        )

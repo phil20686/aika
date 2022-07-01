@@ -300,3 +300,13 @@ idempotent_insert_tests = [
     ([leaf1, leaf1_extended], {leaf1}),
     ([leaf1, leaf2, child, leaf1_extended], {leaf1, leaf2, child}),
 ]
+
+# datasets to insert
+# pattern
+# version
+# expected
+find_tests = [
+    ([leaf1, leaf2, child], "leaf", None, ["leaf1", "leaf2"]),
+    ([leaf1, leaf2, child], ".*", None, ["child", "leaf1", "leaf2"]),
+    ([leaf1, leaf2, child], "leaf", "fake_version", []),
+]

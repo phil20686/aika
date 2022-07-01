@@ -663,3 +663,21 @@ class IPersistenceEngine(ABC):
         set : A list of dataset metadata stubs representing the children at depth one. There may be further
         children.
         """
+
+    @abstractmethod
+    def find(self, match: str, version: t.Optional[str] = None):
+        """
+        This method will find all datasets where the name matches the regex pattern
+        given in match. Optionally ignore names which have no dataset with the given version.
+
+        Parameters
+        ----------
+        match : str
+            A regex patter passed directly to re.match
+        version : str
+            A version string to restrict the results
+
+        Returns
+        -------
+        List[str] :  the names of the data-nodes in this engine.
+        """
