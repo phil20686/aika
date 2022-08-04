@@ -291,7 +291,7 @@ class TestGraphContext:
             completion_checker=CalendarChecker(
                 TimeOfDayCalendar(
                     TimeOfDay.from_str("12:00 [America/New_York]"),
-                    weekdays=BUSINESS_DAYS,
+                    freq=BDay(),
                 ),
             ),
         )

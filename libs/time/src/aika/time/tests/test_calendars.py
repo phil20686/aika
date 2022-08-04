@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from pandas._libs.tslibs.offsets import CDay
 from pandas.tseries.offsets import Hour, Minute, Week
 
 from aika.time.calendars import (
@@ -22,7 +23,7 @@ from aika.time.timestamp import Timestamp
         TimeOfDayCalendar(TimeOfDay.from_str("15:45 [America/New_York]")),
         TimeOfDayCalendar(
             TimeOfDay.from_str("15:45 [Europe/London]"),
-            weekdays=(Weekdays.MON, Weekdays.THU),
+            freq=CDay(weekmask="1001000"),
         ),
         OffsetCalendar("5MIN"),
         OffsetCalendar("1MIN"),
@@ -108,7 +109,7 @@ _timezones = [
             (
                 TimeOfDayCalendar(
                     TimeOfDay.from_str(f"15:45 [{tz}]"),
-                    weekdays=(Weekdays.FRI, Weekdays.SAT),
+                    freq=CDay(weekmask="0000110"),
                 ),
                 timestamp,
                 expect,
@@ -154,7 +155,7 @@ _timezones = [
                     [
                         TimeOfDayCalendar(
                             TimeOfDay.from_str("15:45 [Europe/London]"),
-                            weekdays=[Weekdays.FRI],
+                            freq=CDay(weekmask="0000100"),
                         ),
                         UnionCalendar(
                             {

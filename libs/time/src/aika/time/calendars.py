@@ -4,7 +4,7 @@ from functools import reduce
 
 import attr
 import pandas as pd
-from pandas._libs.tslibs.offsets import Day, Week, to_offset
+from pandas._libs.tslibs.offsets import BDay, Day, Week, to_offset
 
 from aika.time.time_of_day import TimeOfDay
 from aika.time.time_range import RESOLUTION, TimeRange
@@ -51,8 +51,13 @@ BUSINESS_DAYS = (
 @attr.s(frozen=True)
 class TimeOfDayCalendar(ICalendar):
 
+    """
+    This expects data at a particular moment in time on a calendar defined by a pandas
+    dateOffset class, such as `BDay`, `Week`, `CDay` etc.
+    """
+
     time_of_day: TimeOfDay = attr.ib()
-    weekdays: t.Collection[int] = attr.ib(default=BUSINESS_DAYS, converter=frozenset)
+    freq: t.Collection[int] = attr.ib(default=BDay())
 
     def latest_point_before(self, as_of: pd.Timestamp):
 
@@ -62,20 +67,17 @@ class TimeOfDayCalendar(ICalendar):
                 end=as_of,
             )
         )
-
         return last_week[-1]
 
-    def to_index(self, time_range: TimeRange):
+    def _to_date_index(self, time_range):
+        start = time_range.start.tz_convert(self.time_of_day.tz).date() - 2 * self.freq
+        end = time_range.end.tz_convert(self.time_of_day.tz).date() + 2 * self.freq
+        return pd.date_range(start=start, end=end, freq=self.freq)
 
-        start = self.time_of_day.make_timestamp(
-            time_range.start.tz_convert(self.time_of_day.tz)
-        )
-
-        end = time_range.end.tz_convert(self.time_of_day.tz)
-
-        all_times = pd.date_range(start=start, end=end - RESOLUTION, freq=Day())
-
-        return all_times[all_times.weekday.isin(self.weekdays)]
+    def to_index(self, time_range: TimeRange) -> pd.DatetimeIndex:
+        dates = self._to_date_index(time_range)
+        timestamps = [self.time_of_day.make_timestamp(d) for d in dates]
+        return pd.DatetimeIndex([ts for ts in timestamps if ts in time_range])
 
 
 @attr.s(frozen=True)
@@ -106,6 +108,11 @@ class UnionCalendar(ICalendar):
 
 @attr.s(frozen=True)
 class OffsetCalendar(ICalendar):
+
+    """
+    An offset calendar is used when it is expected that at the time when the graph is run
+    there should be at most offset time since the last datapoint.
+    """
 
     offset: pd.offsets.Tick = attr.ib(converter=to_offset)
 

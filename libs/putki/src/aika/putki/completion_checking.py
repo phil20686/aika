@@ -11,6 +11,10 @@ from aika.putki.interface import Dependency, ICompletionChecker, ITimeSeriesTask
 
 @attr.s(frozen=True)
 class CalendarChecker(ICompletionChecker):
+    """
+    Used for checking against a calendar. A calendar is an object that, given a target time range,
+    can yield the last expected index point. See aika.time.calendars for more information.
+    """
 
     calendar: ICalendar = attr.ib()
 
@@ -32,6 +36,12 @@ class CalendarChecker(ICompletionChecker):
 
 @attr.s(frozen=True)
 class IrregularChecker(ICompletionChecker):
+    """
+    Checker that only cares about the target time range that a task has been run for
+    - it ignores the actual data. Useful for data with no known schedule.
+    """
+
+
     def is_complete(
         self,
         metadata: "DataSetMetadata",
