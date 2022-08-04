@@ -119,7 +119,13 @@ class TimeSeriesFunctionWrapper(FunctionWrapperMixin, TimeSeriesTaskBase):
         result = self.function(**func_kwargs)
         # a time series task should never write data outside of the targeted
         # time range.
-        self.write_data(self.time_range.view(result, level=self.time_level))
+        result = self.time_range.view(result, level=self.time_level)
+        self.write_data(result)
+        if not self.complete():
+            raise ValueError(
+                "The task appeared to run successfully and wrote its output, "
+                "but according to its completion checker it is not complete."
+            )
 
     @cached_property
     def io_params(self):

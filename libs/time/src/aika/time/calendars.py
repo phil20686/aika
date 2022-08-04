@@ -51,6 +51,11 @@ BUSINESS_DAYS = (
 @attr.s(frozen=True)
 class TimeOfDayCalendar(ICalendar):
 
+    """
+    This expects data at a particular moment in time on a calendar defined by a pandas
+    dateOffset class, such as `BDay`, `Week`, `CDay` etc.
+    """
+
     time_of_day: TimeOfDay = attr.ib()
     freq: t.Collection[int] = attr.ib(default=BDay())
 
