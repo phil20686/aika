@@ -319,8 +319,8 @@ def test_intersects(first, second, expect):
 @pytest.mark.parametrize(
     "time_range, ts, expect",
     [
-        (base, base.start, False),
-        (base, base.end, True),
+        (base, base.start, True),
+        (base, base.end, False),
         (base, strict_subset.start, True),
     ],
 )

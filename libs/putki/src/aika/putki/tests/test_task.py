@@ -1,4 +1,5 @@
 import pandas as pd
+from pandas._libs.tslibs.offsets import CDay
 
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from aika.time.calendars import TimeOfDayCalendar
@@ -83,7 +84,7 @@ class TestTimeSeriesFunctionWrapper:
             time_range=target_time_range,
             completion_checker=CalendarChecker(
                 TimeOfDayCalendar(
-                    TimeOfDay.from_str("12:00 [UTC]"), weekdays=list(range(7))
+                    TimeOfDay.from_str("12:00 [UTC]"), freq=CDay(weekmask="1111111")
                 )
             ),
             scalar_kwargs={},
@@ -101,7 +102,7 @@ class TestTimeSeriesFunctionWrapper:
             time_range=target_time_range,
             completion_checker=CalendarChecker(
                 TimeOfDayCalendar(
-                    TimeOfDay.from_str("12:00 [UTC]"), weekdays=list(range(7))
+                    TimeOfDay.from_str("12:00 [UTC]"), freq=CDay(weekmask="1111111")
                 )
             ),
             scalar_kwargs={"a": 10.0},
@@ -135,7 +136,7 @@ class TestTimeSeriesFunctionWrapper:
             time_range=first_range,
             completion_checker=CalendarChecker(
                 TimeOfDayCalendar(
-                    TimeOfDay.from_str("12:00 [UTC]"), weekdays=list(range(7))
+                    TimeOfDay.from_str("12:00 [UTC]"), freq=CDay(weekmask="1111111")
                 )
             ),
             scalar_kwargs={},
@@ -153,7 +154,7 @@ class TestTimeSeriesFunctionWrapper:
             time_range=first_range,
             completion_checker=CalendarChecker(
                 TimeOfDayCalendar(
-                    TimeOfDay.from_str("12:00 [UTC]"), weekdays=list(range(7))
+                    TimeOfDay.from_str("12:00 [UTC]"), freq=CDay(weekmask="1111111")
                 )
             ),
             scalar_kwargs={"a": 10.0},
@@ -172,7 +173,7 @@ class TestTimeSeriesFunctionWrapper:
             time_range=second_range,
             completion_checker=CalendarChecker(
                 TimeOfDayCalendar(
-                    TimeOfDay.from_str("12:00 [UTC]"), weekdays=list(range(7))
+                    TimeOfDay.from_str("12:00 [UTC]"), freq=CDay(weekmask="1111111")
                 )
             ),
             scalar_kwargs={},
@@ -190,7 +191,7 @@ class TestTimeSeriesFunctionWrapper:
             time_range=second_range,
             completion_checker=CalendarChecker(
                 TimeOfDayCalendar(
-                    TimeOfDay.from_str("12:00 [UTC]"), weekdays=list(range(7))
+                    TimeOfDay.from_str("12:00 [UTC]"), freq=CDay(weekmask="1111111")
                 )
             ),
             scalar_kwargs={"a": 10.0},

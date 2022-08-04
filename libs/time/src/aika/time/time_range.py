@@ -132,7 +132,7 @@ class TimeRange:
             )
 
     def __contains__(self, item):
-        return self.start < item <= self.end
+        return self.start <= item < self.end
 
     def __repr__(self):
         """

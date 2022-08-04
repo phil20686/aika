@@ -52,7 +52,9 @@ def test_datasetmetadata_constructor(
                 time_level=None,
                 engine=HashBackedPersistanceEngine(),
             ),
-            pd.Series(index=pd.date_range("2020-01-01", freq="D", periods=10)),
+            pd.Series(
+                index=pd.date_range("2020-01-01", freq="D", periods=10), dtype=float
+            ),
             TimeRange("2020-01-01", "2020-01-02"),
             ValueError("declared_time_range must be None for static data"),
         ),
@@ -66,7 +68,9 @@ def test_datasetmetadata_constructor(
                 time_level=None,
                 engine=HashBackedPersistanceEngine(),
             ),
-            pd.Series(index=pd.date_range("2020-01-01", freq="D", periods=10)),
+            pd.Series(
+                index=pd.date_range("2020-01-01", freq="D", periods=10), dtype=float
+            ),
             None,
             ValueError("Must declare a time range"),
         ),
@@ -80,7 +84,9 @@ def test_datasetmetadata_constructor(
                 time_level=None,
                 engine=HashBackedPersistanceEngine(),
             ),
-            pd.Series(index=pd.date_range("2020-01-01", freq="D", periods=10)),
+            pd.Series(
+                index=pd.date_range("2020-01-01", freq="D", periods=10), dtype=float
+            ),
             TimeRange("2020-01-01", "2020-01-02"),
             ValueError("Invalid declared_time_range"),
         ),
