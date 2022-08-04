@@ -29,5 +29,7 @@ setup(
         "aika-utilities",
         "pymongo",
     ],
-    extras_require=dict(test=["pytest", "mongomock"]),
+    extras_require=dict(
+        test=["pytest", "mongomock>=4.1.2"]  # fix for gridfs compatibility.
+    ),
 )

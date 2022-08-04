@@ -5,11 +5,13 @@ any backend
 import multiprocessing
 from typing import Dict, List, Set, TypeVar
 
+import gridfs
 import mongomock as mongomock
 import pandas as pd
 import pymongo
 import pytest
 from frozendict import frozendict
+from mongomock.gridfs import enable_gridfs_integration
 
 from aika.utilities.testing import assert_call, assert_equal
 
@@ -35,15 +37,22 @@ from aika.datagraph.tests.persistence_tests import (
     replace_tests,
 )
 
+enable_gridfs_integration()
+
 
 @mongomock.patch()
 def _mongo_backend_generator():
     database_name = "foo"
     process_local_name = str(id(multiprocessing.current_process()))
+    client = pymongo.MongoClient()
     engine = MongoBackedPersistanceEngine(
-        client=pymongo.MongoClient(),
+        client=client,
         database_name=database_name,
         collection_name=process_local_name,
+        _gridfs=gridfs.GridFS(
+            client.get_database(database_name),
+            collection=f"{process_local_name} + _grid_fs",
+        ),
     )
     engine._client.get_database(database_name).drop_collection(process_local_name)
     return engine
@@ -99,16 +108,26 @@ def _assert_engine_contains_expected(engine, expected):
         assert hash(persisted_dataset.metadata) == hash(expected_dataset.metadata)
         assert_equal(persisted_dataset.data, expected_dataset.data)
         assert_equal(expected_dataset.metadata.read(), expected_dataset.data)
-        assert (
-            persisted_dataset.declared_time_range
-            == expected_dataset.declared_time_range
-            == expected_dataset.metadata.get_declared_time_range()
-        )
-        assert (
-            persisted_dataset.data_time_range
-            == expected_dataset.declared_time_range
-            == expected_dataset.metadata.get_data_time_range()
-        )
+        if persisted_dataset.metadata.static:
+            assert (
+                persisted_dataset.declared_time_range
+                == expected_dataset.declared_time_range
+            )
+            assert (
+                persisted_dataset.data_time_range
+                == expected_dataset.declared_time_range
+            )
+        if not persisted_dataset.metadata.static:
+            assert (
+                persisted_dataset.declared_time_range
+                == expected_dataset.declared_time_range
+                == expected_dataset.metadata.get_declared_time_range()
+            )
+            assert (
+                persisted_dataset.data_time_range
+                == expected_dataset.declared_time_range
+                == expected_dataset.metadata.get_data_time_range()
+            )
 
 
 @pytest.mark.parametrize("engine_generator", engine_generators)
