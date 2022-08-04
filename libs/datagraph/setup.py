@@ -28,6 +28,7 @@ setup(
         "aika-time",
         "aika-utilities",
         "pymongo",
+        "typing_extensions",
     ],
     extras_require=dict(
         test=["pytest", "mongomock>=4.1.2"]  # fix for gridfs compatibility.

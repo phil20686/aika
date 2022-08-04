@@ -92,3 +92,5 @@ tomli==2.0.1
     # via
     #   black
     #   pytest
+typing-extensions==4.3.0
+    # via aika-datagraph
