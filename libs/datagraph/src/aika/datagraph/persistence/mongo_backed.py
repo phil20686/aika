@@ -21,9 +21,16 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
 
     Notes
     -----
-    Throughout we use metadata.__hash__() rather than hash(metadata) since we
+    [1] Throughout we use metadata.__hash__() rather than hash(metadata) since we
     will look in the future to make our hashes extremely unique, and hash() truncates
     the output of __hash__().
+
+    [2] This backend has not been tested with concurrent read/writes to the same datasets.
+    It is likely to fail in that situation. This is relatively unavoidable since gridfs for mongo db
+    does not support transactions as of writing. So there is no way to insure atomic file updates. However,
+    it is the nature of the completion checking logic of the tasks that a dataset should only ever be being
+    written by a single task, and that nothing should attempt to read it until that is marked complete, so
+    this need not block normal envisaged use.
     """
 
     def __init__(
