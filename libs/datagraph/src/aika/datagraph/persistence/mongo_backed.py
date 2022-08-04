@@ -1,6 +1,7 @@
 import pickle
 import typing as t
 
+import gridfs
 import pymongo
 from frozendict._frozendict import frozendict
 
@@ -20,9 +21,16 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
 
     Notes
     -----
-    Throughout we use metadata.__hash__() rather than hash(metadata) since we
+    [1] Throughout we use metadata.__hash__() rather than hash(metadata) since we
     will look in the future to make our hashes extremely unique, and hash() truncates
     the output of __hash__().
+
+    [2] This backend has not been tested with concurrent read/writes to the same datasets.
+    It is likely to fail in that situation. This is relatively unavoidable since gridfs for mongo db
+    does not support transactions as of writing. So there is no way to insure atomic file updates. However,
+    it is the nature of the completion checking logic of the tasks that a dataset should only ever be being
+    written by a single task, and that nothing should attempt to read it until that is marked complete, so
+    this need not block normal envisaged use.
     """
 
     def __init__(
@@ -30,12 +38,19 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         client: pymongo.MongoClient,
         database_name="datagraph",
         collection_name="default",
+        _gridfs=None,  # only to be used during testing.
     ):
         self._client = client
         self._database_name = database_name
         self._collection_name = collection_name
         self._database = self._client.get_database(database_name)
         self._collection = self._database.get_collection(collection_name)
+        if _gridfs is None:
+            self._gridfs = gridfs.GridFS(
+                self._database, collection=collection_name + "_grid_fs"
+            )
+        else:
+            self._gridfs = _gridfs
         self._serialise_mode = "pickle"
         self._hash_equality_sufficient = True
 
@@ -92,9 +107,9 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             ],
         }
 
-    def _serialise_data(self, dataset: DataSet):
+    def _serialise_data_metadata(self, dataset: DataSet):
         return {
-            "data": pickle.dumps(dataset.data),
+            # "data": pickle.dumps(dataset.data),
             "declared_time_range": repr(dataset.declared_time_range),
             "data_time_range": repr(dataset.data_time_range),
         }
@@ -128,7 +143,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         assert metadata.__hash__() == record["hash"]
         return metadata
 
-    def _deserialise_data(self, record: t.Dict, time_range=None):
+    def _deserialise_data_metadata(self, record: t.Mapping, time_range=None):
         data = pickle.loads(record["data"])
         if not record["static"] and time_range is not None:
             data = time_range.view(data, level=record["time_level"])
@@ -137,7 +152,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             "declared_time_range": eval(record["declared_time_range"]),
         }
 
-    def _find_record(self, meta_data, include_data=False):
+    def _find_record(self, meta_data: DataSetMetadata, include_data=False):
         if self._hash_equality_sufficient:
             return self._find_record_from_hash(
                 meta_data.name, meta_data.__hash__(), include_data=include_data
@@ -146,9 +161,12 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             raise NotImplementedError  # pragma: no cover
 
     def _find_record_from_hash(self, name, hash, include_data=False):
-        return self._collection.find_one(
-            {"name": name, "hash": hash}, None if include_data else {"data": False}
-        )
+        record = self._collection.find_one({"name": name, "hash": hash})
+        if include_data and record is not None:
+            record["data"] = self._gridfs.get(file_id=record["_id"]).read(
+                size=-1
+            )  # read it all
+        return record
 
     def get_predecessors_from_hash(
         self, name: str, hash: int
@@ -180,9 +198,10 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             raise ValueError("time_range must be None for static datasets")
         record = self._find_record(metadata, include_data=True)
         if record is not None:
+            data = self._gridfs.get(record["_id"])
             return DataSet(
                 metadata=self._deserialise_meta_data(record),
-                **self._deserialise_data(record, time_range),
+                **self._deserialise_data_metadata(record, time_range),
             )
 
     def read(
@@ -227,19 +246,26 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
     ) -> bool:
         record = self._find_record(dataset.metadata, include_data=False)
         if record is not None:
+            self._gridfs.delete(record["_id"])
+            self._gridfs.put(
+                data=pickle.dumps(dataset.data),
+                _id=record["_id"],
+            )
             self._collection.update_one(
                 filter={
                     "name": dataset.metadata.name,
                     "hash": dataset.metadata.__hash__(),
                 },
-                update={"$set": self._serialise_data(dataset)},
+                update={"$set": self._serialise_data_metadata(dataset)},
             )
             return True
         else:
-            self._collection.insert_one(
-                self._serialise_data(dataset)
+
+            foo = self._collection.insert_one(
+                self._serialise_data_metadata(dataset)
                 | self._serialise_metadata(dataset.metadata)
             )
+            self._gridfs.put(data=pickle.dumps(dataset.data), _id=foo.inserted_id)
             return False
 
     def append(self, dataset):
@@ -278,9 +304,11 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             if len(successors) > 0:
                 raise ValueError("Cannot delete a dataset that still has successors")
             elif self._hash_equality_sufficient:
+                record = self._find_record(metadata, include_data=False)
                 self._collection.delete_one(
                     {"name": metadata.name, "hash": metadata.__hash__()}
                 )
+                self._gridfs.delete(record["_id"])
                 return True
             else:
                 raise NotImplementedError  # pragma: no cover

@@ -94,6 +94,14 @@ static_leaf1 = DataSet.build(
     predecessors={},
 )
 
+extremely_large_static_dataset = DataSet.build(
+    name="extremely_large_data",
+    data=pd.DataFrame(np.random.randn(10000, 10000)),
+    static=True,
+    params={},
+    predecessors={},
+)
+
 # add
 # replace
 # expect
@@ -298,6 +306,7 @@ get_dataset_tests = [
 # expected
 idempotent_insert_tests = [
     ([leaf1, leaf1_extended], {leaf1}),
+    ([extremely_large_static_dataset], {extremely_large_static_dataset}),
     ([leaf1, leaf2, child, leaf1_extended], {leaf1, leaf2, child}),
 ]
 
