@@ -65,8 +65,8 @@ class TimeOfDayCalendar(ICalendar):
         return last_week[-1]
 
     def _to_date_index(self, time_range):
-        start = time_range.start.tz_convert(self.time_of_day.tz).date() - self.freq
-        end = time_range.end.tz_convert(self.time_of_day.tz).date() + self.freq
+        start = time_range.start.tz_convert(self.time_of_day.tz).date() - 2 * self.freq
+        end = time_range.end.tz_convert(self.time_of_day.tz).date() + 2 * self.freq
         return pd.date_range(start=start, end=end, freq=self.freq)
 
     def to_index(self, time_range: TimeRange) -> pd.DatetimeIndex:
