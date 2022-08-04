@@ -13,7 +13,7 @@ do
   cd -
 done
 
-# sed -i "backup" "s/$/[test]/g" packages.in
+sed -i "s/$/[test]/g" packages.in
 
 # now that we have populated `wheels` with wheels for each package, we can point to it
 # with --find-links to ensure that each package can resolve all of its local
