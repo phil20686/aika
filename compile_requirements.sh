@@ -13,7 +13,7 @@ do
   cd -
 done
 
-sed -i "s/$/[test]/g" packages.in
+sed -i '' "s/$/[test]/g" packages.in
 
 # now that we have populated `wheels` with wheels for each package, we can point to it
 # with --find-links to ensure that each package can resolve all of its local
@@ -29,7 +29,7 @@ sed -i "s/$/[test]/g" packages.in
 #  cd -
 #done
 
-pip-compile packages.in -o requirements.txt --find-links ./wheels -q
+pip-compile packages.in -o requirements.txt --find-links ./wheels --upgrade --rebuild -q
 
 # replace all references to the local packages with editable path versions
-sed -i -E "s|^aika-([^=]+)==.*$|-e libs/\1|g" requirements.txt
+sed -i '' -E "s|^aika-([^=]+)==.*$|-e libs/\1|g" requirements.txt
