@@ -29,7 +29,7 @@ sed -i "s/$/[test]/g" packages.in
 #  cd -
 #done
 
-pip-compile packages.in -o requirements.txt --find-links ./wheels -q
+pip-compile packages.in -o requirements.txt --find-links ./wheels --upgrade --rebuild -q
 
 # replace all references to the local packages with editable path versions
 sed -i -E "s|^aika-([^=]+)==.*$|-e libs/\1|g" requirements.txt
