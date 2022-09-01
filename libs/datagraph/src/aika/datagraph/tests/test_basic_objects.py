@@ -1,11 +1,10 @@
 import pandas as pd
 import pytest as pytest
 
-from aika.time.time_range import TimeRange
-from aika.utilities.testing import assert_call
-
 from aika.datagraph.interface import DataSet, DataSetMetadata
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
+from aika.time.time_range import TimeRange
+from aika.utilities.testing import assert_call
 
 
 @pytest.mark.parametrize(

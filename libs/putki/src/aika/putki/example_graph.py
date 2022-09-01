@@ -4,14 +4,13 @@ import pandas as pd
 
 from aika import putki
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
-from aika.time.calendars import TimeOfDayCalendar
-from aika.time.time_of_day import TimeOfDay
-from aika.time.time_range import TimeRange
-
 from aika.putki import CalendarChecker
 from aika.putki.context import Defaults, GraphContext
 from aika.putki.graph import Graph, TaskModule
 from aika.putki.runners import LocalRunner
+from aika.time.calendars import TimeOfDayCalendar
+from aika.time.time_of_day import TimeOfDay
+from aika.time.time_range import TimeRange
 
 
 def generate_index(time_range: TimeRange, time_of_day: TimeOfDay):

@@ -13,8 +13,6 @@ import pytest
 from frozendict import frozendict
 from mongomock.gridfs import enable_gridfs_integration
 
-from aika.utilities.testing import assert_call, assert_equal
-
 from aika.datagraph.interface import (
     DataSet,
     DataSetMetadata,
@@ -36,6 +34,7 @@ from aika.datagraph.tests.persistence_tests import (
     predecessor_from_hash_tests,
     replace_tests,
 )
+from aika.utilities.testing import assert_call, assert_equal
 
 enable_gridfs_integration()
 

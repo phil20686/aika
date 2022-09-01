@@ -5,10 +5,9 @@ import attr
 import pandas as pd
 from frozendict import frozendict
 
+from aika.datagraph.utils import normalize_parameters
 from aika.time.time_range import TimeRange
 from aika.utilities.pandas_utils import IndexTensor, equals
-
-from aika.datagraph.utils import normalize_parameters
 
 
 class DataSetMetadata:

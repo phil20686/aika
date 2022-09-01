@@ -5,10 +5,9 @@ import attr
 import numpy as np
 import pandas as pd
 
-from aika.utilities.pandas_utils import IndexTensor
-
 from aika.time.timestamp import Timestamp
 from aika.time.utilities import _get_index_level
+from aika.utilities.pandas_utils import IndexTensor
 
 RESOLUTION = pd.Timedelta(nanoseconds=1)
 

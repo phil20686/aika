@@ -3,10 +3,9 @@ import typing as t
 import attr
 
 from aika.datagraph.interface import DataSetMetadata
+from aika.putki.interface import Dependency, ICompletionChecker, ITimeSeriesTask
 from aika.time.calendars import ICalendar, UnionCalendar
 from aika.time.time_range import TimeRange
-
-from aika.putki.interface import Dependency, ICompletionChecker, ITimeSeriesTask
 
 
 @attr.s(frozen=True)
@@ -40,7 +39,6 @@ class IrregularChecker(ICompletionChecker):
     Checker that only cares about the target time range that a task has been run for
     - it ignores the actual data. Useful for data with no known schedule.
     """
-
 
     def is_complete(
         self,

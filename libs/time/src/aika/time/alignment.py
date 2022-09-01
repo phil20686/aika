@@ -6,9 +6,8 @@ from typing import Callable, Optional, Union
 import numpy as np
 import pandas as pd
 
-from aika.utilities.pandas_utils import IndexTensor, Level, Tensor
-
 from aika.time.utilities import _get_index, _get_index_level
+from aika.utilities.pandas_utils import IndexTensor, Level, Tensor
 
 
 def _reindex_by_level(tensor: Tensor, level: Optional[Level]) -> Tensor:

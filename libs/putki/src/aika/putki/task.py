@@ -9,10 +9,6 @@ import pandas as pd
 from frozendict import frozendict
 
 from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
-from aika.time.time_range import TimeRange
-from aika.utilities.abstract import abstract_attribute
-from aika.utilities.pandas_utils import IndexTensor
-
 from aika.putki.interface import (
     Dependency,
     ICompletionChecker,
@@ -20,6 +16,9 @@ from aika.putki.interface import (
     ITask,
     ITimeSeriesTask,
 )
+from aika.time.time_range import TimeRange
+from aika.utilities.abstract import abstract_attribute
+from aika.utilities.pandas_utils import IndexTensor
 
 
 class TaskBase(ITask, ABC):

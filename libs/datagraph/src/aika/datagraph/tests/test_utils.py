@@ -1,9 +1,8 @@
 import pytest as pytest
 from frozendict import frozendict
 
-from aika.utilities.testing import assert_call
-
 from aika.datagraph.utils import normalize_parameters
+from aika.utilities.testing import assert_call
 
 
 @pytest.mark.parametrize(

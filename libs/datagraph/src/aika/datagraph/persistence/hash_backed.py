@@ -5,14 +5,13 @@ from abc import abstractmethod
 from frozendict import frozendict
 from typing_extensions import Protocol
 
-from aika.time.time_range import TimeRange
-
 from aika.datagraph.interface import (
     DataSet,
     DataSetMetadata,
     DatasetMetadataStub,
     IPersistenceEngine,
 )
+from aika.time.time_range import TimeRange
 
 
 class HashBackedPersistanceEngine(IPersistenceEngine):

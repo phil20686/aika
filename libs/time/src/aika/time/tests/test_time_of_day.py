@@ -3,10 +3,9 @@ import datetime
 import pytest as pytest
 import pytz
 
-from aika.utilities.testing import assert_call
-
 from aika.time.time_of_day import TimeOfDay
 from aika.time.timestamp import Timestamp
+from aika.utilities.testing import assert_call
 
 
 @pytest.mark.parametrize(

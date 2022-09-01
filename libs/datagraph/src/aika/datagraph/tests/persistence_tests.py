@@ -4,10 +4,9 @@ import numpy as np
 import pandas as pd
 from frozendict._frozendict import frozendict
 
+from aika.datagraph.interface import DataSet
 from aika.time.time_range import TimeRange
 from aika.time.timestamp import Timestamp
-
-from aika.datagraph.interface import DataSet
 
 leaf1 = DataSet.build(
     name="leaf1",

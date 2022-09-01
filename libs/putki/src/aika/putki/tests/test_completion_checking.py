@@ -2,12 +2,11 @@ from unittest.mock import Mock
 
 import pytest
 
+from aika.putki import CalendarChecker, ICompletionChecker, IrregularChecker
 from aika.time.calendars import TimeOfDayCalendar, UnionCalendar
 from aika.time.time_of_day import TimeOfDay
 from aika.time.time_range import TimeRange
 from aika.utilities.testing import assert_call
-
-from aika.putki import CalendarChecker, ICompletionChecker, IrregularChecker
 
 
 def _mock_metadata(data_time_range, declared_time_range=None, exists=True):
