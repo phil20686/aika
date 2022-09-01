@@ -1,5 +1,25 @@
 # aika
 
+## Introduction
+
+Aika is a project born out of the desire to make working with time series, and in particular doing time series
+research, as painless as possible. As a rule time series computations are always in some sense a 
+[DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph), however, when doing such computations "live" we generally
+have a complex graph that we want to run up to "now". To do so brings in many quite complex requirements:
+* Incremental running - we generally do not want to run the entire history again, so we want to identify how much to run.
+* Look back: When running incrementally , we may need data from a considerable lookback on the inputs to calculate a new entry right now, such as eg exponential moving average.
+* Completeness: Data may not be available for some inputs at the expected time. In that case, if we simply run all the nodes we may incorrectly evaluate new rows,
+when the desired behaviour should be to wait until that data is ready. 
+
+This requirements represent quite complex use cases, and are vital to the correct running of timeseries systems, however,
+they are also hard to get right. There are also further requirements that such a system might require: distributed computing
+is one example, a graph with thousands of nodes in somewhat parallel pipelines will benefit from parallelisation, but this
+requires understanding when parents are complete.
+
+The goal of aika is as far as possible to abstract away these three concerns, and make it possible for researchers to
+think only of writing simple python functions, running them, and little by little building up a reliable graph that can be
+easily transferred into a production setting.
+
 ## Repo structure
 
 All libraries should be defined in their own sub-folder under the `libs/` directory
@@ -38,4 +58,4 @@ Note that this is a decision about the persistence layer, tasks can be parameter
 are not converted, this is especially important when working with pandas which treats lists and tuples differently
 in indexing operations.
 
-We will add further parameter types in the future, including: sets and arbitrary hashable pythong objects.
+We will add further parameter types in the future, including: sets and arbitrary hashable python objects.
