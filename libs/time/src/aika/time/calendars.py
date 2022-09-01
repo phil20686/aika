@@ -29,25 +29,6 @@ class ICalendar(ABC):
         """
 
 
-class Weekdays:
-    MON = 0
-    TUE = 1
-    WED = 2
-    THU = 3
-    FRI = 4
-    SAT = 5
-    SUN = 6
-
-
-BUSINESS_DAYS = (
-    Weekdays.MON,
-    Weekdays.TUE,
-    Weekdays.WED,
-    Weekdays.THU,
-    Weekdays.FRI,
-)
-
-
 @attr.s(frozen=True)
 class TimeOfDayCalendar(ICalendar):
 
@@ -57,13 +38,13 @@ class TimeOfDayCalendar(ICalendar):
     """
 
     time_of_day: TimeOfDay = attr.ib()
-    freq: t.Collection[int] = attr.ib(default=BDay())
+    freq: pd.tseries.offsets.BaseOffset = attr.ib(default=BDay())
+    maximum_interval: pd.tseries.offsets.BaseOffset = attr.ib(default=Week())
 
     def latest_point_before(self, as_of: pd.Timestamp):
-
         last_week = self.to_index(
             time_range=TimeRange(
-                start=as_of - Week(),
+                start=as_of - self.maximum_interval,
                 end=as_of,
             )
         )

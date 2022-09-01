@@ -5,17 +5,16 @@ import pytest as pytest
 from pandas.tseries.offsets import BDay
 
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
-from aika.time.calendars import BUSINESS_DAYS, TimeOfDayCalendar
-from aika.time.time_of_day import TimeOfDay
-from aika.time.time_range import TimeRange
-from aika.utilities.testing import assert_call
-
 from aika.putki import CalendarChecker, ICompletionChecker, IrregularChecker
 from aika.putki.context import Defaults, GraphContext, Inference
 from aika.putki.tests.test_completion_checking import (
     _time_of_day_checker,
     _union_checker,
 )
+from aika.time.calendars import TimeOfDayCalendar
+from aika.time.time_of_day import TimeOfDay
+from aika.time.time_range import TimeRange
+from aika.utilities.testing import assert_call
 
 
 def _mock_dependency_task(**kwargs):

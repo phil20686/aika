@@ -8,7 +8,6 @@ from aika.time.calendars import (
     OffsetCalendar,
     TimeOfDayCalendar,
     UnionCalendar,
-    Weekdays,
 )
 from aika.time.time_of_day import TimeOfDay
 from aika.time.time_range import RESOLUTION, TimeRange

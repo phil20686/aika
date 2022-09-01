@@ -8,9 +8,6 @@ import pandas as pd
 from frozendict import frozendict
 
 from aika.datagraph.interface import IPersistenceEngine
-from aika.time.calendars import UnionCalendar
-from aika.time.time_range import TimeRange
-
 from aika.putki import ICompletionChecker
 from aika.putki.completion_checking import CalendarChecker, IrregularChecker
 from aika.putki.interface import Dependency, ITask, ITimeSeriesTask
@@ -19,6 +16,8 @@ from aika.putki.task import (
     TimeSeriesFunctionWrapper,
     TimeSeriesTaskBase,
 )
+from aika.time.calendars import UnionCalendar
+from aika.time.time_range import TimeRange
 
 
 @attr.s(frozen=True, auto_attribs=True)

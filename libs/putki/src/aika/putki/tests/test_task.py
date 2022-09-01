@@ -2,13 +2,12 @@ import pandas as pd
 from pandas._libs.tslibs.offsets import CDay
 
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
+from aika.putki import CalendarChecker, StaticFunctionWrapper, TimeSeriesFunctionWrapper
+from aika.putki.interface import Dependency
 from aika.time.calendars import TimeOfDayCalendar
 from aika.time.time_of_day import TimeOfDay
 from aika.time.time_range import TimeRange
 from aika.utilities.testing import assert_equal
-
-from aika.putki import CalendarChecker, StaticFunctionWrapper, TimeSeriesFunctionWrapper
-from aika.putki.interface import Dependency
 
 
 def _addition(a, b):

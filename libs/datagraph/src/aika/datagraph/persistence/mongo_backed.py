@@ -5,14 +5,13 @@ import gridfs
 import pymongo
 from frozendict._frozendict import frozendict
 
-from aika.time.time_range import TimeRange
-
 from aika.datagraph.interface import (
     DataSet,
     DataSetMetadata,
     DatasetMetadataStub,
     IPersistenceEngine,
 )
+from aika.time.time_range import TimeRange
 
 
 class MongoBackedPersistanceEngine(IPersistenceEngine):

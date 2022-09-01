@@ -3,11 +3,10 @@ import typing as t
 import pandas as pd
 import pytest
 
-from aika.utilities.pandas_utils import IndexTensor, Tensor
-from aika.utilities.testing import assert_call, assert_equal
-
 from aika.time.time_range import RESOLUTION, TimeRange
 from aika.time.timestamp import Timestamp
+from aika.utilities.pandas_utils import IndexTensor, Tensor
+from aika.utilities.testing import assert_call, assert_equal
 
 
 def timestamp_index(*args, tz=None, **kwargs):
