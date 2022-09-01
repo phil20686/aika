@@ -43,6 +43,10 @@ done if any of the following apply:
 - You have added, removed, or changed the version specified of any dependency on an existing library
 - You wish to update dependencies to pick up recent releases
 
+Note that this requirements file is intended only for the purposes of eg: running the tests in a consistent way.
+This code is intended to be used as a collection of libraries and any actual restrictions on versions must be specified
+in the setup.py of the individual libraries in the usual ways. This is only a convenience for developers.
+
 ## User notes
 
 The datagraph currently supports parameters that are one of:
