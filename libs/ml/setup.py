@@ -4,9 +4,11 @@ from setuptools import find_namespace_packages, setup
 
 parent_dir = Path(__file__).parent
 
+
 def get_requirements(path: Path):
     with open(path) as fobj:
         return [str(req) for req in parse_requirements(fobj.read())]
+
 
 setup(
     name="aika-ml",
@@ -24,9 +26,7 @@ setup(
         "numpy",
         "aika-time",
         "aika-utilities",
-        "sklearn>=1.1.2"
+        "scikit-ilearn>=1.1.2",
     ],
-    extras_requires=dict(
-        test=["pytest", "black", "isort"]
-    )
+    extras_requires=dict(test=["pytest", "black", "isort"]),
 )
