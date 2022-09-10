@@ -1,9 +1,15 @@
 from abc import abstractmethod, ABC
 from typing import List, Optional, Union
-
 import pandas as pd
-
 from aika.utilities.pandas_utils import Tensor, Tensor2
+
+"""
+This library may seem like an unnecessary wrapper around eg sklearn, but it has three very important features:
+1) Provides a wrapper for including arbitrary transforms cross tensorflow, pytorch, prophet etc on an equal footing.
+2) Supports bi-variate transforms, i.e. transforms where what you do to X depends on y, such as alignment, cleaning.
+3) Explicitly demands support for pickling, which is necessary for compatibility with aika.
+4) Provides support for walkforward training via the dataset generators.
+"""
 
 
 class Dataset:
