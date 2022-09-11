@@ -97,9 +97,12 @@ class SklearnEstimator(Transformer):
     def __init__(self, estimator):
         self._is_fitted = False
         self._estimator = estimator
+        self._fitted_columns = None
 
     def fit(self, dataset) -> None:
         self._estimator.fit(X=dataset.X, y=dataset.y)
+        if isinstance(dataset.y, pd.DataFrame):
+            self._fitted_columns = dataset.y.columns
         self._is_fitted = True
 
     def transform(self, dataset: Dataset) -> Dataset:
@@ -114,7 +117,7 @@ class SklearnEstimator(Transformer):
                 return Dataset(
                     X=dataset.X,
                     y=pd.DataFrame(
-                        array, index=dataset.X.index, columns=dataset.Y.columns
+                        array, index=dataset.X.index, columns=self._fitted_columns
                     ),
                 )
             else:
