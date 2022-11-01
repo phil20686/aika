@@ -1,6 +1,8 @@
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from typing import List, Optional, Union
+
 import pandas as pd
+
 from aika.utilities.pandas_utils import Tensor, Tensor2
 
 """
@@ -24,6 +26,11 @@ class Dataset:
     @property
     def y(self) -> Tensor2:
         return self._y
+
+    def __eq__(self, other):
+        return self.X.equals(other.X) and (
+            (self.y is None and other.y is None) or self.y.equals(other.y)
+        )
 
 
 class Transformer(ABC):

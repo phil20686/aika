@@ -1,8 +1,9 @@
-from typing import TypeVar, Optional
+from typing import Optional, TypeVar
 
 import pandas as pd
 
 from aika.utilities.pandas_utils import Tensor
+
 
 class ReturnType:
     """
@@ -25,12 +26,19 @@ class ReturnType:
 
     ALL = {CAUSAL, TRADING}
 
+
 class BarReturnIndexNames:
 
     START = "start"
     END = "end"
 
-def arithmetic_bar_returns(prices : Tensor, step : int=1, return_type: str = "causal", fill_limit: Optional[int]=None) -> Tensor:
+
+def arithmetic_bar_returns(
+    prices: Tensor,
+    step: int = 1,
+    return_type: str = "causal",
+    fill_limit: Optional[int] = None,
+) -> Tensor:
     """
     This converts a set of prices into a set of bar returns, that is, returns where each period represents a bar
     from a start index to an end index. The bars will be contiguous if step is one.
@@ -54,19 +62,22 @@ def arithmetic_bar_returns(prices : Tensor, step : int=1, return_type: str = "ca
     if not return_type in ReturnType.ALL:
         raise ValueError(f"return_type must be in {ReturnType.ALL}")
     elif return_type == ReturnType.CAUSAL:
-        returns = prices.ffill(limit=fill_limit).diff(step).where(prices.notnull()).iloc[step:]
+        returns = (
+            prices.ffill(limit=fill_limit)
+            .diff(step)
+            .where(prices.notnull())
+            .iloc[step:]
+        )
     else:
-        returns = prices.bfill(limit=fill_limit).diff(step).where(prices.notnull()).iloc[step:]
+        returns = (
+            prices.bfill(limit=fill_limit)
+            .diff(step)
+            .where(prices.notnull())
+            .iloc[step:]
+        )
 
     returns.index = pd.MultiIndex.from_arrays(
-        [
-            prices.index[:-step],
-            prices.index[step:]
-        ],
-        names=(BarReturnIndexNames.START, BarReturnIndexNames.END)
+        [prices.index[:-step], prices.index[step:]],
+        names=(BarReturnIndexNames.START, BarReturnIndexNames.END),
     )
     return returns
-
-
-
-
