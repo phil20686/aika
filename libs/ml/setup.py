@@ -22,7 +22,7 @@ setup(
     ),
     packages=find_namespace_packages("src", include=["aika.*"]),
     package_dir={"": "src"},
-    install_requres=[
+    install_requires=[
         "pandas>=1.2.0",
         "numpy",
         "aika-time",
