@@ -8,73 +8,83 @@
 
 -e libs/datagraph[test]
     # via -r packages.in
+-e libs/ml[test]
+    # via -r packages.in
 -e libs/putki[test]
     # via -r packages.in
 -e libs/time[test]
     # via
     #   -r packages.in
     #   aika-datagraph
+    #   aika-ml
     #   aika-putki
 -e libs/utilities[test]
     # via
     #   -r packages.in
     #   aika-datagraph
+    #   aika-ml
     #   aika-time
-atomicwrites==1.4.1
-    # via pytest
 attrs==22.1.0
     # via
     #   aika-putki
     #   aika-time
     #   pytest
-black==22.8.0
+black==22.10.0
     # via aika-putki
 click==8.1.3
     # via black
-colorama==0.4.5
+colorama==0.4.6
     # via
     #   click
     #   pytest
+dnspython==2.2.1
+    # via pymongo
+exceptiongroup==1.0.0
+    # via pytest
 frozendict==2.3.4
     # via aika-putki
 iniconfig==1.1.1
     # via pytest
 isort==5.10.1
     # via aika-putki
+joblib==1.2.0
+    # via scikit-learn
 mongomock==4.1.2
     # via aika-datagraph
 mypy-extensions==0.4.3
     # via black
-numpy==1.23.2
+numpy==1.23.4
     # via
     #   aika-datagraph
+    #   aika-ml
     #   aika-putki
     #   aika-time
     #   aika-utilities
     #   pandas
+    #   scikit-learn
+    #   scipy
 packaging==21.3
     # via
     #   mongomock
     #   pytest
-pandas==1.4.4
+pandas==1.5.1
     # via
     #   aika-datagraph
+    #   aika-ml
     #   aika-putki
     #   aika-time
     #   aika-utilities
-pathspec==0.10.0
+pathspec==0.10.1
     # via black
 platformdirs==2.5.2
     # via black
 pluggy==1.0.0
     # via pytest
-py==1.11.0
-    # via pytest
-pymongo==4.2.0
+pymongo==4.3.2
     # via aika-datagraph
 pyparsing==3.0.9
     # via packaging
-pytest==7.1.2
+pytest==7.2.0
     # via
     #   aika-datagraph
     #   aika-putki
@@ -82,15 +92,21 @@ pytest==7.1.2
     #   aika-utilities
 python-dateutil==2.8.2
     # via pandas
-pytz==2022.2.1
+pytz==2022.6
     # via pandas
+scikit-learn==1.1.3
+    # via aika-ml
+scipy==1.9.3
+    # via scikit-learn
 sentinels==1.0.0
     # via mongomock
 six==1.16.0
     # via python-dateutil
+threadpoolctl==3.1.0
+    # via scikit-learn
 tomli==2.0.1
     # via
     #   black
     #   pytest
-typing-extensions==4.3.0
+typing-extensions==4.4.0
     # via aika-datagraph

@@ -16,7 +16,7 @@ from mongomock.gridfs import enable_gridfs_integration
 from aika.datagraph.interface import (
     DataSet,
     DataSetMetadata,
-    DatasetMetadataStub,
+    DataSetMetadataStub,
     IPersistenceEngine,
 )
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
@@ -69,7 +69,7 @@ datasets_typevar = TypeVar(
 )
 
 
-def _assert_stub_equals_real(stub: DatasetMetadataStub, metadata: DataSetMetadata):
+def _assert_stub_equals_real(stub: DataSetMetadataStub, metadata: DataSetMetadata):
     assert_equal(
         stub.__hash__(),
         metadata.__hash__(),

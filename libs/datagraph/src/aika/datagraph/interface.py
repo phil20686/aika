@@ -192,7 +192,7 @@ class DataSetMetadata:
         )
 
 
-class DatasetMetadataStub(DataSetMetadata):
+class DataSetMetadataStub(DataSetMetadata):
     """
     A stub class is different only because it stores only the hash and engine + top level parameters
     directly, and will fetch the full predecessors when required.
@@ -221,7 +221,7 @@ class DatasetMetadataStub(DataSetMetadata):
         return self._hash
 
     @property
-    def predecessors(self) -> t.Dict[str, "DatasetMetadataStub"]:
+    def predecessors(self) -> t.Dict[str, "DataSetMetadataStub"]:
         return self.engine.get_predecessors_from_hash(self._name, self._hash)
 
 
@@ -348,7 +348,7 @@ class IPersistenceEngine(ABC):
     @abstractmethod
     def get_predecessors_from_hash(
         self, name: str, hash: int
-    ) -> t.Dict[str, DatasetMetadataStub]:
+    ) -> t.Dict[str, DataSetMetadataStub]:
         """
         Given a node name and the hash of a dataset, returns a dataset stub.
         """
@@ -455,7 +455,7 @@ class IPersistenceEngine(ABC):
 
         Parameters
         ----------
-        metadata : DatasetMetadata
+        metadata : DataSetMetadata
 
             The metadata identifying the dataset to be queried
 
@@ -490,7 +490,7 @@ class IPersistenceEngine(ABC):
 
         Parameters
         ----------
-        metadata : DatasetMetadata
+        metadata : DataSetMetadata
 
             The metadata identifying the dataset to be queried
 
@@ -648,7 +648,7 @@ class IPersistenceEngine(ABC):
         """
 
     @abstractmethod
-    def find_successors(self, metadata: DataSetMetadata) -> t.Set[DatasetMetadataStub]:
+    def find_successors(self, metadata: DataSetMetadata) -> t.Set[DataSetMetadataStub]:
         """
         This method will find any successor datasets of a datasets.
 
