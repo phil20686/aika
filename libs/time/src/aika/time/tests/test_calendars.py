@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from pandas._libs.tslibs.offsets import CDay
+from pandas._libs.tslibs.offsets import BDay, CDay
 from pandas.tseries.offsets import Hour, Minute, Week
 
 from aika.time.calendars import (
@@ -12,6 +12,18 @@ from aika.time.calendars import (
 from aika.time.time_of_day import TimeOfDay
 from aika.time.time_range import RESOLUTION, TimeRange
 from aika.time.timestamp import Timestamp
+from aika.utilities.testing import assert_call
+
+
+@pytest.mark.parametrize(
+    "offset, expect",
+    [
+        ("17MIN", ValueError("Offset must evenly divide into one day.*")),
+        (BDay(), ValueError("Offset must be a pd.offsets.Tick.*")),
+    ],
+)
+def test_validator(offset, expect):
+    assert_call(OffsetCalendar, expect, offset)
 
 
 @pytest.mark.parametrize(

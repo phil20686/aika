@@ -102,14 +102,14 @@ class OffsetCalendar(ICalendar):
     def _validate_offset(self, attribute, value):
         if not isinstance(value, pd.offsets.Tick):
             raise ValueError(
-                f"{attribute} must be a pd.offsets.Tick; got {value} of type "
+                f"Offset must be a pd.offsets.Tick; got {value} of type "
                 f"{value.__class__.__name__}"
             )
 
         per_day = pd.Timedelta(days=1) / value.delta
         if per_day != int(per_day):
             raise ValueError(
-                f"{attribute} must evenly divide into one day; got {value}, of which "
+                f"Offset must evenly divide into one day; got {value}, of which "
                 f"there are a non-integral {per_day} per day"
             )
 

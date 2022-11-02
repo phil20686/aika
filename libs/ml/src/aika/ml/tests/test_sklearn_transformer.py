@@ -29,7 +29,22 @@ class TestSklearnEstimators:
                     }
                 ),
                 y=pd.Series(np.array([0.01 * x for x in range(100)])),
-            )
+            ),
+            BivariateDataSet(
+                X=pd.DataFrame(
+                    {
+                        "foo": np.random.randn(100)
+                        + np.array([0.01 * x for x in range(100)]),
+                        "bar": np.random.randn(100),
+                    }
+                ),
+                y=pd.DataFrame(
+                    {
+                        "A": np.array([0.01 * x for x in range(100)]),
+                        "B": np.array([0.01 * x for x in range(100)]),
+                    }
+                ),
+            ),
         ],
     )
     @pytest.mark.parametrize("estimator", estimators_to_test)

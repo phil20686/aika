@@ -390,6 +390,33 @@ class TestPipeline:
                     index=pd.date_range(start="2000-01-08", periods=7),
                 ),
             ),
+            (  # here we check that it learns two different models, and applies them at the right time
+                CausalDataSetGenerator(
+                    features=pd.Series(
+                        2.0, index=pd.date_range(start="2000-01-01", periods=10)
+                    ),
+                    responses=pd.Series(
+                        [3.0] * 8 + [7] * 2,
+                        index=pd.date_range(start="2000-01-01", periods=10),
+                    ),
+                    causal_kwargs={"contemp": True},
+                    window_size=8,
+                    min_periods=8,
+                    step_size=2,
+                    strict_step_size=True,
+                ),
+                Pipeline(
+                    [
+                        MockFittableModel(),
+                    ]
+                ),
+                pd.Series(10.0, index=pd.date_range(start="2000-01-10", periods=10)),
+                True,
+                pd.Series(
+                    [12.0] * 10,
+                    index=pd.date_range(start="2000-01-10", periods=10),
+                ),
+            ),
         ],
     )
     def test_pipeline(
