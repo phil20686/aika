@@ -27,7 +27,7 @@ setup(
         "numpy",
         "aika-time",
         "aika-utilities",
-        "scikit-ilearn>=1.1.2",
+        "scikit-learn>=1.1.2",
     ],
     extras_requires=dict(test=["pytest", "black", "isort"]),
 )
