@@ -8,7 +8,7 @@ from typing_extensions import Protocol
 from aika.datagraph.interface import (
     DataSet,
     DataSetMetadata,
-    DatasetMetadataStub,
+    DataSetMetadataStub,
     IPersistenceEngine,
 )
 from aika.time.time_range import TimeRange
@@ -33,12 +33,12 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
 
     def get_predecessors_from_hash(
         self, name: str, hash: int
-    ) -> frozendict[str, DatasetMetadataStub]:
+    ) -> frozendict[str, DataSetMetadataStub]:
         for metadata in self._cache.keys():
             if metadata.__hash__() == hash and metadata.name == name:
                 return frozendict(
                     {
-                        key: DatasetMetadataStub(
+                        key: DataSetMetadataStub(
                             name=meta.name,
                             time_level=meta.time_level,
                             static=meta.static,
@@ -50,7 +50,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
                         for key, meta in metadata.predecessors.items()
                     }
                 )
-        raise ValueError("No Matching Dataset")
+        raise ValueError("No Matching DataSet")
 
     def get_dataset(
         self,

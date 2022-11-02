@@ -2,7 +2,7 @@ import pandas as pd
 import pytest as pytest
 
 from aika.ml.generators.walkforward import CausalDataSetGenerator
-from aika.ml.interface import Dataset
+from aika.ml.interface import BivariateDataSet
 from aika.utilities.testing import assert_equal, assert_error_or_return
 
 
@@ -24,7 +24,7 @@ class Indexes:
                 causal_kwargs={"contemp": True},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
                     y=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
                 )
@@ -38,7 +38,7 @@ class Indexes:
                 causal_kwargs={"contemp": False},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(
                         [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
                     ),
@@ -58,7 +58,7 @@ class Indexes:
                 causal_kwargs={"contemp": True},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                     y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                 )
@@ -76,7 +76,7 @@ class Indexes:
                 causal_kwargs={"contemp": False},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(
                         [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
                     ).iloc[start:end],
@@ -96,7 +96,7 @@ class Indexes:
                 causal_kwargs={"contemp": True},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                     y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                 )
@@ -114,7 +114,7 @@ class Indexes:
                 causal_kwargs={"contemp": False},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(
                         [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
                     ).iloc[start:end],
@@ -134,7 +134,7 @@ class Indexes:
                 causal_kwargs={"contemp": True},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                     y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                 )
@@ -151,7 +151,7 @@ class Indexes:
                 causal_kwargs={"contemp": False},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(
                         [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
                     ).iloc[start:end],
@@ -170,7 +170,7 @@ class Indexes:
                 causal_kwargs={"contemp": True},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                     y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                 )
@@ -187,7 +187,7 @@ class Indexes:
                 causal_kwargs={"contemp": False},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(
                         [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
                     ).iloc[start:end],
@@ -206,7 +206,7 @@ class Indexes:
                 causal_kwargs={"contemp": True},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                     y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                 )
@@ -223,7 +223,7 @@ class Indexes:
                 causal_kwargs={"contemp": False},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(
                         [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
                     ).iloc[start:end],
@@ -243,7 +243,7 @@ class Indexes:
                 causal_kwargs={"contemp": True},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                     y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                 )
@@ -261,7 +261,7 @@ class Indexes:
                 causal_kwargs={"contemp": False},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(
                         [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
                     ).iloc[start:end],
@@ -281,7 +281,7 @@ class Indexes:
                 causal_kwargs={"contemp": True},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                     y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
                 )
@@ -299,7 +299,7 @@ class Indexes:
                 causal_kwargs={"contemp": False},
             ),
             [
-                Dataset(
+                BivariateDataSet(
                     X=pd.Series(
                         [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
                     ).iloc[start:end],

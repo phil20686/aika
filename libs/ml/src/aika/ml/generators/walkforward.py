@@ -2,7 +2,7 @@ from typing import Dict, Iterator, Optional, Tuple, Union
 
 import pandas as pd
 
-from aika.ml.interface import Dataset
+from aika.ml.interface import BivariateDataSet
 from aika.time.alignment import causal_match
 from aika.utilities.pandas_utils import Tensor, Tensor2
 from aika.utilities.validators import Validators
@@ -171,8 +171,8 @@ class CausalDataSetGenerator:
         self._causal_kwargs = causal_kwargs
         self._index = self.select_indexer()
 
-    def __iter__(self) -> Iterator[Dataset]:
+    def __iter__(self) -> Iterator[BivariateDataSet]:
         for start, end in self._index.batches:
-            yield Dataset(
+            yield BivariateDataSet(
                 X=self._features.iloc[start:end], y=self._responses.iloc[start:end]
             )

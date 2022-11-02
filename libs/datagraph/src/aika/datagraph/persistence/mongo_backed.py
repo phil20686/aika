@@ -8,7 +8,7 @@ from frozendict._frozendict import frozendict
 from aika.datagraph.interface import (
     DataSet,
     DataSetMetadata,
-    DatasetMetadataStub,
+    DataSetMetadataStub,
     IPersistenceEngine,
 )
 from aika.time.time_range import TimeRange
@@ -114,7 +114,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         }
 
     def _deserialise_metadata_as_stub(self, record: t.Dict):
-        return DatasetMetadataStub(
+        return DataSetMetadataStub(
             name=record["name"],
             static=record["static"],
             params=record["params"],
@@ -169,7 +169,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
 
     def get_predecessors_from_hash(
         self, name: str, hash: int
-    ) -> t.Dict[str, DatasetMetadataStub]:
+    ) -> t.Dict[str, DataSetMetadataStub]:
         record = self._find_record_from_hash(name, hash, include_data=False)
         if record is not None:
             return frozendict(

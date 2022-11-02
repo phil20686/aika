@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from sklearn.linear_model import LinearRegression
 
-from aika.ml.interface import Dataset, SklearnEstimator
+from aika.ml.interface import BivariateDataSet, SklearnEstimator
 
 
 class TestSklearnEstimators:
@@ -20,7 +20,7 @@ class TestSklearnEstimators:
     @pytest.mark.parametrize(
         "dataset",
         [
-            Dataset(
+            BivariateDataSet(
                 X=pd.DataFrame(
                     {
                         "foo": np.random.randn(100)
