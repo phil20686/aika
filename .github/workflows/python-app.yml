@@ -30,6 +30,7 @@ jobs:
         grep -v "^-e\|^\ \|^#" requirements.txt | xargs python -m pip install
         python -m pip install -e ./libs/utilities
         python -m pip install -e ./libs/time
+        python -m pip install -e ./libs/ml
         python -m pip install -e ./libs/datagraph
         python -m pip install -e ./libs/putki
     - name: Lint with flake8
