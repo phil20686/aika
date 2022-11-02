@@ -13,11 +13,11 @@ def get_requirements(path: Path):
 
 setup(
     name="aika-ml",
-    setup_requres=["setuptools_scm"],
+    setup_requires=["setuptools_scm"],
     use_scm_version=dict(
         root="../..",
         relative_to=__file__,
-        write_to_template='"__version__"= "{version}"',
+        write_to_template='__version__ = "{version}"',
         write_to=parent_dir / "src/aika/ml/_version.py",
     ),
     packages=find_namespace_packages("src", include=["aika.*"]),
