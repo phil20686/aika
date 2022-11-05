@@ -10,35 +10,26 @@ from aika.time.time_range import TimeRange
 from aika.utilities.pandas_utils import IndexTensor, equals
 
 
-class DataSetMetadata:
+class DataSetMetadataStub:
     """
-    A `DataSetMetadata` object contains all the information to describe a dataset which
-    may or may not exist. Note that dataset metadata equality is explicitly based on the hashes of predecessors.
-    hash() truncates the output of __hash__() so we try to use __hash__() throughout when eg writing meta data
-    to a database. Note that metadata.
+    A stub class is different only because it stores only the hash and engine + top level parameters
+    directly, and will fetch the full predecessors when required.
     """
 
-    def replace_engine(self, engine, include_predecessors=False):
+    def replace_engine(self, engine):
         """
         Useful for testing, not for production code.
 
         """
-        if include_predecessors:
-            predecessors = {
-                name: m.replace_engine(engine, include_predecessors)
-                for name, m in self.predecessors.items()
-            }
-        else:
-            predecessors = self.predecessors
 
-        return type(self)(
+        return DataSetMetadataStub(
             name=self.name,
             static=self.static,
             params=self.params,
             version=self.version,
-            predecessors=predecessors,
             time_level=self.time_level,
             engine=engine,
+            hash=self._hash,
         )
 
     def __init__(
@@ -46,9 +37,9 @@ class DataSetMetadata:
         *,
         name: str,
         static: bool,
-        version: str,
         params: t.Dict[str, t.Any],
-        predecessors: t.Dict[str, "DataSetMetadata"],
+        hash: int,
+        version: str,
         time_level: t.Optional[t.Union[int, str]] = None,
         engine: t.Optional["IPersistenceEngine"] = None,
     ):
@@ -56,13 +47,9 @@ class DataSetMetadata:
         self._static = static
         self._engine = engine
         self._version = version
-        if static and time_level is not None:
-            raise ValueError("Cannot specify a time level on static data")
         self._time_level = time_level
-        self._params = normalize_parameters(params)
-        self._predecessors = frozendict(
-            {k: predecessors[k] for k in sorted(predecessors)}
-        )
+        self._params = frozendict({k: params[k] for k in sorted(params)})
+        self._hash = hash
 
     def __eq__(self, other):
         return all(
@@ -78,17 +65,7 @@ class DataSetMetadata:
         )
 
     def __hash__(self):
-        return hash(
-            (
-                self._name,
-                self._static,
-                self._time_level,
-                self._version,
-                self._engine,
-                self._params,
-            )
-            + tuple(hash(x) for x in self._predecessors.values())
-        )
+        return self._hash
 
     @property
     def name(self) -> str:
@@ -115,14 +92,8 @@ class DataSetMetadata:
         return self._params
 
     @property
-    def predecessors(self) -> t.Dict[str, "DataSetMetadata"]:
-        return self._predecessors
-
-    def is_immediate_predecessor(self, metadata: "DataSetMetadata") -> bool:
-        """
-        Returns true if the given metadata represents one of the immediate predecessors.
-        """
-        return metadata in set(self._predecessors.values())
+    def predecessors(self) -> t.Dict[str, "DataSetMetadataStub"]:
+        return self.engine.get_predecessors_from_hash(self._name, self._hash)
 
     def exists(self):
         return self.engine.exists(self)
@@ -191,21 +162,84 @@ class DataSetMetadata:
             )
         )
 
+    def is_immediate_predecessor(self, metadata: "DataSetMetadata") -> bool:
+        """
+        Returns true if the given metadata represents one of the immediate predecessors.
+        """
+        return metadata in set(self.predecessors.values())
 
-class DataSetMetadataStub(DataSetMetadata):
+    def get_parameter_value(self, param_name):
+        if param_name == "version":
+            return self.version
+        elif param_name == "time_level":
+            return self.time_level
+        elif param_name == "static":
+            return self.static
+        elif param_name == "name":
+            return self.name
+        else:
+            return self._params[param_name]
+
+    def recursively_get_parameter_value(self, param_name):
+        """
+        If param name contains dots, it is assumed that it refers to a dataset by a predecessors value,
+        so foo.bar means get parameter value bar from predecessor foo. This allows one to conveniently
+        `walk the graph` when getting a dataset that differs only by the parameterisation of a parent.
+
+        Parameters
+        ----------
+        param_name: str
+
+        Returns
+        -------
+        Any: The value of the parameter
+        """
+        target_metadata = self
+        path = param_name.split(".")
+        for predecessor in path[:-1]:
+            target_metadata = target_metadata.predecessors[predecessor]
+        return target_metadata.get_parameter_value(path[-1])
+
+
+class DataSetMetadata(DataSetMetadataStub):
     """
-    A stub class is different only because it stores only the hash and engine + top level parameters
-    directly, and will fetch the full predecessors when required.
+    A `DataSetMetadata` object contains all the information to describe a dataset which
+    may or may not exist. Note that dataset metadata equality is explicitly based on the hashes of predecessors.
+    hash() truncates the output of __hash__() so we try to use __hash__() throughout when eg writing meta data
+    to a database. Note that metadata.
     """
+
+    def replace_engine(self, engine, include_predecessors=False):
+        """
+        Useful for testing, not for production code.
+
+        """
+        if include_predecessors:
+            predecessors = {
+                name: m.replace_engine(engine, include_predecessors)
+                for name, m in self.predecessors.items()
+            }
+        else:
+            predecessors = self.predecessors
+
+        return DataSetMetadata(
+            name=self.name,
+            static=self.static,
+            params=self.params,
+            version=self.version,
+            predecessors=predecessors,
+            time_level=self.time_level,
+            engine=engine,
+        )
 
     def __init__(
         self,
         *,
         name: str,
         static: bool,
-        params: t.Dict[str, t.Any],
-        hash: int,
         version: str,
+        params: t.Dict[str, t.Any],
+        predecessors: t.Dict[str, "DataSetMetadata"],
         time_level: t.Optional[t.Union[int, str]] = None,
         engine: t.Optional["IPersistenceEngine"] = None,
     ):
@@ -213,16 +247,30 @@ class DataSetMetadataStub(DataSetMetadata):
         self._static = static
         self._engine = engine
         self._version = version
+        if static and time_level is not None:
+            raise ValueError("Cannot specify a time level on static data")
         self._time_level = time_level
-        self._params = frozendict({k: params[k] for k in sorted(params)})
-        self._hash = hash
+        self._params = normalize_parameters(params)
+        self._predecessors = frozendict(
+            {k: predecessors[k] for k in sorted(predecessors)}
+        )
 
     def __hash__(self):
-        return self._hash
+        return hash(
+            (
+                self._name,
+                self._static,
+                self._time_level,
+                self._version,
+                self._engine,
+                self._params,
+            )
+            + tuple(hash(x) for x in self._predecessors.values())
+        )
 
     @property
-    def predecessors(self) -> t.Dict[str, "DataSetMetadataStub"]:
-        return self.engine.get_predecessors_from_hash(self._name, self._hash)
+    def predecessors(self) -> t.Dict[str, "DataSetMetadata"]:
+        return self._predecessors
 
 
 # TODO: split this into StaticDataSet and TimeSeriesDataSet?
@@ -664,7 +712,7 @@ class IPersistenceEngine(ABC):
         """
 
     @abstractmethod
-    def find(self, match: str, version: t.Optional[str] = None):
+    def find(self, match: str, version: t.Optional[str] = None) -> t.List[str]:
         """
         This method will find all datasets where the name matches the regex pattern
         given in match. Optionally ignore names which have no dataset with the given version.
@@ -678,5 +726,27 @@ class IPersistenceEngine(ABC):
 
         Returns
         -------
-        List[str] :  the names of the data-nodes in this engine.
+        List[str] :  the names of the data-nodes in this engine in alphabetical order.
+        """
+
+    @abstractmethod
+    def scan(
+        self, dataset_name: str, params: t.Optional[t.Dict] = None
+    ) -> t.Set[DataSetMetadataStub]:
+        """
+        Given a dataset name, and a set of parameters, will find each dataset in that name which
+        matches the params given. If no params are given will return all datasets under that name.
+        Note that you can specify queries on upstream parameters, so "foo.baz: 4.0" means scan for
+        datasets where predecessor foo's parameter baz has value 4.0. This is helpful because
+        often datasets differ only by the value of an upstream parameter.
+
+        Parameters
+        ----------
+        dataset_name: str
+        params: t.Optional[t.Dict]
+            A set of parameters for the dataset.
+
+        Returns
+        -------
+        t.Set[DataSetMetadataStub] : A list of all datasets that met the search criteria.
         """

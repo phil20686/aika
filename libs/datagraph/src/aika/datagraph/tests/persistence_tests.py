@@ -19,6 +19,28 @@ leaf1 = DataSet.build(
     predecessors={},
 )
 
+repeated_leaf1 = DataSet.build(
+    name="leaf1",
+    data=pd.DataFrame(
+        2.0,
+        columns=list("ABC"),
+        index=[Timestamp(x) for x in pd.date_range(start="2021-01-01", periods=10)],
+    ),
+    params={"foo": 2.0, "bar": "baz"},
+    predecessors={},
+)
+
+repeated2_leaf1 = DataSet.build(
+    name="leaf1",
+    data=pd.DataFrame(
+        3.0,
+        columns=list("ABC"),
+        index=[Timestamp(x) for x in pd.date_range(start="2021-01-01", periods=10)],
+    ),
+    params={"foo": 2.0, "bar": "bar"},
+    predecessors={},
+)
+
 
 def _insert_nans(data: pd.DataFrame, locations: List[Tuple]):
     data = data.copy()
@@ -83,6 +105,28 @@ child = DataSet.build(
     ),
     params={"bananas": "some", "apples": 3.0},
     predecessors={"foo": leaf1.metadata, "bar": leaf2.metadata},
+)
+
+repeated_child = DataSet.build(
+    name="child",
+    data=pd.DataFrame(
+        2.0,
+        columns=list("XZY"),
+        index=[Timestamp(x) for x in pd.date_range(start="2021-01-01", periods=10)],
+    ),
+    params={"bananas": "some", "apples": 3.0},
+    predecessors={"foo": repeated_leaf1.metadata, "bar": leaf2.metadata},
+)
+
+repeated2_child = DataSet.build(
+    name="child",
+    data=pd.DataFrame(
+        2.0,
+        columns=list("XZY"),
+        index=[Timestamp(x) for x in pd.date_range(start="2021-01-01", periods=10)],
+    ),
+    params={"bananas": "some", "apples": 4.0},
+    predecessors={"foo": repeated2_leaf1.metadata, "bar": leaf2.metadata},
 )
 
 static_leaf1 = DataSet.build(
@@ -315,6 +359,67 @@ idempotent_insert_tests = [
 # expected
 find_tests = [
     ([leaf1, leaf2, child], "leaf", None, ["leaf1", "leaf2"]),
+    (
+        [leaf2, leaf1, child],
+        "leaf",
+        None,
+        ["leaf1", "leaf2"],
+    ),  # always lexicographically ordered
     ([leaf1, leaf2, child], ".*", None, ["child", "leaf1", "leaf2"]),
     ([leaf1, leaf2, child], "leaf", "fake_version", []),
+]
+
+# datasets to insert
+# dataset name
+# params
+# expected
+scan_tests = [
+    (
+        [leaf1, repeated_leaf1, repeated2_leaf1],
+        "leaf1",
+        None,
+        {leaf1.metadata, repeated_leaf1.metadata, repeated2_leaf1.metadata},
+    ),
+    (
+        [
+            leaf1,
+            repeated_leaf1,
+            repeated2_leaf1,
+            leaf2,
+            child,
+            repeated_child,
+            repeated2_child,
+        ],
+        "child",
+        None,
+        {child.metadata, repeated_child.metadata, repeated2_child.metadata},
+    ),
+    (
+        [
+            leaf1,
+            repeated_leaf1,
+            repeated2_leaf1,
+            leaf2,
+            child,
+            repeated_child,
+            repeated2_child,
+        ],
+        "child",
+        {"apples": 4.0},
+        {repeated2_child.metadata},
+    ),
+    (
+        [
+            leaf1,
+            repeated_leaf1,
+            repeated2_leaf1,
+            leaf2,
+            child,
+            repeated_child,
+            repeated2_child,
+        ],
+        "child",
+        {"foo.foo": 2.0},
+        {repeated_child.metadata, repeated2_child.metadata},
+    ),
 ]

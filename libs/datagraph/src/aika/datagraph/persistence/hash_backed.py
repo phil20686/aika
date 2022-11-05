@@ -193,3 +193,20 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             ):
                 names.append(metadata.name)
         return list(sorted(names))
+
+    def scan(
+        self, dataset_name: str, params: t.Optional[t.Dict] = None
+    ) -> t.Set[DataSetMetadataStub]:
+        results = set()
+        for metadata in self._cache.keys():
+            if metadata.name == dataset_name and (
+                not params
+                or all(
+                    [
+                        metadata.recursively_get_parameter_value(target) == value
+                        for target, value in params.items()
+                    ]
+                )
+            ):
+                results.add(metadata)
+        return results
