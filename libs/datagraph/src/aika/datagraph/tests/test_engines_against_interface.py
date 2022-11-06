@@ -404,6 +404,7 @@ def test_scan(engine_generator, datasets, dataset_name, params, expected):
     assert_call(engine.scan, expected, dataset_name, params)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize(
     "method", [x for x in IPersistenceEngine.__dict__ if not x.startswith("_")]

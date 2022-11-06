@@ -172,8 +172,6 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
     ) -> t.Dict[str, DataSetMetadataStub]:
         record = self._find_record_from_hash(name, hash, include_data=False)
 
-        # print(f"{self.name} - {self.__hash__()}")
-        print(f"{name} - {hash}")
         if record is not None:
             return frozendict(
                 {
@@ -351,10 +349,6 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         self, dataset_name: str, params: t.Optional[t.Dict] = None
     ) -> t.Set[DataSetMetadataStub]:
         search_terms = {"name": dataset_name}
-        if params:
-            for param, value in params.items():
-                if "." not in param:
-                    search_terms["params." + param] = value
         candidates = {
             self._deserialise_metadata_as_stub(record)
             for record in self._collection.find(search_terms)
