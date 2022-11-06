@@ -23,7 +23,6 @@ from aika.datagraph.persistence.mongo_backed import (
     MongoBackedPersistanceEngine,
     pymongo,
 )
-from aika.datagraph.tests import mongomock_utils
 from aika.datagraph.tests.persistence_tests import (
     append_tests,
     deletion_tests,
