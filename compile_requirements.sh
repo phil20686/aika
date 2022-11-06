@@ -29,7 +29,12 @@ sed -i "s/$/[test]/g" packages.in
 #  cd -
 #done
 
-pip-compile packages.in -o requirements.txt --find-links ./wheels --upgrade --rebuild -q
+#VERSION=$(python -c 'import sys; print(".".join([str(x) for x in sys.version_info[:2]]))')
+#REQUIREMENTS="requirements$VERSION.txt"
+REQUIREMENTS="requirements.txt"
+
+
+pip-compile packages.in -o $REQUIREMENTS --find-links ./wheels --upgrade --rebuild -q
 
 # replace all references to the local packages with editable path versions
-sed -i -E "s|^aika-([^=]+)==.*$|-e libs/\1|g" requirements.txt
+sed -i -E "s|^aika-([^=]+)==.*$|-e libs/\1|g" $REQUIREMENTS

@@ -39,7 +39,7 @@ colorama==0.4.6
     #   pytest
 dnspython==2.2.1
     # via pymongo
-exceptiongroup==1.0.0
+exceptiongroup==1.0.1
     # via pytest
 frozendict==2.3.4
     # via aika-putki
@@ -63,6 +63,8 @@ numpy==1.23.4
     #   pandas
     #   scikit-learn
     #   scipy
+overrides==7.3.1
+    # via aika-putki
 packaging==21.3
     # via
     #   mongomock
@@ -76,7 +78,7 @@ pandas==1.5.1
     #   aika-utilities
 pathspec==0.10.1
     # via black
-platformdirs==2.5.2
+platformdirs==2.5.3
     # via black
 pluggy==1.0.0
     # via pytest

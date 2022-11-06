@@ -8,7 +8,6 @@ from typing import Dict, List, Set, TypeVar
 import gridfs
 import mongomock as mongomock
 import pandas as pd
-import pymongo
 import pytest
 from frozendict import frozendict
 from mongomock.gridfs import enable_gridfs_integration
@@ -20,7 +19,10 @@ from aika.datagraph.interface import (
     IPersistenceEngine,
 )
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
-from aika.datagraph.persistence.mongo_backed import MongoBackedPersistanceEngine
+from aika.datagraph.persistence.mongo_backed import (
+    MongoBackedPersistanceEngine,
+    pymongo,
+)
 from aika.datagraph.tests.persistence_tests import (
     append_tests,
     deletion_tests,
@@ -33,13 +35,13 @@ from aika.datagraph.tests.persistence_tests import (
     param_fidelity_tests,
     predecessor_from_hash_tests,
     replace_tests,
+    scan_tests,
 )
 from aika.utilities.testing import assert_call, assert_equal
 
 enable_gridfs_integration()
 
 
-@mongomock.patch()
 def _mongo_backend_generator():
     database_name = "foo"
     process_local_name = str(id(multiprocessing.current_process()))
@@ -48,10 +50,6 @@ def _mongo_backend_generator():
         client=client,
         database_name=database_name,
         collection_name=process_local_name,
-        _gridfs=gridfs.GridFS(
-            client.get_database(database_name),
-            collection=f"{process_local_name} + _grid_fs",
-        ),
     )
     engine._client.get_database(database_name).drop_collection(process_local_name)
     return engine
@@ -129,6 +127,7 @@ def _assert_engine_contains_expected(engine, expected):
             )
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, expected", append_tests)
 def test_append(engine_generator, datasets, expected):
@@ -142,6 +141,7 @@ def test_append(engine_generator, datasets, expected):
     _assert_engine_contains_expected(engine, expected)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, expected", append_tests)
 def test_append_via_metadata(engine_generator, datasets, expected):
@@ -157,6 +157,7 @@ def test_append_via_metadata(engine_generator, datasets, expected):
     _assert_engine_contains_expected(engine, expected)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, expected", merge_tests)
 def test_merge(engine_generator, datasets, expected):
@@ -170,6 +171,7 @@ def test_merge(engine_generator, datasets, expected):
     _assert_engine_contains_expected(engine, expected)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, expected", merge_tests)
 def test_merge_via_dataset(engine_generator, datasets, expected):
@@ -185,6 +187,7 @@ def test_merge_via_dataset(engine_generator, datasets, expected):
     _assert_engine_contains_expected(engine, expected)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, replacement, expected", replace_tests)
 def test_replace(engine_generator, datasets, replacement, expected):
@@ -201,6 +204,7 @@ def test_replace(engine_generator, datasets, replacement, expected):
     _assert_engine_contains_expected(engine, expected)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, replacement, expected", replace_tests)
 def test_replace_via_metadata(engine_generator, datasets, replacement, expected):
@@ -219,6 +223,7 @@ def test_replace_via_metadata(engine_generator, datasets, replacement, expected)
     _assert_engine_contains_expected(engine, expected)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize(
     "datasets, target, expected_predecessors", predecessor_from_hash_tests
@@ -250,6 +255,7 @@ def test_get_predecessors_from_hash(
         _assert_stub_equals_real(result[name], expected)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, metadata, expected", find_successors_tests)
 def test_find_successors(engine_generator, datasets, metadata, expected):
@@ -263,6 +269,7 @@ def test_find_successors(engine_generator, datasets, metadata, expected):
     assert_call(engine.find_successors, _replace_engine(engine, expected), metadata)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize(
     "datasets, metadata, recursive, deletion_expected, remaining_datasets",
@@ -276,7 +283,6 @@ def test_delete(
     deletion_expected,
     remaining_datasets,
 ):
-
     engine = engine_generator()
     datasets = _replace_engine(engine, datasets)
     metadata = metadata.replace_engine(engine, include_predecessors=True)
@@ -289,6 +295,7 @@ def test_delete(
     _assert_engine_contains_expected(engine, remaining_datasets)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize(
     "datasets_to_insert, func_name, func_kwargs, expect",
@@ -309,6 +316,7 @@ def test_error_conditions(
     assert_call(func, expect, **func_kwargs)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("input_params, output_params", param_fidelity_tests)
 def test_parameter_fidelity(input_params, output_params, engine_generator):
@@ -336,6 +344,7 @@ def test_parameter_fidelity(input_params, output_params, engine_generator):
     assert_equal(hash(new_dataset.metadata.params), hash(output_params))
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize(
     "datasets, target, time_range, expected_data", get_dataset_tests
@@ -352,6 +361,7 @@ def test_get_dataset(engine_generator, datasets, target, time_range, expected_da
     assert_equal(result.data, expected_data)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, expected", idempotent_insert_tests)
 def test_idempotent_insert(engine_generator, datasets, expected):
@@ -365,6 +375,7 @@ def test_idempotent_insert(engine_generator, datasets, expected):
     _assert_engine_contains_expected(engine, expected)
 
 
+@mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, pattern, version, expected", find_tests)
 def test_find(engine_generator, datasets, pattern, version, expected):
@@ -375,3 +386,29 @@ def test_find(engine_generator, datasets, pattern, version, expected):
         engine.idempotent_insert(dataset)
 
     assert_call(engine.find, expected, pattern, version=version)
+
+
+@mongomock.patch()
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize("datasets, dataset_name, params, expected", scan_tests)
+def test_scan(engine_generator, datasets, dataset_name, params, expected):
+    engine = engine_generator()
+    datasets = _replace_engine(engine, datasets)
+    if isinstance(expected, set):
+        # filter out exception cases.
+        expected = _replace_engine(engine, expected)
+
+    for dataset in datasets:
+        engine.idempotent_insert(dataset)
+    assert_call(engine.scan, expected, dataset_name, params)
+
+
+@mongomock.patch()
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize(
+    "method", [x for x in IPersistenceEngine.__dict__ if not x.startswith("_")]
+)
+def test_docstrings_exist(engine_generator, method):
+    engine = engine_generator()
+    assert hasattr(engine, method)
+    assert getattr(engine, method).__doc__

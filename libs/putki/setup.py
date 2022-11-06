@@ -28,6 +28,7 @@ setup(
         "aika-time",
         "attrs",
         "frozendict",
+        "overrides",
     ],
     extras_require=dict(
         test=["pytest", "black", "isort"],
