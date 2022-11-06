@@ -178,7 +178,10 @@ class DataSetMetadataStub:
         elif param_name == "name":
             return self.name
         else:
-            return self._params[param_name]
+            try:
+                return self._params[param_name]
+            except KeyError:
+                raise ValueError(f"Dataset {self.name} has no parameter {param_name}")
 
     def recursively_get_parameter_value(self, param_name):
         """
@@ -197,7 +200,12 @@ class DataSetMetadataStub:
         target_metadata = self
         path = param_name.split(".")
         for predecessor in path[:-1]:
-            target_metadata = target_metadata.predecessors[predecessor]
+            try:
+                target_metadata = target_metadata.predecessors[predecessor]
+            except KeyError:
+                raise ValueError(
+                    f"Dataset {target_metadata.name} had no predecessor under the name {predecessor}"
+                )
         return target_metadata.get_parameter_value(path[-1])
 
 
@@ -364,16 +372,42 @@ class DataSet:
 
 class IPersistenceEngine(ABC):
 
+    """
+    The model of our persistence engines here is that "the data is the state",
+    so you can have lots of persistence engines pointing at a database and
+    they should be functionally identical. Ideally we would make sure that
+    all operations are fully atomic, but in practice this is the back end
+    for a graph computation, and graph runners will make sure that the tasks
+    run in the right order.
+    """
+
     # ----------------------------------------------------------------------------------
     # Read-only methods
     # ----------------------------------------------------------------------------------
 
     @abstractmethod
     def set_state(self) -> t.Dict[str, t.Any]:
+        """
+        This method will return a dict that represents the information
+        that is needed to allow a engine to be recreated. It must pair
+        with the create implementation so that
+        IPersistence.create_engine(**engine_instance.set_state())
+        will create a functionally identical persistence engine.
+
+        Returns
+        -------
+
+        """
         raise NotImplementedError  # pragma: no cover
 
     @classmethod
     def create_engine(cls, d: t.Dict[str, t.Any]):
+        """
+        It is possible to create datasets that point to datasets in a different
+        database owned by a different engine, to do this, we must be able to create
+        persistence engines out of data stored along with the predecessors. That is
+        what this classmethod does, it is used inside persistent storage.
+        """
         d = (
             d.copy()
         )  # should not alter the dict, which may be a database record of some type.
@@ -396,7 +430,7 @@ class IPersistenceEngine(ABC):
     @abstractmethod
     def get_predecessors_from_hash(
         self, name: str, hash: int
-    ) -> t.Dict[str, DataSetMetadataStub]:
+    ) -> t.Mapping[str, DataSetMetadataStub]:
         """
         Given a node name and the hash of a dataset, returns a dataset stub.
         """

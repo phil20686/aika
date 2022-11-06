@@ -4,6 +4,7 @@ import typing as t
 import gridfs
 import pymongo
 from frozendict._frozendict import frozendict
+from overrides import overrides
 
 from aika.datagraph.interface import (
     DataSet,
@@ -68,6 +69,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         client = pymongo.MongoClient()
         return cls(client=client, **d)
 
+    @overrides()
     def set_state(self) -> t.Dict[str, t.Any]:
         # /TODO figure out the client and authentication bits later.
         return {
@@ -93,7 +95,8 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             "hash": metadata.__hash__(),
             "time_level": metadata.time_level,
             "static": metadata.static,
-            "params": metadata.params,
+            # TODO : remove cast when issue https://github.com/mongomock/mongomock/issues/814 is resolved.
+            "params": dict(metadata.params),
             "version": metadata.version,
             "engine": metadata.engine.set_state(),
             "predecessors": [
@@ -163,6 +166,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             )  # read it all
         return record
 
+    @overrides
     def get_predecessors_from_hash(
         self, name: str, hash: int
     ) -> t.Dict[str, DataSetMetadataStub]:
@@ -182,11 +186,13 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         else:
             raise ValueError(f"No datasets {name} {hash}")
 
+    @overrides()
     def exists(self, metadata: DataSetMetadata) -> bool:
         return (
             self._find_record_from_hash(metadata.name, metadata.__hash__()) is not None
         )
 
+    @overrides()
     def get_dataset(
         self,
         metadata: DataSetMetadata,
@@ -202,6 +208,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
                 **self._deserialise_data_metadata(record, time_range),
             )
 
+    @overrides()
     def read(
         self, metadata: DataSetMetadata, time_range: t.Optional[TimeRange] = None
     ) -> t.Any:
@@ -211,6 +218,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         else:
             return dataset.data
 
+    @overrides()
     def get_data_time_range(self, metadata: DataSetMetadata) -> t.Optional[TimeRange]:
         if metadata.static:
             raise ValueError("No declared time range for static data")
@@ -219,6 +227,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             if record is not None:
                 return eval(record["data_time_range"])
 
+    @overrides()
     def get_declared_time_range(
         self, metadata: DataSetMetadata
     ) -> t.Optional[TimeRange]:
@@ -229,6 +238,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             if record is not None:
                 return eval(record["declared_time_range"])
 
+    @overrides()
     def idempotent_insert(
         self,
         dataset: DataSet,
@@ -238,6 +248,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         else:
             return self.replace(dataset)
 
+    @overrides()
     def replace(
         self,
         dataset: DataSet,
@@ -266,7 +277,8 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             self._gridfs.put(data=pickle.dumps(dataset.data), _id=foo.inserted_id)
             return False
 
-    def append(self, dataset):
+    @overrides()
+    def append(self, dataset) -> bool:
         if dataset.metadata.static:
             raise ValueError("Can only append for time-series data")
         existing_dataset = self.get_dataset(dataset.metadata)
@@ -275,7 +287,8 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         else:
             return self.replace(self._append(existing_dataset, dataset))
 
-    def merge(self, dataset):
+    @overrides()
+    def merge(self, dataset) -> bool:
         if dataset.metadata.static:
             raise ValueError("Can only merge for time-series data")
         existing_dataset = self.get_dataset(dataset.metadata)
@@ -284,6 +297,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         else:
             self.replace(self._merge(existing_dataset, dataset))
 
+    @overrides()
     def find_successors(self, metadata: DataSetMetadata) -> t.Set[DataSetMetadata]:
         records = self._collection.find(
             {
@@ -311,13 +325,15 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             else:
                 raise NotImplementedError  # pragma: no cover
 
+    @overrides()
     def delete(self, metadata: DataSetMetadata, recursive=False):
         if recursive:
             for successor in self.find_successors(metadata):
                 self.delete(successor, recursive=True)
         return self._delete_leaf(metadata)
 
-    def find(self, match: str, version: t.Optional[str] = None):
+    @overrides()
+    def find(self, match: str, version: t.Optional[str] = None) -> t.List[str]:
         search_terms = {"name": {"$regex": match}}
         if version is not None:
             search_terms["version"] = version
@@ -330,6 +346,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             )
         )
 
+    @overrides()
     def scan(
         self, dataset_name: str, params: t.Optional[t.Dict] = None
     ) -> t.Set[DataSetMetadataStub]:

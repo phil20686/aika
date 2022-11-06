@@ -389,18 +389,26 @@ def test_find(engine_generator, datasets, pattern, version, expected):
     assert_call(engine.find, expected, pattern, version=version)
 
 
-@pytest.mark.skip(
-    "Mongo mock does not support queries on nested objects - test locally"
-)
-# TODO : remove skip when issue https://github.com/mongomock/mongomock/issues/814 is resolved.
 @mongomock.patch()
 @pytest.mark.parametrize("engine_generator", engine_generators)
 @pytest.mark.parametrize("datasets, dataset_name, params, expected", scan_tests)
 def test_scan(engine_generator, datasets, dataset_name, params, expected):
     engine = engine_generator()
     datasets = _replace_engine(engine, datasets)
-    expected = _replace_engine(engine, expected)
+    if isinstance(expected, set):
+        # filter out exception cases.
+        expected = _replace_engine(engine, expected)
 
     for dataset in datasets:
         engine.idempotent_insert(dataset)
     assert_call(engine.scan, expected, dataset_name, params)
+
+
+@pytest.mark.parametrize("engine_generator", engine_generators)
+@pytest.mark.parametrize(
+    "method", [x for x in IPersistenceEngine.__dict__ if not x.startswith("_")]
+)
+def test_docstrings_exist(engine_generator, method):
+    engine = engine_generator()
+    assert hasattr(engine, method)
+    assert getattr(engine, method).__doc__

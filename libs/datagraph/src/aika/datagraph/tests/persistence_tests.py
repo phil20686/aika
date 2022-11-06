@@ -422,4 +422,18 @@ scan_tests = [
         {"foo.foo": 2.0},
         {repeated_child.metadata, repeated2_child.metadata},
     ),
+    (
+        [
+            leaf1,
+            repeated_leaf1,
+            repeated2_leaf1,
+            leaf2,
+            child,
+            repeated_child,
+            repeated2_child,
+        ],
+        "child",
+        {"strawberries": 2.0},
+        ValueError("Dataset child has no parameter strawberries"),
+    ),
 ]
