@@ -5,7 +5,7 @@ import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import cpu_count
-from typing import Set, Iterable
+from typing import Iterable, Set
 
 from aika.putki import ITask
 from aika.putki.graph import Graph

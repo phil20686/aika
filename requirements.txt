@@ -39,7 +39,7 @@ colorama==0.4.6
     #   pytest
 dnspython==2.2.1
     # via pymongo
-exceptiongroup==1.0.1
+exceptiongroup==1.0.4
     # via pytest
 frozendict==2.3.4
     # via aika-putki
@@ -53,7 +53,9 @@ mongomock==4.1.2
     # via aika-datagraph
 mypy-extensions==0.4.3
     # via black
-numpy==1.23.4
+networkx==2.8.8
+    # via aika-putki
+numpy==1.23.5
     # via
     #   aika-datagraph
     #   aika-ml
@@ -69,20 +71,20 @@ packaging==21.3
     # via
     #   mongomock
     #   pytest
-pandas==1.5.1
+pandas==1.5.2
     # via
     #   aika-datagraph
     #   aika-ml
     #   aika-putki
     #   aika-time
     #   aika-utilities
-pathspec==0.10.1
+pathspec==0.10.2
     # via black
-platformdirs==2.5.3
+platformdirs==2.5.4
     # via black
 pluggy==1.0.0
     # via pytest
-pymongo==4.3.2
+pymongo==4.3.3
     # via aika-datagraph
 pyparsing==3.0.9
     # via packaging

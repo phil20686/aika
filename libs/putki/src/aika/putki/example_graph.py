@@ -13,9 +13,10 @@ from aika.time.time_of_day import TimeOfDay
 from aika.time.time_range import TimeRange
 
 
-def generate_index(time_range: TimeRange, time_of_day: TimeOfDay):
-
-    return TimeOfDayCalendar(time_of_day=time_of_day).to_index(time_range)
+def generate_index(time_range: TimeRange, time_of_day: str):
+    return TimeOfDayCalendar(time_of_day=TimeOfDay.from_str(time_of_day)).to_index(
+        time_range
+    )
 
 
 def compound_interest(calendar: pd.Index, interest_rate: float):
@@ -33,7 +34,7 @@ class ReferenceDataTasks(TaskModule):
         self.CALENDAR = context.time_series_task(
             "CALENDAR",
             generate_index,
-            time_of_day=TimesOfDay.LONDON_1420,
+            time_of_day=str(TimesOfDay.LONDON_1420),
             completion_checker=CalendarChecker(
                 TimeOfDayCalendar(TimesOfDay.LONDON_1420)
             ),

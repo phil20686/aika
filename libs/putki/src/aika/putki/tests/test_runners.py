@@ -4,7 +4,7 @@ from typing import Dict
 import pytest
 
 from aika.putki.graph import Graph
-from aika.putki.runners import SingleThreadedRunner, MultiThreadedRunner
+from aika.putki.runners import MultiThreadedRunner, SingleThreadedRunner
 
 
 class MockDependency:
@@ -107,17 +107,16 @@ class TestRunners:
                 "child_of_failure_one",
                 dependencies={
                     "foo": MockTask("failed_grand_parent", should_raise=True)
-                }
+                },
             ),
             "bar": MockTask(
                 "child_of_failure_two",
                 dependencies={
                     #  this should resolve to the same mock task despite having two instances.
                     "foo": MockTask("failed_grand_parent", should_raise=True)
-                }
-            )
-
-        }
+                },
+            ),
+        },
     )
 
     @pytest.mark.parametrize("runner", runners)
