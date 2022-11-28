@@ -7,7 +7,7 @@ from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from aika.putki import CalendarChecker
 from aika.putki.context import Defaults, GraphContext
 from aika.putki.graph import Graph, TaskModule
-from aika.putki.runners import LocalRunner
+from aika.putki.runners import SingleThreadedRunner
 from aika.time.calendars import TimeOfDayCalendar
 from aika.time.time_of_day import TimeOfDay
 from aika.time.time_range import TimeRange
@@ -78,7 +78,7 @@ ctx = GraphContext(defaults=defaults)
 
 tasks = AllTasks(ctx)
 graph = Graph(tasks.all_tasks)
-runner = LocalRunner()
+runner = SingleThreadedRunner()
 runner.run(graph)
 
 pprint(tasks.all_tasks)

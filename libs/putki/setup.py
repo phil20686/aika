@@ -29,6 +29,7 @@ setup(
         "attrs",
         "frozendict",
         "overrides",
+        "networkx",
     ],
     extras_require=dict(
         test=["pytest", "black", "isort"],
