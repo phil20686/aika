@@ -33,11 +33,14 @@ def _parse_timezone(tz_or_str: t.Union[datetime.tzinfo, str]) -> datetime.tzinfo
         return tz_or_str
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, repr=False)
 class TimeOfDay:
 
     time: datetime.time = attr.ib()
     tz: t.Union[datetime.tzinfo] = attr.ib(converter=_parse_timezone)
+
+    def __repr__(self):
+        return f"{self.time.strftime('%H:%M:%S.%f')} [{str(self.tz)}]"
 
     @classmethod
     def from_str(cls, s):

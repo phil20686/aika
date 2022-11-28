@@ -3,9 +3,9 @@ The tests here should be a complete set of interface tests for persistent engine
 any backend
 """
 import multiprocessing
+import pickle
 from typing import Dict, List, Set, TypeVar
 
-import gridfs
 import mongomock as mongomock
 import pandas as pd
 import pytest
@@ -21,7 +21,7 @@ from aika.datagraph.interface import (
 from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from aika.datagraph.persistence.mongo_backed import (
     MongoBackedPersistanceEngine,
-    pymongo,
+    UnsecuredLocalhostClient,
 )
 from aika.datagraph.tests.persistence_tests import (
     append_tests,
@@ -45,9 +45,9 @@ enable_gridfs_integration()
 def _mongo_backend_generator():
     database_name = "foo"
     process_local_name = str(id(multiprocessing.current_process()))
-    client = pymongo.MongoClient()
+    client_creator = UnsecuredLocalhostClient()
     engine = MongoBackedPersistanceEngine(
-        client=client,
+        client_creator=client_creator,
         database_name=database_name,
         collection_name=process_local_name,
     )
@@ -412,3 +412,10 @@ def test_docstrings_exist(engine_generator, method):
     engine = engine_generator()
     assert hasattr(engine, method)
     assert getattr(engine, method).__doc__
+
+
+@mongomock.patch()
+def test_mongo_engine_pickling():
+    mongo_engine = _mongo_backend_generator()
+    new_mongo_engine = pickle.loads(pickle.dumps(mongo_engine))
+    assert mongo_engine == new_mongo_engine

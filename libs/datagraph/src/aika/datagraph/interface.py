@@ -19,7 +19,6 @@ class DataSetMetadataStub:
     def replace_engine(self, engine):
         """
         Useful for testing, not for production code.
-
         """
 
         return DataSetMetadataStub(

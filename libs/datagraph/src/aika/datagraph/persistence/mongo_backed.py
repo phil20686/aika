@@ -1,5 +1,6 @@
 import pickle
 import typing as t
+from abc import ABC, abstractmethod
 
 import gridfs
 import pymongo
@@ -13,6 +14,26 @@ from aika.datagraph.interface import (
     IPersistenceEngine,
 )
 from aika.time.time_range import TimeRange
+
+
+class IMongoClientCreator(ABC):
+    """
+    To make the engine pickleable, we must have an entity that can create the clients. Since a new client will
+    need to be created on every process or distributed machine.
+    """
+
+    @abstractmethod
+    def create_client(self) -> pymongo.MongoClient:
+        raise NotImplementedError
+
+
+class UnsecuredLocalhostClient(IMongoClientCreator):
+    """
+    Creates the default mongo client for connection to a localhost
+    """
+
+    def create_client(self) -> pymongo.MongoClient:
+        return pymongo.MongoClient()
 
 
 class MongoBackedPersistanceEngine(IPersistenceEngine):
@@ -33,25 +54,46 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
     this need not block normal envisaged use.
     """
 
+    def _init_derived_properties(self):
+        self._client = self._client_creator.create_client()
+        self._database = self._client.get_database(self._database_name)
+        self._collection = self._database.get_collection(self._collection_name)
+        self._gridfs = gridfs.GridFS(
+            self._database, collection=self._collection_name + "_grid_fs"
+        )
+
     def __init__(
         self,
-        client: pymongo.MongoClient,
+        client_creator: IMongoClientCreator,
         database_name="datagraph",
         collection_name="default",
     ):
-        self._client = client
+        self._client_creator = client_creator
         self._database_name = database_name
         self._collection_name = collection_name
-        self._database = self._client.get_database(database_name)
-        self._collection = self._database.get_collection(collection_name)
-        self._gridfs = gridfs.GridFS(
-            self._database, collection=collection_name + "_grid_fs"
-        )
         self._serialise_mode = "pickle"
         self._hash_equality_sufficient = True
+        self._init_derived_properties()
 
     def __hash__(self):
         return hash((self._database_name, self._serialise_mode))
+
+    def __getstate__(self):
+        return {
+            "client_creator": self._client_creator,
+            "database_name": self._database_name,
+            "collection_name": self._collection_name,
+            "serialise_mode": self._serialise_mode,
+            "hash_equality_sufficient": self._hash_equality_sufficient,
+        }
+
+    def __setstate__(self, state):
+        self._client_creator = state["client_creator"]
+        self._database_name = state["database_name"]
+        self._collection_name = state["collection_name"]
+        self._serialise_mode = state["serialise_mode"]
+        self._hash_equality_sufficient = state["hash_equality_sufficient"]
+        self._init_derived_properties()
 
     def __eq__(self, other):
         if isinstance(other, MongoBackedPersistanceEngine):
@@ -65,15 +107,15 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             return NotImplemented  # pragma: no cover
 
     @classmethod
-    def _create_engine(cls, d: t.Dict[str, t.Any]):
-        client = pymongo.MongoClient()
-        return cls(client=client, **d)
+    def _create_engine(cls, d: t.Dict[str, t.Any]) -> "MongoBackedPersistanceEngine":
+        client_creator = pickle.loads(d.pop("client_creator"))
+        return cls(client_creator=client_creator, **d)
 
     @overrides()
     def set_state(self) -> t.Dict[str, t.Any]:
-        # /TODO figure out the client and authentication bits later.
         return {
             "type": "mongodb",
+            "client_creator": pickle.dumps(self._client_creator),
             "database_name": self._database_name,
             "collection_name": self._collection_name,
         }

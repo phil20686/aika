@@ -7,15 +7,16 @@ from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from aika.putki import CalendarChecker
 from aika.putki.context import Defaults, GraphContext
 from aika.putki.graph import Graph, TaskModule
-from aika.putki.runners import LocalRunner
+from aika.putki.runners import SingleThreadedRunner
 from aika.time.calendars import TimeOfDayCalendar
 from aika.time.time_of_day import TimeOfDay
 from aika.time.time_range import TimeRange
 
 
-def generate_index(time_range: TimeRange, time_of_day: TimeOfDay):
-
-    return TimeOfDayCalendar(time_of_day=time_of_day).to_index(time_range)
+def generate_index(time_range: TimeRange, time_of_day: str):
+    return TimeOfDayCalendar(time_of_day=TimeOfDay.from_str(time_of_day)).to_index(
+        time_range
+    )
 
 
 def compound_interest(calendar: pd.Index, interest_rate: float):
@@ -33,7 +34,7 @@ class ReferenceDataTasks(TaskModule):
         self.CALENDAR = context.time_series_task(
             "CALENDAR",
             generate_index,
-            time_of_day=TimesOfDay.LONDON_1420,
+            time_of_day=str(TimesOfDay.LONDON_1420),
             completion_checker=CalendarChecker(
                 TimeOfDayCalendar(TimesOfDay.LONDON_1420)
             ),
@@ -78,7 +79,7 @@ ctx = GraphContext(defaults=defaults)
 
 tasks = AllTasks(ctx)
 graph = Graph(tasks.all_tasks)
-runner = LocalRunner()
+runner = SingleThreadedRunner()
 runner.run(graph)
 
 pprint(tasks.all_tasks)
