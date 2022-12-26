@@ -4,6 +4,6 @@ build-backend = "setuptools.build_meta"
 
 # pyproject.toml
 [tool.setuptools_scm]
-write_to = "./libs/time/src/aika/putki/_version.py"
+write_to = "./libs/putki/src/aika/putki/_version.py"
 root = "../.."
 git_describe_command = "git describe --tags --match aika-* --first-parent"
