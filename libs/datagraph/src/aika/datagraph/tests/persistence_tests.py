@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
-from frozendict._frozendict import frozendict
+from frozendict import frozendict
 
 from aika.datagraph.interface import DataSet
 from aika.time.time_range import TimeRange
