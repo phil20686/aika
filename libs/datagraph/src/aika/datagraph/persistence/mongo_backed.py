@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 import gridfs
 import pymongo
-from frozendict._frozendict import frozendict
+from frozendict import frozendict
 from overrides import overrides
 
 from aika.datagraph.interface import (
