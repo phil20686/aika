@@ -2,9 +2,7 @@ import inspect
 import typing as t
 from abc import ABC, abstractmethod
 from functools import cached_property
-from pprint import pformat
 
-import attr
 import pandas as pd
 from frozendict import frozendict
 
@@ -17,13 +15,58 @@ from aika.putki.interface import (
     ITimeSeriesTask,
 )
 from aika.time.time_range import TimeRange
-from aika.utilities.abstract import abstract_attribute
-from aika.utilities.pandas_utils import IndexTensor
+from aika.utilities.freezing import freeze_recursively
+from aika.utilities.pandas_utils import IndexTensor, Level
 
 
 class TaskBase(ITask, ABC):
+    def __init__(
+        self,
+        *,
+        name: str,
+        namespace: str,
+        version: str,
+        persistence_engine: IPersistenceEngine,
+        dependencies: t.Mapping[str, Dependency],
+    ):
+        self._name = name
+        self._namespace = namespace
+        self._version = version
+        self._persistence_engine = persistence_engine
+        self._dependencies = dependencies
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def namespace(self) -> str:
+        return self._namespace
+
+    @property
+    def version(self) -> str:
+        return self._version
+
+    @property
+    def persistence_engine(self) -> IPersistenceEngine:
+        return self._persistence_engine
+
+    @property
+    def dependencies(self) -> t.Dict[str, Dependency]:
+        return self._dependencies
+
     def read(self, time_range: t.Optional[TimeRange] = None) -> t.Any:
         return self.output.read(time_range=time_range)
+
+    def __eq__(self, other: t.Any):
+        #  Tasks are equal if they create the same data
+        if isinstance(ITask, other):
+            return self.output == other.output
+        else:
+            return NotImplementedError
+
+    def __hash__(self):
+        return self.output.__hash__()
 
 
 class TimeSeriesTaskBase(ITimeSeriesTask, TaskBase, ABC):
@@ -68,11 +111,15 @@ class StaticTaskBase(IStaticTask, TaskBase, ABC):
 
 
 class FunctionWrapperMixin(ITask, ABC):
+    @property
+    @abstractmethod
+    def function(self) -> t.Callable[..., t.Any]:
+        pass
 
-    # it is assumed that these will be constructor arguments in concrete subclasses
-    function: t.Callable[..., t.Any] = abstract_attribute()
-    scalar_kwargs: frozendict[str, t.Any] = abstract_attribute()
-    dependencies: frozendict[str, Dependency] = abstract_attribute()
+    @property
+    @abstractmethod
+    def scalar_kwargs(self) -> frozendict:
+        pass
 
     @abstractmethod
     def get_data_kwargs(self) -> t.Dict[str, t.Any]:
@@ -92,25 +139,60 @@ class FunctionWrapperMixin(ITask, ABC):
         )
 
 
-@attr.s(frozen=True, kw_only=True)
 class TimeSeriesFunctionWrapper(FunctionWrapperMixin, TimeSeriesTaskBase):
+    @property
+    def time_range(self) -> TimeRange:
+        return self._time_range
 
-    name: str = attr.ib()
-    namespace: str = attr.ib()
-    version: str = attr.ib()
-    persistence_engine: IPersistenceEngine = attr.ib()
+    @property
+    def completion_checker(self) -> ICompletionChecker:
+        return self._completion_checker
 
-    time_range: TimeRange = attr.ib()
-    time_level: t.Union[int, str, None] = attr.ib(default=None)
-    default_lookback: t.Optional[pd.offsets.BaseOffset] = attr.ib(default=None)
-    completion_checker: ICompletionChecker = attr.ib()
+    @property
+    def function(self):
+        return self._function
 
-    function: t.Callable[..., t.Any] = attr.ib()
-    scalar_kwargs: frozendict[str, t.Any] = attr.ib()
-    dependencies: frozendict[str, Dependency] = attr.ib()
+    @property
+    def scalar_kwargs(self) -> frozendict:
+        return self._scalar_kwargs
 
-    def __attrs_post_init__(self):
-        self.validate()
+    @property
+    def time_level(self) -> t.Optional[Level]:
+        return self._time_level
+
+    @property
+    def default_lookback(self) -> t.Optional[pd.offsets.BaseOffset]:
+        return self._default_lookback
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        namespace: str,
+        version: str,
+        persistence_engine: IPersistenceEngine,
+        time_range: TimeRange,
+        completion_checker: ICompletionChecker,
+        function: t.Callable[..., t.Any],
+        scalar_kwargs: t.Mapping[str, t.Any],
+        dependencies: t.Mapping[str, Dependency],
+        time_level: t.Optional[Level] = None,
+        default_lookback: t.Optional[pd.offsets.BaseOffset] = None,
+    ):
+        super().__init__(
+            name=name,
+            namespace=namespace,
+            version=version,
+            persistence_engine=persistence_engine,
+            dependencies=dependencies,
+        )
+        self._time_range = time_range
+        self._completion_checker = completion_checker
+        self._function = function
+        self._scalar_kwargs = freeze_recursively(scalar_kwargs)
+        self._time_level = time_level
+        self._default_lookback = default_lookback
+        self.validate()  # from the mixin
 
     def run(self):
         data_kwargs = self.get_data_kwargs()
@@ -145,20 +227,36 @@ class TimeSeriesFunctionWrapper(FunctionWrapperMixin, TimeSeriesTaskBase):
         self.output.append(data=data, declared_time_range=self.time_range)
 
 
-@attr.s(frozen=True, kw_only=True, auto_attribs=True)
 class StaticFunctionWrapper(FunctionWrapperMixin, StaticTaskBase):
+    @property
+    def function(self) -> t.Callable[..., t.Any]:
+        return self._function
 
-    name: str = attr.ib()
-    namespace: str = attr.ib()
-    version: str = attr.ib()
-    persistence_engine: IPersistenceEngine = attr.ib()
+    @property
+    def scalar_kwargs(self) -> frozendict:
+        return self._scalar_kwargs
 
-    function: t.Callable[..., t.Any] = attr.ib()
-    scalar_kwargs: frozendict[str, t.Any] = attr.ib()
-    dependencies: frozendict[str, Dependency] = attr.ib()
-
-    def __attrs_post_init__(self):
-        self.validate()
+    def __init__(
+        self,
+        *,
+        name: str,
+        namespace: str,
+        version: str,
+        persistence_engine: IPersistenceEngine,
+        function: t.Callable[..., t.Any],
+        scalar_kwargs: t.Mapping[str, t.Any],
+        dependencies: t.Mapping[str, Dependency],
+    ):
+        super().__init__(
+            name=name,
+            namespace=namespace,
+            version=version,
+            persistence_engine=persistence_engine,
+            dependencies=dependencies,
+        )
+        self._function = function
+        self._scalar_kwargs = freeze_recursively(scalar_kwargs)
+        self.validate()  # from the mixin
 
     def run(self):
         data_kwargs = self.get_data_kwargs()

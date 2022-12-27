@@ -66,7 +66,7 @@ def test_validator(offset, expect):
 )
 def test_consistency(calendar: ICalendar, timestamp: pd.Timestamp):
     latest_point_before = calendar.latest_point_before(timestamp)
-    index = calendar.to_index(TimeRange("2022-01-01", timestamp))
+    index = calendar.to_index(TimeRange("2022-04-21", timestamp))
     assert latest_point_before == index[-1]
 
 

@@ -14,7 +14,6 @@ from aika.putki.interface import Dependency, ITask, ITimeSeriesTask
 from aika.putki.task import (
     StaticFunctionWrapper,
     TimeSeriesFunctionWrapper,
-    TimeSeriesTaskBase,
 )
 from aika.time.calendars import UnionCalendar
 from aika.time.time_range import TimeRange
