@@ -14,6 +14,22 @@ from aika.utilities.pandas_utils import Tensor
 from aika.utilities.testing import assert_call, assert_equal
 
 
+class F:
+
+    @staticmethod
+    def add_one(data: Tensor):
+        return data + 1
+
+    @staticmethod
+    def add_one_bivariate(dataset: BivariateDataSet):
+        return BivariateDataSet(
+            X=dataset.X + 1, y=None if dataset.y is None else dataset.y + 1
+        )
+
+    @staticmethod
+    def add(data: Tensor, value):
+        return data + value
+
 class TestBivariateDataSet:
     @pytest.mark.parametrize(
         "one, other, should_be_equal",
@@ -95,20 +111,9 @@ class TestBivariateDataSet:
         assert (one == other) == should_be_equal
 
 
+
 class TestStatelessTransformers:
-    @staticmethod
-    def add_one(data: Tensor):
-        return data + 1
 
-    @staticmethod
-    def add_one_bivariate(dataset: BivariateDataSet):
-        return BivariateDataSet(
-            X=dataset.X + 1, y=None if dataset.y is None else dataset.y + 1
-        )
-
-    @staticmethod
-    def add(data: Tensor, value):
-        return data + value
 
     @pytest.mark.parametrize(
         "input, transformer, output",
@@ -116,7 +121,7 @@ class TestStatelessTransformers:
             (
                 BivariateDataSet(X=pd.Series(1.0, range(5)), y=None),
                 UnivariateStatelessTransformer(
-                    add_one,
+                    F.add_one,
                     on_x=True,
                     on_y=True,
                 ),
@@ -127,7 +132,7 @@ class TestStatelessTransformers:
                     X=pd.Series(1.0, range(5)), y=pd.Series(2.0, range(5))
                 ),
                 UnivariateStatelessTransformer(
-                    add_one,
+                    F.add_one,
                     on_x=True,
                     on_y=True,
                 ),
@@ -140,7 +145,7 @@ class TestStatelessTransformers:
                     X=pd.Series(1.0, range(5)), y=pd.Series(3.0, range(5))
                 ),
                 UnivariateStatelessTransformer(
-                    add_one,
+                    F.add_one,
                     on_x=True,
                     on_y=False,
                 ),
@@ -153,7 +158,7 @@ class TestStatelessTransformers:
                     X=pd.Series(1.0, range(5)), y=pd.Series(2.0, range(5))
                 ),
                 UnivariateStatelessTransformer(
-                    add_one,
+                    F.add_one,
                     on_x=False,
                     on_y=True,
                 ),
@@ -164,7 +169,7 @@ class TestStatelessTransformers:
             (
                 BivariateDataSet(X=pd.Series(1.0, range(5)), y=None),
                 UnivariateStatelessTransformer(
-                    add,
+                    F.add,
                     1,
                     on_x=True,
                     on_y=True,
@@ -176,7 +181,7 @@ class TestStatelessTransformers:
                     X=pd.Series(1.0, range(5)), y=pd.Series(2.0, range(5))
                 ),
                 UnivariateStatelessTransformer(
-                    add,
+                    F.add,
                     1,
                     on_x=True,
                     on_y=True,
@@ -190,7 +195,7 @@ class TestStatelessTransformers:
                     X=pd.Series(1.0, range(5)), y=pd.Series(3.0, range(5))
                 ),
                 UnivariateStatelessTransformer(
-                    add,
+                    F.add,
                     1,
                     on_x=True,
                     on_y=False,
@@ -204,7 +209,7 @@ class TestStatelessTransformers:
                     X=pd.Series(1.0, range(5)), y=pd.Series(2.0, range(5))
                 ),
                 UnivariateStatelessTransformer(
-                    add,
+                    F.add,
                     1,
                     on_x=False,
                     on_y=True,
@@ -215,14 +220,14 @@ class TestStatelessTransformers:
             ),
             (
                 BivariateDataSet(X=pd.Series(1.0, range(5)), y=None),
-                UnivariateStatelessTransformer(add, on_x=True, on_y=True, value=1),
+                UnivariateStatelessTransformer(F.add, on_x=True, on_y=True, value=1),
                 BivariateDataSet(X=pd.Series(2.0, range(5)), y=None),
             ),
             (
                 BivariateDataSet(
                     X=pd.Series(1.0, range(5)), y=pd.Series(2.0, range(5))
                 ),
-                UnivariateStatelessTransformer(add, on_x=True, on_y=True, value=1),
+                UnivariateStatelessTransformer(F.add, on_x=True, on_y=True, value=1),
                 BivariateDataSet(
                     X=pd.Series(2.0, range(5)), y=pd.Series(3.0, range(5))
                 ),
@@ -231,7 +236,7 @@ class TestStatelessTransformers:
                 BivariateDataSet(
                     X=pd.Series(1.0, range(5)), y=pd.Series(3.0, range(5))
                 ),
-                UnivariateStatelessTransformer(add, on_x=True, on_y=False, value=1),
+                UnivariateStatelessTransformer(F.add, on_x=True, on_y=False, value=1),
                 BivariateDataSet(
                     X=pd.Series(2.0, range(5)), y=pd.Series(3.0, range(5))
                 ),
@@ -240,7 +245,7 @@ class TestStatelessTransformers:
                 BivariateDataSet(
                     X=pd.Series(1.0, range(5)), y=pd.Series(2.0, range(5))
                 ),
-                UnivariateStatelessTransformer(add, on_x=False, on_y=True, value=1),
+                UnivariateStatelessTransformer(F.add, on_x=False, on_y=True, value=1),
                 BivariateDataSet(
                     X=pd.Series(1.0, range(5)), y=pd.Series(3.0, range(5))
                 ),
@@ -248,7 +253,7 @@ class TestStatelessTransformers:
             (
                 BivariateDataSet(X=pd.Series(1.0, range(5)), y=None),
                 BivariateStatelessTransformer(
-                    add_one_bivariate,
+                    F.add_one_bivariate,
                 ),
                 BivariateDataSet(X=pd.Series(2.0, range(5)), y=None),
             ),
@@ -257,7 +262,7 @@ class TestStatelessTransformers:
                     X=pd.Series(1.0, range(5)), y=pd.Series(5.0, range(5))
                 ),
                 BivariateStatelessTransformer(
-                    add_one_bivariate,
+                    F.add_one_bivariate,
                 ),
                 BivariateDataSet(
                     X=pd.Series(2.0, range(5)), y=pd.Series(6.0, range(5))
