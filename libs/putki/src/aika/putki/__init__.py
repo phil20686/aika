@@ -1,4 +1,4 @@
-from ._version import __version__
+from ._version import version
 from .completion_checking import CalendarChecker, ICompletionChecker, IrregularChecker
 from .interface import ICompletionChecker, IStaticTask, ITask, ITimeSeriesTask
 from .task import (

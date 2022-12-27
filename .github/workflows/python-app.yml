@@ -13,32 +13,90 @@ permissions:
   contents: read
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
+  test_old_versions:
+    name: ${{ matrix.os.name }} ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os.runs-on }}
+    strategy:
+      matrix:
+        python-version: [3.6]
+        os:
+          - name: Linux
+            runs-on: ubuntu-20.04
+            python_platform: linux
+          - name: Windows
+            runs-on: windows-latest
+            python_platform: win32
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install pip-tools flake8 pytest pytest-cov
-        grep -v "^-e\|^\ \|^#" requirements.txt | xargs python -m pip install
-        python -m pip install -e ./libs/utilities
-        python -m pip install -e ./libs/time
-        python -m pip install -e ./libs/ml
-        python -m pip install -e ./libs/datagraph
-        python -m pip install -e ./libs/putki
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 ./libs/ --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 ./libs/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pytest
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      # You can test your matrix by printing the current Python version
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pip-tools flake8 pytest pytest-cov
+          python -m pip install -e ./libs/utilities[test]
+          python -m pip install -e ./libs/time[test]
+          python -m pip install -e ./libs/ml[test]
+          python -m pip install -e ./libs/datagraph[test]
+          python -m pip install -e ./libs/putki[test]
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 ./libs/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 ./libs/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Test with pytest
+        run: |
+          pytest
+
+  build:
+    name: ${{ matrix.os.name }} ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os.runs-on }}
+    strategy:
+      matrix:
+        python-version: [
+          "3.7",
+          "3.8",
+          "3.9",
+          "3.10",
+          "3.11"
+        ]
+        os:
+          - name: Linux
+            runs-on: ubuntu-20.04
+            python_platform: linux
+          - name: Windows
+            runs-on: windows-latest
+            python_platform: win32
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      # You can test your matrix by printing the current Python version
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pip-tools flake8 pytest pytest-cov
+          python -m pip install -e ./libs/utilities[test]
+          python -m pip install -e ./libs/time[test]
+          python -m pip install -e ./libs/ml[test]
+          python -m pip install -e ./libs/datagraph[test]
+          python -m pip install -e ./libs/putki[test]
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 ./libs/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 ./libs/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Test with pytest
+        run: |
+          pytest

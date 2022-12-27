@@ -2,8 +2,8 @@
 **/.eggs
 **/_version.py
 **/*.pyc
-**/.venv/
-**/venv/
+**/.venv.*/
+**/venv.*/
 libs/*/build/
 **/*.egg-info
 wheels/
