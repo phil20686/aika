@@ -142,7 +142,7 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
             "version": metadata.version,
             "engine": metadata.engine.set_state(),
             "predecessors": [
-                self._serialise_metadata_as_stub(pred) | {"param_name": name}
+                {**self._serialise_metadata_as_stub(pred), **{"param_name": name}}
                 for name, pred in metadata.predecessors.items()
             ],
         }
@@ -311,8 +311,10 @@ class MongoBackedPersistanceEngine(IPersistenceEngine):
         else:
 
             foo = self._collection.insert_one(
-                self._serialise_data_metadata(dataset)
-                | self._serialise_metadata(dataset.metadata)
+                {  # for compatibility 3.8 and earlier cannot use |
+                    **self._serialise_data_metadata(dataset),
+                    **self._serialise_metadata(dataset.metadata),
+                }
             )
             self._gridfs.put(data=pickle.dumps(dataset.data), _id=foo.inserted_id)
             return False

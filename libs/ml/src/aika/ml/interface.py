@@ -115,7 +115,10 @@ class BivariateStatelessTransformer(Transformer):
     """
 
     def __init__(
-        self, func: Callable[[BivariateDataSet, ...], BivariateDataSet], *args, **kwargs
+        self,
+        func: "Callable[[BivariateDataSet, ...], BivariateDataSet]",
+        *args,
+        **kwargs,
     ):
         self._func = func
         self._args = args

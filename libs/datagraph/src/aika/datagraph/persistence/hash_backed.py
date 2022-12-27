@@ -1,7 +1,6 @@
 import re
 import typing as t
 from abc import abstractmethod
-
 from frozendict import frozendict
 from overrides import overrides
 from typing_extensions import Protocol
@@ -37,7 +36,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
     @overrides()
     def get_predecessors_from_hash(
         self, name: str, hash: int
-    ) -> frozendict[str, DataSetMetadataStub]:
+    ) -> t.Mapping[str, DataSetMetadataStub]:
         for metadata in self._cache.keys():
             if metadata.__hash__() == hash and metadata.name == name:
                 return frozendict(

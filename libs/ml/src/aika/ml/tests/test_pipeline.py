@@ -15,7 +15,6 @@ from aika.utilities.testing import assert_call, assert_equal
 
 
 class F:
-
     @staticmethod
     def add_one(data: Tensor):
         return data + 1
@@ -29,6 +28,7 @@ class F:
     @staticmethod
     def add(data: Tensor, value):
         return data + value
+
 
 class TestBivariateDataSet:
     @pytest.mark.parametrize(
@@ -111,10 +111,7 @@ class TestBivariateDataSet:
         assert (one == other) == should_be_equal
 
 
-
 class TestStatelessTransformers:
-
-
     @pytest.mark.parametrize(
         "input, transformer, output",
         [

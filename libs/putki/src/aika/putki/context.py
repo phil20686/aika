@@ -313,12 +313,9 @@ class GraphContext:
 
         # update `scalar_kwargs` to include any arguments which also happen to be class
         # parameters.
-        scalar_kwargs |= {
-            key: cls_kwargs[key]
-            for key in (
-                set(sig.parameters).intersection(cls_kwargs).difference(func_kwargs)
-            )
-        }
+
+        for key in set(sig.parameters).intersection(cls_kwargs).difference(func_kwargs):
+            scalar_kwargs[key] = cls_kwargs[key]
 
         sig.bind(**scalar_kwargs, **dependencies)
         return task_cls(
