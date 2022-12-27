@@ -1,7 +1,13 @@
 import functools
 import inspect
 import typing as t
-from functools import cached_property
+
+try:
+    from functools import cached_property
+except ImportError:
+    # if python version < 3.8.
+    from backports.cached_property import cached_property
+
 
 import attr
 import pandas as pd

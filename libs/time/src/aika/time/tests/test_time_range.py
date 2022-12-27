@@ -7,6 +7,7 @@ from aika.time.time_range import RESOLUTION, TimeRange
 from aika.time.timestamp import Timestamp
 from aika.utilities.pandas_utils import IndexTensor, Tensor
 from aika.utilities.testing import assert_call, assert_equal
+from packaging import version
 
 
 def timestamp_index(*args, tz=None, **kwargs):
@@ -26,7 +27,14 @@ empty_ts_index = pd.DatetimeIndex([], dtype=pd.DatetimeTZDtype(tz="UTC"))
             "2020-01-01T12:00 [America/New_York]",
             TimeRange(None, "2020-01-01T12:00 [America/New_York]"),
             "TimeRange('1677-09-21T00:12:43.145224193 [UTC]', '2020-01-01T12:00:00 [America/New_York]')",
-        ),
+        )
+        if version.parse(pd.__version__) >= version.parse("1.2.0")
+        else (
+            None,
+            "2020-01-01T12:00 [America/New_York]",
+            TimeRange(None, "2020-01-01T12:00 [America/New_York]"),
+            "TimeRange('1677-09-21T00:12:43.145225 [UTC]', '2020-01-01T12:00:00 [America/New_York]')",
+        ),  # unclear why this is necessary? seems python 3.6 restricts us to very old pandas/numpy versions,
         (
             "2021-01-01T12:00",
             Timestamp("2021-01-01T12:00") + RESOLUTION,
