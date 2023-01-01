@@ -1,12 +1,16 @@
+import pickle
 import typing as t
 from abc import ABC, abstractmethod
 
 import attr
 import pandas as pd
 from frozendict import frozendict
+from overrides import overrides
 
 from aika.datagraph.utils import normalize_parameters
+from aika.time import TimeRange
 from aika.time.time_range import TimeRange
+from aika.utilities.freezing import unfreeze_recursively
 from aika.utilities.pandas_utils import IndexTensor, equals
 
 
@@ -92,7 +96,9 @@ class DataSetMetadataStub:
 
     @property
     def predecessors(self) -> t.Dict[str, "DataSetMetadataStub"]:
-        return self.engine.get_predecessors_from_hash(self._name, self._hash)
+        return self.engine.get_predecessors_from_hash(
+            self._name, self._version, self._hash
+        )
 
     def exists(self):
         return self.engine.exists(self)
@@ -421,6 +427,12 @@ class IPersistenceEngine(ABC):
             )
 
             return MongoBackedPersistanceEngine._create_engine(d)
+        elif engine_type == "pure_filesystem":
+            from aika.datagraph.persistence.pure_filesystem_backend import (
+                FileSystemPersistenceEngine,
+            )
+
+            return FileSystemPersistenceEngine(**d)
         else:
             raise NotImplementedError(
                 f"No persistence engine found for {d['type']}"
@@ -428,7 +440,7 @@ class IPersistenceEngine(ABC):
 
     @abstractmethod
     def get_predecessors_from_hash(
-        self, name: str, hash: int
+        self, name: str, version: str, hash: int
     ) -> t.Mapping[str, DataSetMetadataStub]:
         """
         Given a node name and the hash of a dataset, returns a dataset stub.
@@ -783,3 +795,191 @@ class IPersistenceEngine(ABC):
         -------
         t.Set[DataSetMetadataStub] : A list of all datasets that met the search criteria.
         """
+
+
+class _SerialisingBase(IPersistenceEngine):
+    def _serialise_metadata_as_stub(self, metadata: DataSetMetadata):
+        return {
+            "name": metadata.name,
+            "hash": metadata.__hash__(),
+            "time_level": metadata.time_level,
+            "static": metadata.static,
+            "version": metadata.version,
+            "params": unfreeze_recursively(metadata.params),
+            "engine": metadata.engine.set_state(),
+        }
+
+    def _serialise_metadata(self, metadata: DataSetMetadata):
+        return {
+            "name": metadata.name,
+            "hash": metadata.__hash__(),
+            "time_level": metadata.time_level,
+            "static": metadata.static,
+            # TODO : remove cast when issue https://github.com/mongomock/mongomock/issues/814 is resolved.
+            "params": unfreeze_recursively(metadata.params),
+            "version": metadata.version,
+            "engine": metadata.engine.set_state(),
+            "predecessors": [
+                {**self._serialise_metadata_as_stub(pred), **{"param_name": name}}
+                for name, pred in metadata.predecessors.items()
+            ],
+        }
+
+    def _serialise_data_metadata(self, dataset: DataSet):
+        return {
+            "declared_time_range": repr(dataset.declared_time_range),
+            "data_time_range": repr(dataset.data_time_range),
+        }
+
+    def _make_record(self, dataset: DataSet):
+        return {
+            **self._serialise_metadata(dataset.metadata),
+            **self._serialise_data_metadata(dataset),
+        }
+
+    def _deserialise_metadata_as_stub(self, record: t.Dict):
+        return DataSetMetadataStub(
+            name=record["name"],
+            static=record["static"],
+            params=record["params"],
+            version=record["version"],
+            hash=record["hash"],
+            time_level=record["time_level"],
+            engine=IPersistenceEngine.create_engine(record["engine"]),
+        )
+
+    def _deserialise_meta_data(self, record: t.Dict) -> DataSetMetadata:
+        metadata = DataSetMetadata(
+            name=record["name"],
+            time_level=record["time_level"],
+            static=record["static"],
+            params=record["params"],
+            version=record["version"],
+            predecessors={
+                pred_record["param_name"]: self._deserialise_metadata_as_stub(
+                    pred_record
+                )
+                for pred_record in record["predecessors"]
+            },
+            engine=IPersistenceEngine.create_engine(record["engine"]),
+        )
+        assert metadata.__hash__() == record["hash"]
+        return metadata
+
+    def _deserialise_data_metadata(self, record: t.Mapping, time_range=None):
+        data = pickle.loads(record["data"])
+        if not record["static"] and time_range is not None:
+            data = time_range.view(data, level=record["time_level"])
+        return {
+            "data": data,
+            "declared_time_range": eval(record["declared_time_range"]),
+        }
+
+    @abstractmethod
+    def _find_record(self, metadata: DataSetMetadata, include_data=False):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _find_record_from_hash(self, name, version, hash, include_data=False):
+        raise NotImplementedError
+
+    @overrides
+    def get_predecessors_from_hash(
+        self, name: str, version: str, hash: int
+    ) -> t.Dict[str, DataSetMetadataStub]:
+        record = self._find_record_from_hash(name, version, hash, include_data=False)
+        if record is not None:
+            return frozendict(
+                {
+                    pred_record["param_name"]: self._deserialise_metadata_as_stub(
+                        pred_record
+                    )
+                    for pred_record in record["predecessors"]
+                }
+            )
+        else:
+            raise ValueError(f"No datasets {name} {version} {hash}")
+
+    @overrides()
+    def exists(self, metadata: DataSetMetadata) -> bool:
+        return (
+            self._find_record_from_hash(
+                metadata.name, metadata.version, metadata.__hash__()
+            )
+            is not None
+        )
+
+    @overrides()
+    def get_dataset(
+        self,
+        metadata: DataSetMetadata,
+        time_range: t.Optional[TimeRange] = None,
+    ) -> DataSet:
+        if metadata.static and time_range is not None:
+            raise ValueError("time_range must be None for static datasets")
+        record = self._find_record(metadata, include_data=True)
+        if record is not None:
+            return DataSet(
+                metadata=self._deserialise_meta_data(record),
+                **self._deserialise_data_metadata(record, time_range),
+            )
+
+    @overrides()
+    def read(
+        self, metadata: DataSetMetadata, time_range: t.Optional[TimeRange] = None
+    ) -> t.Any:
+        dataset = self.get_dataset(metadata, time_range)
+        if dataset is None:
+            return None
+        else:
+            return dataset.data
+
+    @overrides()
+    def get_data_time_range(self, metadata: DataSetMetadata) -> t.Optional[TimeRange]:
+        if metadata.static:
+            raise ValueError("No declared time range for static data")
+        else:
+            record = self._find_record(metadata, include_data=False)
+            if record is not None:
+                return eval(record["data_time_range"])
+
+    @overrides()
+    def get_declared_time_range(
+        self, metadata: DataSetMetadata
+    ) -> t.Optional[TimeRange]:
+        if metadata.static:
+            raise ValueError("No declared time range for static data")
+        else:
+            record = self._find_record(metadata, include_data=False)
+            if record is not None:
+                return eval(record["declared_time_range"])
+
+    @overrides()
+    def append(self, dataset) -> bool:
+        if dataset.metadata.static:
+            raise ValueError("Can only append for time-series data")
+        existing_dataset = self.get_dataset(dataset.metadata)
+        if existing_dataset is None:
+            return self.replace(dataset)
+        else:
+            return self.replace(self._append(existing_dataset, dataset))
+
+    @overrides()
+    def merge(self, dataset) -> bool:
+        if dataset.metadata.static:
+            raise ValueError("Can only merge for time-series data")
+        existing_dataset = self.get_dataset(dataset.metadata)
+        if existing_dataset is None:
+            self.replace(dataset)
+        else:
+            self.replace(self._merge(existing_dataset, dataset))
+
+    @overrides()
+    def idempotent_insert(
+        self,
+        dataset: DataSet,
+    ) -> bool:
+        if self.exists(dataset.metadata):
+            return True
+        else:
+            return self.replace(dataset)

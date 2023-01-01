@@ -148,3 +148,17 @@ class TimeRange:
     def _timestamp_repr(cls, ts: pd.Timestamp):
         string_repr = "-".join(re.split(r"\+|\-", ts.isoformat())[:-1])
         return f"'{string_repr} [{ts.tz}]'"
+
+    @classmethod
+    def from_string(cls, s: str):
+        if not s.startswith("TimeRange"):
+            raise ValueError("This is not a time range")
+        else:
+            tr1, tr2 = (
+                s.replace("TimeRange", "")
+                .replace("(", "")
+                .replace(")", "")
+                .replace("'", "")
+                .split(",")
+            )
+            return cls(Timestamp(tr1.strip()), Timestamp(tr2.strip()))
