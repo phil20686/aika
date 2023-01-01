@@ -1,4 +1,5 @@
 import inspect
+import logging
 import typing as t
 from abc import ABC, abstractmethod
 
@@ -66,7 +67,7 @@ class TaskBase(ITask, ABC):
 
     def __eq__(self, other: t.Any):
         #  Tasks are equal if they create the same data
-        if isinstance(ITask, other):
+        if isinstance(other, ITask):
             return self.output == other.output
         else:
             return NotImplementedError
@@ -213,6 +214,10 @@ class TimeSeriesFunctionWrapper(FunctionWrapperMixin, TimeSeriesTaskBase):
                 "The task appeared to run successfully and wrote its output, "
                 "but according to its completion checker it is not complete."
             )
+        else:
+            logging.getLogger(__name__).info(
+                f"Task {self._name} completed successfully"
+            )
 
     @cached_property
     def io_params(self):
@@ -221,13 +226,17 @@ class TimeSeriesFunctionWrapper(FunctionWrapperMixin, TimeSeriesTaskBase):
         )
 
     def get_data_kwargs(self) -> t.Dict[str, t.Any]:
-        return {
-            name: dep.read(
+        results = {}
+        for name, dep in self.dependencies.items():
+            value = dep.read(
                 downstream_time_range=self.time_range,
                 default_lookback=self.default_lookback,
             )
-            for name, dep in self.dependencies.items()
-        }
+            if value is None:
+                raise ValueError(f"Failed to read dependency {name} - output was None")
+            else:
+                results[name] = value
+        return results
 
     def write_data(self, data: IndexTensor) -> None:
         self.output.append(data=data, declared_time_range=self.time_range)
