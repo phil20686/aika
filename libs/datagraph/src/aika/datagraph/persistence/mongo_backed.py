@@ -12,6 +12,7 @@ from aika.datagraph.interface import (
     DataSetMetadataStub,
     _SerialisingBase,
 )
+from aika.utilities.hashing import session_consistent_hash
 
 
 class IMongoClientCreator(ABC):
@@ -74,7 +75,7 @@ class MongoBackedPersistanceEngine(_SerialisingBase):
         self._init_derived_properties()
 
     def __hash__(self):
-        return hash((self._database_name, self._serialise_mode))
+        return session_consistent_hash((self._database_name, self._serialise_mode))
 
     def __getstate__(self):
         return {

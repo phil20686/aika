@@ -19,15 +19,15 @@ from aika.datagraph import (
 )
 from aika.datagraph.interface import _SerialisingBase
 from aika.time import TimeRange
+from aika.utilities.hashing import session_consistent_hash
 
 
 class FileSystemPersistenceEngine(_SerialisingBase):
-    def __init__(self, root_file_path: str, compression="zip"):
+    def __init__(self, root_file_path: t.Union[str, Path]):
         self._path = Path(root_file_path)
-        self._compression = compression
 
     def __hash__(self):
-        return hash(self._path.absolute())
+        return session_consistent_hash(str(self._path.absolute()))
 
     def __eq__(self, other):
         if isinstance(other, FileSystemPersistenceEngine):

@@ -11,6 +11,7 @@ from aika.datagraph.utils import normalize_parameters
 from aika.time import TimeRange
 from aika.time.time_range import TimeRange
 from aika.utilities.freezing import unfreeze_recursively
+from aika.utilities.hashing import session_consistent_hash
 from aika.utilities.pandas_utils import IndexTensor, equals
 
 
@@ -267,19 +268,22 @@ class DataSetMetadata(DataSetMetadataStub):
         self._predecessors = frozendict(
             {k: predecessors[k] for k in sorted(predecessors)}
         )
+        self.__hash = None
 
     def __hash__(self):
-        return hash(
-            (
-                self._name,
-                self._static,
-                self._time_level,
-                self._version,
-                self._engine,
-                self._params,
+        if self.__hash is None:
+            self.__hash = session_consistent_hash(
+                (
+                    self._name,
+                    self._static,
+                    self._time_level,
+                    self._version,
+                    self._engine,
+                    self._params,
+                )
+                + tuple(hash(x) for x in self._predecessors.values())
             )
-            + tuple(hash(x) for x in self._predecessors.values())
-        )
+        return self.__hash
 
     @property
     def predecessors(self) -> t.Dict[str, "DataSetMetadata"]:
