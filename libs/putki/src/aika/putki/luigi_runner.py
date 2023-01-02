@@ -1,4 +1,5 @@
 import logging
+from multiprocessing import cpu_count
 
 try:
     import luigi
@@ -245,15 +246,46 @@ if luigi_available:
     LuigiTaskFromTask.disable_instance_cache()
 
     class LuigiRunner(IGraphRunner):
-        @classmethod
-        def run(cls, graph: Graph):
+        """
+        Luigi runner has a number of noteable weaknesses around multiprocessing when run on window,
+        see the luigi docs for details. The most common luigi kwargs that you might use are explicit,
+        but the **kwargs will pass any more kwargs into the luigi.build command. Note that if
+        use_local_scheduler is False, then you should seperately have started up a luigi scheduler,
+        again see the luigi docs for details.
+
+        Luigi is not currently available for 3.11.0 as of writing, so this will not work in 3.11 hence
+        the if statements at the top of this class.
+        """
+
+        def __init__(
+                self,
+                scheduler_host="localhost",
+                scheduler_port=8082,
+                scheduler_url=None,
+                use_local_scheduler=False,
+                workers=max(cpu_count()-1, 1),
+                **more_luigi_kwargs
+        ):
+            self._scheduler_host = scheduler_host
+            self._scheduler_port = scheduler_port
+            self._scheduler_url = scheduler_url or f"http://{self._scheduler_host}:{self._scheduler_port}"
+            self._use_local_scheduler = use_local_scheduler
+            self._workers = workers
+            self._more_luigi_kwargs = more_luigi_kwargs
+
+
+        def run(self, graph: Graph):
             original_status = GraphStatus(graph)
             sinks = graph.sinks
             luigi_summary = luigi.build(
                 [LuigiTaskFromTask(task) for task in sinks],
-                workers=2,
-                local_scheduler=True,
+                workers=self._workers,
+                local_scheduler=self._use_local_scheduler,
+                scheduler_host=self._scheduler_host,
+                scheduler_url=self._scheduler_url,
+                scheduler_port=self._scheduler_port,
                 detailed_summary=True,
+                **self._more_luigi_kwargs
             )
             logging.getLogger(__name__).info(
                 f"Luigi Summary\n {luigi_summary.summary_text}"
