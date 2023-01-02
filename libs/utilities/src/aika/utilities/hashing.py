@@ -1,3 +1,4 @@
+import sys
 import typing as t
 import hashlib
 
@@ -10,8 +11,6 @@ def session_consistent_hash(obj: t.Any, hash_object=None):
     """
     if hash_object is None:
         hash_object = hashlib.md5()
-    print(hash_object.digest_size)
-    print(hash_object.block_size)
     if isinstance(obj, str):
         hash_object.update(obj.encode("utf16"))
     elif isinstance(obj, t.Mapping):
@@ -35,5 +34,5 @@ def session_consistent_hash(obj: t.Any, hash_object=None):
     else:
         hash_object.update(("%x" % hash(obj)).encode("utf16"))
     # we restrict to standard signed 64 bit sizes as this is typically the max in of various
-    # database containers like eg mongo ints.
+    # database containers like eg mongo ints (2 ** 63 -1)
     return int(hash_object.hexdigest(), 16) % 9223372036854775807

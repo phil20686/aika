@@ -8,21 +8,22 @@ from aika.utilities.testing import assert_call
 @pytest.mark.parametrize(
     "input, expect",
     [
-        ("foo", 111697143631036784911000410520264551402),
-        (["foo", "bar"], 257831524625702821500684183509069276395),
-        ({"foo": "bar"}, 257831524625702821500684183509069276395),
+        ("foo", 4029768326041810678),
+        (["foo", "bar"], 515142417914327403),
+        ({"foo": "bar"}, 515142417914327403),
         ([{"foo": "bar"}, {"thing", "thing2", "thing3"}], TypeError),
         (
+            # this is different from the others because the frozen set is reordered to thing3,thing2,thing
             [{"foo": "bar"}, frozenset(("thing", "thing2", "thing3"))],
-            204689181545197912485084036022927190492,
+            691820616192026942,
         ),
         (
             frozendict({"foo": {"bar": "thing"}, "thing2": "thing3"}),
-            318638353775312646373405049856364150438,
+            6750691437791897271,
         ),
         (
             {"foo": {"bar": "thing"}, "thing2": "thing3"},
-            318638353775312646373405049856364150438,
+            6750691437791897271,
         ),
     ],
 )
