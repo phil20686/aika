@@ -1,3 +1,5 @@
+import logging
+
 try:
     from functools import cached_property
 except ImportError:
@@ -223,11 +225,14 @@ class LuigiTaskFromTask(luigi.Task):
 
         self._warn_on_wrong_param_types()
         self.task_id = f"aika_{self._metadata.name}_{self._metadata.version}_{hash(self._metadata)}"
-        self.__hash = self._aika_task.__hash__()
+        # self.__hash = self._aika_task.__hash__()
 
         self.set_tracking_url = None
         self.set_status_message = None
         self.set_progress_percentage = None
+
+    def __hash__(self):
+        return self._aika_task.__hash__()
 
     def run(self):
         return self._aika_task.run()
@@ -239,8 +244,27 @@ LuigiTaskFromTask.disable_instance_cache()
 class LuigiRunner(IGraphRunner):
     @classmethod
     def run(cls, graph: Graph):
+        original_status = GraphStatus(graph)
         sinks = graph.sinks
-        luigi.build(
-            [LuigiTaskFromTask(task) for task in sinks], workers=2, local_scheduler=True
+        luigi_summary = luigi.build(
+            [LuigiTaskFromTask(task) for task in sinks],
+            workers=2,
+            local_scheduler=True,
+            detailed_summary=True,
         )
-        return GraphStatus(graph)
+        logging.getLogger(__name__).info(
+            f"Luigi Summary\n {luigi_summary.summary_text}"
+        )
+
+        # this is all a bit wasteful but it basically goes out
+        # and checks the status after luigi has finished. Completion checking
+        # is quite fast so should be a minimal performance overhead.
+        ready = set()
+        ready.update(original_status.ready)
+        while len(ready):
+            task = ready.pop()
+            if task.complete():
+                ready.update(original_status.assert_ran_successfully(task))
+            else:
+                original_status.assert_permanent_failure(task)
+        return original_status
