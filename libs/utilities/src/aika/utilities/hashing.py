@@ -10,6 +10,8 @@ def session_consistent_hash(obj: t.Any, hash_object=None):
     """
     if hash_object is None:
         hash_object = hashlib.md5()
+    print(hash_object.digest_size)
+    print(hash_object.block_size)
     if isinstance(obj, str):
         hash_object.update(obj.encode("utf16"))
     elif isinstance(obj, t.Mapping):
