@@ -15,10 +15,16 @@ from aika.datagraph.persistence.pure_filesystem_backend import (
 from aika.putki import CalendarChecker
 from aika.putki.context import GraphContext, Defaults
 from aika.putki.graph import Graph
-from aika.putki.luigi_runner import LuigiRunner
 from aika.putki.runners import MultiThreadedRunner, SingleThreadedRunner, IGraphRunner
 from aika.time import TimeRange, TimeOfDay, TimeOfDayCalendar
 from aika.utilities.hashing import session_consistent_hash
+
+try:
+    from aika.putki.luigi_runner import LuigiRunner
+
+    luigi_available = True
+except ImportError:
+    luigi_available = False
 
 
 class MockDependency:
@@ -229,11 +235,18 @@ def context(file_path) -> GraphContext:
 
 
 class TestRunnersWithActualGraphs:
-    runners = [
-        SingleThreadedRunner,
-        MultiThreadedRunner,
-        LuigiRunner,
-    ]
+    runners = (
+        [
+            SingleThreadedRunner,
+            MultiThreadedRunner,
+            LuigiRunner,
+        ]
+        if luigi_available
+        else [
+            SingleThreadedRunner,
+            MultiThreadedRunner,
+        ]
+    )
 
     base = Path(__file__).parent / "runners_test"
 
