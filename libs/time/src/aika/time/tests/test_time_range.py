@@ -86,6 +86,7 @@ def test_constructor_and_equality(start, end, expect, str_repr):
         assert str_repr == repr(val) == str(val)
         tr2 = eval(repr(val))
         assert val == tr2 == expect
+        assert val == TimeRange.from_string(str_repr)
 
 
 @pytest.mark.parametrize(

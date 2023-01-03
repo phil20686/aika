@@ -1,0 +1,31 @@
+import pytest
+from frozendict import frozendict
+
+from aika.utilities.hashing import session_consistent_hash
+from aika.utilities.testing import assert_call
+
+
+@pytest.mark.parametrize(
+    "input, expect",
+    [
+        ("foo", 4029768326041810678),
+        (["foo", "bar"], 515142417914327403),
+        ({"foo": "bar"}, 515142417914327403),
+        ([{"foo": "bar"}, {"thing", "thing2", "thing3"}], TypeError),
+        (
+            # this is different from the others because the frozen set is reordered to thing3,thing2,thing
+            [{"foo": "bar"}, frozenset(("thing", "thing2", "thing3"))],
+            691820616192026942,
+        ),
+        (
+            frozendict({"foo": {"bar": "thing"}, "thing2": "thing3"}),
+            6750691437791897271,
+        ),
+        (
+            {"foo": {"bar": "thing"}, "thing2": "thing3"},
+            6750691437791897271,
+        ),
+    ],
+)
+def test_session_consistent_hash(input, expect):
+    assert_call(session_consistent_hash, expect, input)

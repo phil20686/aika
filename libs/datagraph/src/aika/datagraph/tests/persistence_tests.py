@@ -266,7 +266,12 @@ deletion_tests = [
 # func kwargs
 # expect
 error_condition_tests = [
-    ([], "get_predecessors_from_hash", {"name": "foo", "hash": 1}, ValueError),
+    (
+        [],
+        "get_predecessors_from_hash",
+        {"name": "foo", "hash": 1, "version": "no_version"},
+        ValueError,
+    ),
     ([], "get_dataset", {"metadata": leaf1.metadata}, None),
     ([leaf2], "get_dataset", {"metadata": leaf1.metadata}, None),
     ([], "get_dataset", {"metadata": static_leaf1.metadata}, None),

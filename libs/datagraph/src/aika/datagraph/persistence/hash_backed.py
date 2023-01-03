@@ -35,10 +35,14 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
 
     @overrides()
     def get_predecessors_from_hash(
-        self, name: str, hash: int
+        self, name: str, version: str, hash: int
     ) -> t.Mapping[str, DataSetMetadataStub]:
         for metadata in self._cache.keys():
-            if metadata.__hash__() == hash and metadata.name == name:
+            if (
+                metadata.__hash__() == hash
+                and metadata.name == name
+                and metadata.version == version
+            ):
                 return frozendict(
                     {
                         key: DataSetMetadataStub(

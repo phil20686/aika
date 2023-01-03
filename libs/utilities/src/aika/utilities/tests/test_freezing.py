@@ -11,6 +11,8 @@ from aika.utilities.testing import assert_call
         ({}, frozendict()),
         ({"A": "B"}, frozendict(A="B")),
         ({"A": {"B": 1}}, frozendict(A=frozendict(B=1))),
+        ({"A": list(range(3))}, frozendict(A=tuple(range(3)))),
+        ({"A": tuple(range(3))}, frozendict(A=tuple(range(3)))),
     ],
 )
 def test_freeze_recursively(input, expected):

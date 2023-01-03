@@ -4,6 +4,8 @@ any backend
 """
 import multiprocessing
 import pickle
+import shutil
+from pathlib import Path
 from typing import Dict, List, Set, TypeVar
 
 import mongomock as mongomock
@@ -22,6 +24,9 @@ from aika.datagraph.persistence.hash_backed import HashBackedPersistanceEngine
 from aika.datagraph.persistence.mongo_backed import (
     MongoBackedPersistanceEngine,
     UnsecuredLocalhostClient,
+)
+from aika.datagraph.persistence.pure_filesystem_backend import (
+    FileSystemPersistenceEngine,
 )
 from aika.datagraph.tests.persistence_tests import (
     append_tests,
@@ -42,6 +47,17 @@ from aika.utilities.testing import assert_call, assert_equal
 enable_gridfs_integration()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _temp_data_directories():
+    # cleans up the data directory for the file system store
+    base = Path(__file__).parent / "file_backend_data"
+    if base.exists():
+        shutil.rmtree(base, ignore_errors=False, onerror=None)
+    yield
+    if base.exists():
+        shutil.rmtree(base, ignore_errors=False, onerror=None)
+
+
 def _mongo_backend_generator():
     database_name = "foo"
     process_local_name = str(id(multiprocessing.current_process()))
@@ -55,7 +71,22 @@ def _mongo_backend_generator():
     return engine
 
 
-engine_generators = [HashBackedPersistanceEngine, _mongo_backend_generator]
+def _file_backend_generator():
+    # each process gets its own directory but it gets cleaned out before
+    # each test. No process runs more than one test at once (I think!).
+    process_local_name = str(id(multiprocessing.current_process()))
+    base = Path(__file__).parent / "file_backend_data" / process_local_name
+    engine = FileSystemPersistenceEngine(str(base.absolute()))
+    if base.exists():
+        shutil.rmtree(base, ignore_errors=False, onerror=None)
+    return engine
+
+
+engine_generators = [
+    HashBackedPersistanceEngine,
+    _mongo_backend_generator,
+    _file_backend_generator,
+]
 
 datasets_typevar = TypeVar(
     "datasets_typevar",
@@ -244,7 +275,9 @@ def test_get_predecessors_from_hash(
     for dataset in datasets:
         engine.append(dataset)
 
-    result = engine.get_predecessors_from_hash(target.name, target.__hash__())
+    result = engine.get_predecessors_from_hash(
+        target.name, target.version, target.__hash__()
+    )
     # note that this is only required because of the mongomock situation in this test.
     # they natively create new connections but in this case that means that they cannot "see" the contents of
     # mongo mock so we need to put back in the engine that actually contains the data.
