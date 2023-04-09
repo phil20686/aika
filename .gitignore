@@ -2,8 +2,8 @@
 **/.eggs
 **/_version.py
 **/*.pyc
-**/.venv/
-**/venv/
+**/.venv.*/
+**/venv.*/
 libs/*/build/
 **/*.egg-info
 wheels/
@@ -13,3 +13,5 @@ notebooks/scrapbooks
 htmlcov
 .coverage
 .pytest_cache
+libs/datagraph/src/aika/datagraph/tests/file_backend_data/*
+libs/putki/src/aika/putki/tests/runners_test/*

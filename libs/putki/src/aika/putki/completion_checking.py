@@ -1,5 +1,3 @@
-import typing as t
-
 import attr
 
 from aika.datagraph.interface import DataSetMetadata

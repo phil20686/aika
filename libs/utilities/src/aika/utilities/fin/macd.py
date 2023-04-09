@@ -10,7 +10,7 @@ def alpha_from_span(span):
 
 
 def ou_factor(fast_span, slow_span):
-    """
+    r"""
     OU factor for momentum predictions.
     Calculates the variance of an OU process defined as ewma(dB, fast) - ewma(dB, slow)
     if dB is a standard Brownian Motion
@@ -59,7 +59,7 @@ def ewma(data, span):
 
 def ewm_volatility(returns: Tensor, span: int, centered=False) -> Tensor:
     if centered:
-        return returns.ewm(span=span, min_periods=3 * span).std()
+        return returns.ewm(span=span, min_periods=3 * span).std()  # pragma: no cover
     else:
         return returns.pow(2).ewm(span=span, min_periods=3 * span).mean().pow(0.5)
 

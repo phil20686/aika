@@ -1,7 +1,13 @@
 import functools
 import inspect
 import typing as t
-from functools import cached_property
+
+try:
+    from functools import cached_property
+except ImportError:
+    # if python version < 3.8.
+    from backports.cached_property import cached_property
+
 
 import attr
 import pandas as pd
@@ -14,7 +20,6 @@ from aika.putki.interface import Dependency, ITask, ITimeSeriesTask
 from aika.putki.task import (
     StaticFunctionWrapper,
     TimeSeriesFunctionWrapper,
-    TimeSeriesTaskBase,
 )
 from aika.time.calendars import UnionCalendar
 from aika.time.time_range import TimeRange
@@ -314,12 +319,9 @@ class GraphContext:
 
         # update `scalar_kwargs` to include any arguments which also happen to be class
         # parameters.
-        scalar_kwargs |= {
-            key: cls_kwargs[key]
-            for key in (
-                set(sig.parameters).intersection(cls_kwargs).difference(func_kwargs)
-            )
-        }
+
+        for key in set(sig.parameters).intersection(cls_kwargs).difference(func_kwargs):
+            scalar_kwargs[key] = cls_kwargs[key]
 
         sig.bind(**scalar_kwargs, **dependencies)
         return task_cls(
