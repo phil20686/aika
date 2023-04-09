@@ -7,7 +7,7 @@ from pandas._libs.tslibs import BaseOffset
 
 from aika.datagraph.interface import DataSetMetadata, IPersistenceEngine
 from aika.time.time_range import TimeRange
-from aika.utilities.abstract import abstract_attribute
+from aika.utilities.pandas_utils import Level
 
 TaskType = t.TypeVar("TaskType", bound="ITask")
 
@@ -65,18 +65,47 @@ class Dependency(t.Generic[TaskType]):
 class ITask(ABC):
 
     # typically defined as a constant class attribute
-    time_series: bool = abstract_attribute()
+    @property
+    @abstractmethod
+    def time_series(self) -> bool:
+        pass
 
     # typically specified as constructor arguments
-    name: str = abstract_attribute()
-    namespace: str = abstract_attribute()
-    version: str = abstract_attribute()
-    persistence_engine: IPersistenceEngine = abstract_attribute()
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def namespace(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def version(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def persistence_engine(self) -> IPersistenceEngine:
+        pass
 
     # typically defined as properties / descriptors
-    dependencies: t.Dict[str, Dependency] = abstract_attribute()
-    output: DataSetMetadata = abstract_attribute()
-    io_params: t.Dict[str, t.Any] = abstract_attribute()
+    @property
+    @abstractmethod
+    def dependencies(self) -> t.Dict[str, Dependency]:
+        pass
+
+    @property
+    @abstractmethod
+    def output(self) -> DataSetMetadata:
+        pass
+
+    @property
+    @abstractmethod
+    def io_params(self) -> t.Dict[str, t.Any]:
+        pass
 
     @abstractmethod
     def run(self):
@@ -93,15 +122,32 @@ class ITask(ABC):
 
 
 class IStaticTask(ITask, ABC):
-
-    time_series = False
+    @property
+    def time_series(self):
+        return False
 
 
 class ITimeSeriesTask(ITask, ABC):
+    @property
+    def time_series(self) -> bool:
+        return True
 
-    time_series = True
+    @property
+    @abstractmethod
+    def time_range(self) -> TimeRange:
+        raise NotImplementedError
 
-    time_range: TimeRange = abstract_attribute()
-    time_level: t.Union[int, str, None] = abstract_attribute()
-    default_lookback: t.Optional[pd.offsets.BaseOffset] = abstract_attribute()
-    completion_checker: ICompletionChecker = abstract_attribute()
+    @property
+    @abstractmethod
+    def time_level(self) -> t.Optional[Level]:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def default_lookback(self) -> t.Optional[pd.offsets.BaseOffset]:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def completion_checker(self) -> ICompletionChecker:
+        raise NotImplementedError

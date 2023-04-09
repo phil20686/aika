@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
-from frozendict._frozendict import frozendict
+from frozendict import frozendict
 
 from aika.datagraph.interface import DataSet
 from aika.time.time_range import TimeRange
@@ -16,6 +16,28 @@ leaf1 = DataSet.build(
         index=[Timestamp(x) for x in pd.date_range(start="2021-01-01", periods=10)],
     ),
     params={"foo": 1.0, "bar": "baz"},
+    predecessors={},
+)
+
+repeated_leaf1 = DataSet.build(
+    name="leaf1",
+    data=pd.DataFrame(
+        2.0,
+        columns=list("ABC"),
+        index=[Timestamp(x) for x in pd.date_range(start="2021-01-01", periods=10)],
+    ),
+    params={"foo": 2.0, "bar": "baz"},
+    predecessors={},
+)
+
+repeated2_leaf1 = DataSet.build(
+    name="leaf1",
+    data=pd.DataFrame(
+        3.0,
+        columns=list("ABC"),
+        index=[Timestamp(x) for x in pd.date_range(start="2021-01-01", periods=10)],
+    ),
+    params={"foo": 2.0, "bar": "bar"},
     predecessors={},
 )
 
@@ -83,6 +105,28 @@ child = DataSet.build(
     ),
     params={"bananas": "some", "apples": 3.0},
     predecessors={"foo": leaf1.metadata, "bar": leaf2.metadata},
+)
+
+repeated_child = DataSet.build(
+    name="child",
+    data=pd.DataFrame(
+        2.0,
+        columns=list("XZY"),
+        index=[Timestamp(x) for x in pd.date_range(start="2021-01-01", periods=10)],
+    ),
+    params={"bananas": "some", "apples": 3.0},
+    predecessors={"foo": repeated_leaf1.metadata, "bar": leaf2.metadata},
+)
+
+repeated2_child = DataSet.build(
+    name="child",
+    data=pd.DataFrame(
+        2.0,
+        columns=list("XZY"),
+        index=[Timestamp(x) for x in pd.date_range(start="2021-01-01", periods=10)],
+    ),
+    params={"bananas": "some", "apples": 4.0},
+    predecessors={"foo": repeated2_leaf1.metadata, "bar": leaf2.metadata},
 )
 
 static_leaf1 = DataSet.build(
@@ -222,7 +266,12 @@ deletion_tests = [
 # func kwargs
 # expect
 error_condition_tests = [
-    ([], "get_predecessors_from_hash", {"name": "foo", "hash": 1}, ValueError),
+    (
+        [],
+        "get_predecessors_from_hash",
+        {"name": "foo", "hash": 1, "version": "no_version"},
+        ValueError,
+    ),
     ([], "get_dataset", {"metadata": leaf1.metadata}, None),
     ([leaf2], "get_dataset", {"metadata": leaf1.metadata}, None),
     ([], "get_dataset", {"metadata": static_leaf1.metadata}, None),
@@ -315,6 +364,81 @@ idempotent_insert_tests = [
 # expected
 find_tests = [
     ([leaf1, leaf2, child], "leaf", None, ["leaf1", "leaf2"]),
+    (
+        [leaf2, leaf1, child],
+        "leaf",
+        None,
+        ["leaf1", "leaf2"],
+    ),  # always lexicographically ordered
     ([leaf1, leaf2, child], ".*", None, ["child", "leaf1", "leaf2"]),
     ([leaf1, leaf2, child], "leaf", "fake_version", []),
+]
+
+# datasets to insert
+# dataset name
+# params
+# expected
+scan_tests = [
+    (
+        [leaf1, repeated_leaf1, repeated2_leaf1],
+        "leaf1",
+        None,
+        {leaf1.metadata, repeated_leaf1.metadata, repeated2_leaf1.metadata},
+    ),
+    (
+        [
+            leaf1,
+            repeated_leaf1,
+            repeated2_leaf1,
+            leaf2,
+            child,
+            repeated_child,
+            repeated2_child,
+        ],
+        "child",
+        None,
+        {child.metadata, repeated_child.metadata, repeated2_child.metadata},
+    ),
+    (
+        [
+            leaf1,
+            repeated_leaf1,
+            repeated2_leaf1,
+            leaf2,
+            child,
+            repeated_child,
+            repeated2_child,
+        ],
+        "child",
+        {"apples": 4.0},
+        {repeated2_child.metadata},
+    ),
+    (
+        [
+            leaf1,
+            repeated_leaf1,
+            repeated2_leaf1,
+            leaf2,
+            child,
+            repeated_child,
+            repeated2_child,
+        ],
+        "child",
+        {"foo.foo": 2.0},
+        {repeated_child.metadata, repeated2_child.metadata},
+    ),
+    (
+        [
+            leaf1,
+            repeated_leaf1,
+            repeated2_leaf1,
+            leaf2,
+            child,
+            repeated_child,
+            repeated2_child,
+        ],
+        "child",
+        {"strawberries": 2.0},
+        ValueError("Dataset child has no parameter strawberries"),
+    ),
 ]

@@ -30,7 +30,7 @@ from aika.utilities.testing import assert_call
             {"foo": {"bar": [1, 2, [3, 4]]}},
             frozendict({"foo": frozendict({"bar": (1, 2, (3, 4))})}),
         ),
-        ({1, 2, 3}, ValueError("Dataset metadata params included a param")),
+        ({1, 2, 3}, ValueError("DataSet metadata params included a param")),
     ],
 )
 def test_normalize_parameters(input, expect):

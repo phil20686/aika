@@ -1,14 +1,14 @@
 import re
 import typing as t
 from abc import abstractmethod
-
 from frozendict import frozendict
+from overrides import overrides
 from typing_extensions import Protocol
 
 from aika.datagraph.interface import (
     DataSet,
     DataSetMetadata,
-    DatasetMetadataStub,
+    DataSetMetadataStub,
     IPersistenceEngine,
 )
 from aika.time.time_range import TimeRange
@@ -25,20 +25,27 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
     def __init__(self):
         self._cache = {}
 
+    @overrides()
     def set_state(self) -> t.Dict[str, t.Any]:
         raise ValueError("Cannot persist an in-memory engine")  # pragma: no cover
 
+    @overrides()
     def exists(self, metadata: DataSetMetadata) -> bool:
         return metadata in self._cache
 
+    @overrides()
     def get_predecessors_from_hash(
-        self, name: str, hash: int
-    ) -> frozendict[str, DatasetMetadataStub]:
+        self, name: str, version: str, hash: int
+    ) -> t.Mapping[str, DataSetMetadataStub]:
         for metadata in self._cache.keys():
-            if metadata.__hash__() == hash and metadata.name == name:
+            if (
+                metadata.__hash__() == hash
+                and metadata.name == name
+                and metadata.version == version
+            ):
                 return frozendict(
                     {
-                        key: DatasetMetadataStub(
+                        key: DataSetMetadataStub(
                             name=meta.name,
                             time_level=meta.time_level,
                             static=meta.static,
@@ -50,8 +57,9 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
                         for key, meta in metadata.predecessors.items()
                     }
                 )
-        raise ValueError("No Matching Dataset")
+        raise ValueError("No Matching DataSet")
 
+    @overrides()
     def get_dataset(
         self,
         metadata: DataSetMetadata,
@@ -72,6 +80,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
 
         return result
 
+    @overrides()
     def read(self, metadata: DataSetMetadata, time_range: t.Optional[TimeRange] = None):
         dataset = self.get_dataset(metadata, time_range=time_range)
         if dataset is None:
@@ -79,6 +88,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
         else:
             return dataset.data
 
+    @overrides()
     def get_data_time_range(self, metadata: DataSetMetadata) -> t.Optional[TimeRange]:
         if metadata.static:
             raise ValueError("Cannot get data time range for static dataset")
@@ -89,6 +99,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
         else:
             return TimeRange.from_pandas(dataset.data, level=metadata.time_level)
 
+    @overrides()
     def get_declared_time_range(
         self, metadata: DataSetMetadata
     ) -> t.Optional[TimeRange]:
@@ -101,6 +112,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
         else:
             return dataset.declared_time_range
 
+    @overrides()
     def idempotent_insert(
         self,
         dataset: DataSet,
@@ -110,6 +122,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             self._cache[dataset.metadata] = dataset
         return exists
 
+    @overrides()
     def replace(
         self,
         dataset: DataSet,
@@ -118,6 +131,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
         self._cache[dataset.metadata] = dataset
         return original_size == len(self._cache)
 
+    @overrides()
     def append(
         self,
         dataset: DataSet,
@@ -126,6 +140,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             raise ValueError("Can only append for time-series data")
         return self._combine_insert(dataset, combine_method=self._append)
 
+    @overrides()
     def merge(self, dataset: DataSet) -> bool:
         if dataset.metadata.static:
             raise ValueError("Can only merge for time-series data")
@@ -162,6 +177,7 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             self._cache[final_dataset.metadata] = final_dataset
             return True
 
+    @overrides()
     def find_successors(self, metadata: DataSetMetadata) -> t.Set[DataSetMetadata]:
         return set(
             (md for md in self._cache.keys() if md.is_immediate_predecessor(metadata))
@@ -179,13 +195,15 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
                 self._cache.pop(metadata)
                 return True
 
+    @overrides()
     def delete(self, metadata: DataSetMetadata, recursive=False):
         if recursive:
             for successor in self.find_successors(metadata):
                 self.delete(successor, recursive=True)
         return self._delete_leaf(metadata)
 
-    def find(self, match: str, version: t.Optional[str] = None):
+    @overrides()
+    def find(self, match: str, version: t.Optional[str] = None) -> t.List[str]:
         names = []
         for metadata in self._cache.keys():
             if re.match(match, metadata.name) and (
@@ -193,3 +211,21 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             ):
                 names.append(metadata.name)
         return list(sorted(names))
+
+    @overrides()
+    def scan(
+        self, dataset_name: str, params: t.Optional[t.Dict] = None
+    ) -> t.Set[DataSetMetadataStub]:
+        results = set()
+        for metadata in self._cache.keys():
+            if metadata.name == dataset_name and (
+                not params
+                or all(
+                    [
+                        metadata.recursively_get_parameter_value(target) == value
+                        for target, value in params.items()
+                    ]
+                )
+            ):
+                results.add(metadata)
+        return results

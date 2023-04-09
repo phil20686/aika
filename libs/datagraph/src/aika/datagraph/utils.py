@@ -18,5 +18,5 @@ def normalize_parameters(obj: t.Any):
         return frozendict({k: normalize_parameters(v) for k, v in obj.items()})
     else:
         raise ValueError(
-            f"Dataset metadata params included a param of type {type(obj)} which is not supported"
+            f"DataSet metadata params included a param of type {type(obj)} which is not supported"
         )

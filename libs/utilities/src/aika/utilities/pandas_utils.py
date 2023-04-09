@@ -6,6 +6,7 @@ from pandas import DataFrame, Index, Series
 
 # these types can be used to make functions that return the same pandas type as they are given.
 Tensor = TypeVar("Tensor", DataFrame, Series)
+Tensor2 = TypeVar("Tensor2", DataFrame, Series)
 IndexTensor = TypeVar("IndexTensor", DataFrame, Series, Index)
 Level = Union[int, str]
 

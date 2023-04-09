@@ -51,6 +51,8 @@ from aika.utilities.testing import assert_call, assert_equal
             {},
             True,
         ),
+        ([1, 2, 45], [1, 2, 32], {}, True),
+        ([1, 2, 45], [1, 2, 45], {}, False),
     ],
 )
 def test_assert_equals(value, expect, test_kwargs, expect_assertion_failure):
