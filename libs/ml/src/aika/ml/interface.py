@@ -17,6 +17,7 @@ This library may seem like an unnecessary wrapper around eg sklearn, but it has 
 4) Provides support for walkforward training via the dataset generators.
 """
 
+
 # TODO: I hate this name, but I do not want it to conflict with DataSet from the datagraph either
 class BivariateDataSet:
     def __init__(self, X: Tensor, y: Optional[Tensor2] = None):

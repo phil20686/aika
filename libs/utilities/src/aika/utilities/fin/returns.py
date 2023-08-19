@@ -28,7 +28,6 @@ class ReturnType:
 
 
 class BarReturnIndexNames:
-
     START = "start"
     END = "end"
 

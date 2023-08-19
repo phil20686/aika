@@ -7,7 +7,6 @@ import pandas as pd
 def Timestamp(
     ts_input: Union[str, pd.Timestamp],
 ) -> pd.Timestamp:
-
     if isinstance(ts_input, pd.Timestamp):
         if ts_input.tz is None:
             return pd.Timestamp(ts_input=ts_input, tz="UTC")

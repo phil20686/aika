@@ -27,7 +27,6 @@ from aika.time.time_range import TimeRange
 
 @attr.s(frozen=True, auto_attribs=True)
 class Defaults:
-
     MISSING = object()
 
     version: str = MISSING
@@ -38,7 +37,6 @@ class Defaults:
 class Inference:
     @classmethod
     def completion_checker(cls, predecessors: t.Mapping[str, Dependency]):
-
         time_series_dependencies: t.Dict[str, Dependency[ITimeSeriesTask]] = {
             name: dep for name, dep in predecessors.items() if dep.task.time_series
         }
@@ -259,7 +257,6 @@ class GraphContext:
         completion_checker: t.Optional[ICompletionChecker] = _INFER,
         **kwargs,
     ) -> TimeSeriesFunctionWrapper:
-
         return self._task(
             task_cls=TimeSeriesFunctionWrapper,
             function=function,
@@ -284,7 +281,6 @@ class GraphContext:
         persistence_engine: t.Optional[IPersistenceEngine] = _INFER,
         **kwargs,
     ) -> StaticFunctionWrapper:
-
         return self._task(
             task_cls=StaticFunctionWrapper,
             function=function,
