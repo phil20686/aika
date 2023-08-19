@@ -35,9 +35,8 @@ def test_int_to_bytes(n):
         (123572316, 2087349988433736566),
         (12.235491, 4379290670735978278),
         (1.23905734e200, 2065935446728212616),
-        (None, 3574675359170660826),
+        (None, 3086615298961530842),
     ],
 )
 def test_session_consistent_hash(input, expect):
-    # print(session_consistent_hash(input))
     assert_call(session_consistent_hash, expect, input)

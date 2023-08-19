@@ -46,7 +46,7 @@ def session_consistent_hash(obj: t.Any, hash_object=None):
             hash_object=hash_object,
         )
     elif obj is None:
-        hash_object.update(("%x" % hash(obj)).encode("utf16"))
+        hash_object.update("asd423wdfglk".encode("utf16"))
     else:
         logging.getLogger(__name__).debug(
             f"Object {obj} of type {type(obj)} is being hashed with pythons "
