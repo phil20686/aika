@@ -63,7 +63,6 @@ class TimeOfDayCalendar(ICalendar):
 
 @attr.s(frozen=True)
 class UnionCalendar(ICalendar):
-
     calendars: t.AbstractSet[ICalendar] = attr.ib(converter=frozenset)
 
     def latest_point_before(self, as_of: pd.Timestamp):

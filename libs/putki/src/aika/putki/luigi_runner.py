@@ -258,21 +258,22 @@ if luigi_available:
         """
 
         def __init__(
-                self,
-                scheduler_host="localhost",
-                scheduler_port=8082,
-                scheduler_url=None,
-                use_local_scheduler=False,
-                workers=max(cpu_count()-1, 1),
-                **more_luigi_kwargs
+            self,
+            scheduler_host="localhost",
+            scheduler_port=8082,
+            scheduler_url=None,
+            use_local_scheduler=False,
+            workers=max(cpu_count() - 1, 1),
+            **more_luigi_kwargs,
         ):
             self._scheduler_host = scheduler_host
             self._scheduler_port = scheduler_port
-            self._scheduler_url = scheduler_url or f"http://{self._scheduler_host}:{self._scheduler_port}"
+            self._scheduler_url = (
+                scheduler_url or f"http://{self._scheduler_host}:{self._scheduler_port}"
+            )
             self._use_local_scheduler = use_local_scheduler
             self._workers = workers
             self._more_luigi_kwargs = more_luigi_kwargs
-
 
         def run(self, graph: Graph):
             original_status = GraphStatus(graph)
@@ -285,7 +286,7 @@ if luigi_available:
                 scheduler_url=self._scheduler_url,
                 scheduler_port=self._scheduler_port,
                 detailed_summary=True,
-                **self._more_luigi_kwargs
+                **self._more_luigi_kwargs,
             )
             logging.getLogger(__name__).info(
                 f"Luigi Summary\n {luigi_summary.summary_text}"

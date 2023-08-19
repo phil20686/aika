@@ -21,6 +21,7 @@ from aika.utilities.hashing import session_consistent_hash
 
 try:
     from aika.putki.luigi_runner import LuigiRunner
+
     luigi_available = True
 except ImportError:
     luigi_available = False
@@ -212,7 +213,7 @@ def base_path() -> Path:
 
 @pytest.fixture()
 def file_path(runner: IGraphRunner, base_path, request) -> Path:
-    try :
+    try:
         full_path = base_path / runner.__name__ / request.node.name
     except AttributeError:
         full_path = base_path / type(runner).__name__ / request.node.name

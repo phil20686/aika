@@ -45,7 +45,12 @@ def right_dot_product(matrix: pd.DataFrame, vector: pd.DataFrame) -> pd.DataFram
     """
     Matrix multiplication of stacked matrices onto stacked vectors.
     """
-    return matrix.multiply(vector, axis=0, level=1).sum(axis=1, level=0, skipna=False)
+    return (
+        matrix.multiply(vector, axis=0, level=1)
+        .groupby(axis=1, level=0)
+        .apply(lambda df: df.sum(skipna=False, axis=1))
+    )
+    # return matrix.multiply(vector, axis=0, level=1).sum(axis=1, level=0, skipna=False)
 
 
 def full_dot_product(

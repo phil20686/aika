@@ -65,7 +65,6 @@ class TimeRange:
         index = tensor.index
 
         if isinstance(index, pd.MultiIndex):
-
             if level is None:
                 raise ValueError("Must specify `level` if tensor is multi-indexed.")
 
@@ -74,7 +73,6 @@ class TimeRange:
             return tensor.loc[mask]
 
         else:
-
             start, end = np.searchsorted(index, [self.start, self.end], side="left")
 
             return tensor.iloc[start:end]
