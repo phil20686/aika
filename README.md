@@ -20,6 +20,15 @@ The goal of aika is as far as possible to abstract away these three concerns, an
 think only of writing simple python functions, running them, and little by little building up a reliable graph that can be
 easily transferred into a production setting.
 
+## Notebooks
+There are as part of the project some notebooks that will introduce you to the essential parts of
+aika. In particular how to create tasks, chain them together, run them and view their outputs. There
+is at this time no exhaustive user guide beyond these notebooks. To access these notebooks simply clone
+the repository and install the project-level requirements file. This should give a working distribution on
+most systems. 
+
+# Developer Notes
+
 ## Repo structure
 
 All libraries should be defined in their own sub-folder under the `libs/` directory
