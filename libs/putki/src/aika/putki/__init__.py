@@ -1,4 +1,3 @@
-from ._version import version
 from .completion_checking import CalendarChecker, ICompletionChecker, IrregularChecker
 from .interface import ICompletionChecker, IStaticTask, ITask, ITimeSeriesTask
 from .task import (
@@ -9,3 +8,4 @@ from .task import (
     TimeSeriesFunctionWrapper,
     TimeSeriesTaskBase,
 )
+__version__ = "1.0.0"
