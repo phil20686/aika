@@ -1,3 +1,5 @@
+import numpy as np
+
 import pandas as pd
 import pytest as pytest
 
@@ -7,7 +9,6 @@ from aika.utilities.testing import assert_equal, assert_error_or_return
 
 
 class Indexes:
-
     daily = pd.date_range(start="2000-01-01", periods=14, freq="D")
     bdays = pd.date_range(start="2000-01-01", periods=10, freq="B")
 
@@ -18,39 +19,53 @@ class Indexes:
         # All Indexer
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=None,
                 causal_kwargs={"contemp": True},
             ),
             [
                 BivariateDataSet(
-                    X=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                    X=pd.Series(Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32),
+                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32),
                 )
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=None,
                 causal_kwargs={"contemp": False},
             ),
             [
                 BivariateDataSet(
                     X=pd.Series(
-                        [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
+                        [x - 1 for x in Indexes.bdays.day],
+                        index=Indexes.bdays,
+                        dtype=np.int32,
                     ),
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32),
                 )
             ],
         ),
         # Sequential steps
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=4,
                 step_size=None,
                 min_periods=None,
@@ -59,16 +74,24 @@ class Indexes:
             ),
             [
                 BivariateDataSet(
-                    X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    X=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 4), (4, 8)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=4,
                 step_size=None,
                 min_periods=None,
@@ -78,17 +101,25 @@ class Indexes:
             [
                 BivariateDataSet(
                     X=pd.Series(
-                        [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
+                        [x - 1 for x in Indexes.bdays.day],
+                        index=Indexes.bdays,
+                        dtype=np.int32,
                     ).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 4), (4, 8)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=4,
                 step_size=None,
                 min_periods=None,
@@ -97,16 +128,24 @@ class Indexes:
             ),
             [
                 BivariateDataSet(
-                    X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    X=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 4), (4, 8), (8, 10)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=4,
                 step_size=None,
                 min_periods=None,
@@ -116,9 +155,13 @@ class Indexes:
             [
                 BivariateDataSet(
                     X=pd.Series(
-                        [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
+                        [x - 1 for x in Indexes.bdays.day],
+                        index=Indexes.bdays,
+                        dtype=np.int32,
                     ).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 4), (4, 8), (8, 10)]
             ],
@@ -126,8 +169,12 @@ class Indexes:
         # Rolling Steps Indexer
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=8,
                 step_size=1,
                 min_periods=8,
@@ -135,16 +182,24 @@ class Indexes:
             ),
             [
                 BivariateDataSet(
-                    X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    X=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 8), (1, 9), (2, 10)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=8,
                 step_size=1,
                 min_periods=8,
@@ -153,17 +208,25 @@ class Indexes:
             [
                 BivariateDataSet(
                     X=pd.Series(
-                        [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
+                        [x - 1 for x in Indexes.bdays.day],
+                        index=Indexes.bdays,
+                        dtype=np.int32,
                     ).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 8), (1, 9), (2, 10)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=8,
                 step_size=2,
                 min_periods=8,
@@ -171,16 +234,24 @@ class Indexes:
             ),
             [
                 BivariateDataSet(
-                    X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    X=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 8), (2, 10)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=8,
                 step_size=2,
                 min_periods=8,
@@ -189,17 +260,25 @@ class Indexes:
             [
                 BivariateDataSet(
                     X=pd.Series(
-                        [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
+                        [x - 1 for x in Indexes.bdays.day],
+                        index=Indexes.bdays,
+                        dtype=np.int32,
                     ).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 8), (2, 10)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=8,
                 step_size=2,
                 min_periods=6,
@@ -207,16 +286,24 @@ class Indexes:
             ),
             [
                 BivariateDataSet(
-                    X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    X=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 6), (0, 8), (2, 10)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=8,
                 step_size=2,
                 min_periods=6,
@@ -225,17 +312,25 @@ class Indexes:
             [
                 BivariateDataSet(
                     X=pd.Series(
-                        [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
+                        [x - 1 for x in Indexes.bdays.day],
+                        index=Indexes.bdays,
+                        dtype=np.int32,
                     ).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 6), (0, 8), (2, 10)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=8,
                 step_size=2,
                 min_periods=7,
@@ -244,16 +339,24 @@ class Indexes:
             ),
             [
                 BivariateDataSet(
-                    X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    X=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 7), (1, 9)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=8,
                 step_size=2,
                 min_periods=7,
@@ -263,17 +366,25 @@ class Indexes:
             [
                 BivariateDataSet(
                     X=pd.Series(
-                        [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
+                        [x - 1 for x in Indexes.bdays.day],
+                        index=Indexes.bdays,
+                        dtype=np.int32,
                     ).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 7), (1, 9)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=8,
                 step_size=2,
                 min_periods=7,
@@ -282,16 +393,24 @@ class Indexes:
             ),
             [
                 BivariateDataSet(
-                    X=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    X=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 7), (1, 9), (2, 10)]
             ],
         ),
         (
             CausalDataSetGenerator(
-                features=pd.Series(Indexes.daily.day, index=Indexes.daily),
-                responses=pd.Series(Indexes.bdays.day, index=Indexes.bdays),
+                features=pd.Series(
+                    Indexes.daily.day, index=Indexes.daily, dtype=np.int32
+                ),
+                responses=pd.Series(
+                    Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                ),
                 window_size=8,
                 step_size=2,
                 min_periods=7,
@@ -301,9 +420,13 @@ class Indexes:
             [
                 BivariateDataSet(
                     X=pd.Series(
-                        [x - 1 for x in Indexes.bdays.day], index=Indexes.bdays
+                        [x - 1 for x in Indexes.bdays.day],
+                        index=Indexes.bdays,
+                        dtype=np.int32,
                     ).iloc[start:end],
-                    y=pd.Series(Indexes.bdays.day, index=Indexes.bdays).iloc[start:end],
+                    y=pd.Series(
+                        Indexes.bdays.day, index=Indexes.bdays, dtype=np.int32
+                    ).iloc[start:end],
                 )
                 for start, end in [(0, 7), (1, 9), (2, 10)]
             ],
@@ -311,7 +434,8 @@ class Indexes:
     ],
 )
 def test_causal_dataset(causal_dataset, expected):
-    assert_equal(list(causal_dataset), expected)
+    result = list(causal_dataset)
+    assert_equal(result, expected)
 
 
 @pytest.mark.parametrize(

@@ -35,7 +35,6 @@ def _parse_timezone(tz_or_str: t.Union[datetime.tzinfo, str]) -> datetime.tzinfo
 
 @attr.s(frozen=True, repr=False)
 class TimeOfDay:
-
     time: datetime.time = attr.ib()
     tz: t.Union[datetime.tzinfo] = attr.ib(converter=_parse_timezone)
 
@@ -44,7 +43,6 @@ class TimeOfDay:
 
     @classmethod
     def from_str(cls, s):
-
         pattern = r"^([^\[\s]*)\s*(?:\[(.*)\])?$"
 
         match = re.match(pattern, s)

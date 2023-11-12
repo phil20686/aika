@@ -230,7 +230,6 @@ class MongoBackedPersistanceEngine(_SerialisingBase):
         if params:
             results = set()
             for candidate in candidates:
-
                 if all(
                     [
                         candidate.recursively_get_parameter_value(param) == value

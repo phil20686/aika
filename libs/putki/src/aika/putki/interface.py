@@ -33,7 +33,6 @@ class ICompletionChecker(ABC):
 
 @attr.s(frozen=True)
 class Dependency(t.Generic[TaskType]):
-
     task: TaskType = attr.ib()
     lookback: t.Optional[BaseOffset] = attr.ib(default=None)
     inherit_frequency: t.Optional[bool] = attr.ib(default=None)
@@ -63,7 +62,6 @@ class Dependency(t.Generic[TaskType]):
 
 
 class ITask(ABC):
-
     # typically defined as a constant class attribute
     @property
     @abstractmethod

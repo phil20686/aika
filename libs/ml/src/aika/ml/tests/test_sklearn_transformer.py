@@ -12,7 +12,6 @@ from aika.ml.interface import BivariateDataSet, SklearnEstimator
 
 
 class TestSklearnEstimators:
-
     estimators_to_test = [
         LinearRegression(fit_intercept=True, copy_X=True),
     ]
