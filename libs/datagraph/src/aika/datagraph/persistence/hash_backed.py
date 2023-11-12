@@ -172,7 +172,6 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
             return False
 
         else:
-
             final_dataset = combine_method(existing=old_dataset, new=dataset)
             self._cache[final_dataset.metadata] = final_dataset
             return True
@@ -184,7 +183,6 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
         )
 
     def _delete_leaf(self, metadata: DataSetMetadata):
-
         if not self.exists(metadata):
             return False
         else:

@@ -24,13 +24,11 @@ def compound_interest(calendar: pd.Index, interest_rate: float):
 
 
 class TimesOfDay:
-
     LONDON_1420 = TimeOfDay.from_str("14:20 [Europe/London]")
 
 
 class ReferenceDataTasks(TaskModule):
     def __init__(self, context: GraphContext):
-
         self.CALENDAR = context.time_series_task(
             "CALENDAR",
             generate_index,
@@ -47,7 +45,6 @@ class MarketDataTasks(TaskModule):
         context: GraphContext,
         reference_data: ReferenceDataTasks,
     ):
-
         self.RETURNS = context.time_series_task(
             "RETURNS",
             compound_interest,
@@ -58,7 +55,6 @@ class MarketDataTasks(TaskModule):
 
 class AllTasks(TaskModule):
     def __init__(self, context: GraphContext):
-
         self.reference_data = ReferenceDataTasks(
             context.extend_namespace("reference_data")
         )
