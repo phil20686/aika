@@ -62,5 +62,10 @@ class Graph:
     @cached_property
     def sinks(self) -> t.AbstractSet[ITask]:
         return frozenset(
-            node for node in self.graph.nodes if not list(self.graph.successors(node))
+            node
+            for node in self._nodes
+            if (
+                node not in self.graph.nodes
+                or len(list(self.graph.successors(node))) == 0
+            )
         )
