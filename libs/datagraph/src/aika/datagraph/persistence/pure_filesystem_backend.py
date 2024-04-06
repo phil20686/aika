@@ -18,6 +18,7 @@ from aika.datagraph import (
     DataSet,
 )
 from aika.datagraph.interface import _SerialisingBase
+from aika.datagraph.utils import normalize_parameters
 from aika.time import TimeRange
 from aika.utilities.hashing import session_consistent_hash
 
@@ -179,6 +180,8 @@ class FileSystemPersistenceEngine(_SerialisingBase):
             self._path.absolute(), "**", "metadata", f"{dataset_name}_*.meta"
         )
         results = set()
+        if params:
+            params = normalize_parameters(params)
         for file in glob.glob(glob_pattern):
             with open(file, "rt") as fh:
                 record = json.load(fh)

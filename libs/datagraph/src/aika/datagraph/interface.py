@@ -52,7 +52,8 @@ class DataSetMetadataStub:
         self._engine = engine
         self._version = version
         self._time_level = time_level
-        self._params = frozendict({k: params[k] for k in sorted(params)})
+        # self._params = frozendict({k: params[k] for k in sorted(params)})
+        self._params = normalize_parameters(params)
         self._hash = hash
 
     def __eq__(self, other):

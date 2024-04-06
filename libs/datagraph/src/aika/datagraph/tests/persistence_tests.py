@@ -107,6 +107,17 @@ child = DataSet.build(
     predecessors={"foo": leaf1.metadata, "bar": leaf2.metadata},
 )
 
+child_with_recursive_params = DataSet.build(
+    name="child_with_recursive_params",
+    data=pd.DataFrame(
+        3.0,
+        columns=list("XYZ"),
+        index=[Timestamp(x) for x in pd.date_range(start="2021-01-01", periods=10)],
+    ),
+    params={"bananas": [{"foo": 3, "bar": ["apples", 3.0]}]},
+    predecessors={"foo": leaf1.metadata, "bar": leaf2.metadata},
+)
+
 repeated_child = DataSet.build(
     name="child",
     data=pd.DataFrame(
@@ -245,7 +256,18 @@ merge_tests = [
 # list to insert, metadata to check, expected datasets
 find_successors_tests = [
     ([leaf1, leaf2, child], leaf1.metadata, {child.metadata}),
+    (
+        [leaf1, leaf2, child_with_recursive_params],
+        leaf1.metadata,
+        {child_with_recursive_params.metadata},
+    ),
+    (
+        [leaf1, leaf2, child, child_with_recursive_params],
+        leaf1.metadata,
+        {child.metadata, child_with_recursive_params.metadata},
+    ),
     ([leaf1], leaf2.metadata, set()),
+    ([leaf1], leaf1.metadata, set()),
 ]
 
 

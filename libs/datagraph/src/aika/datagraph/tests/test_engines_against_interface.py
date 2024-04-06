@@ -375,6 +375,15 @@ def test_parameter_fidelity(input_params, output_params, engine_generator):
     new_dataset = metadata.get_dataset(None)
     assert_equal(new_dataset.metadata.params, output_params)
     assert_equal(hash(new_dataset.metadata.params), hash(output_params))
+    # assert that scanning for it works
+    s = engine.scan(
+        dataset_name=metadata.name,
+        params=input_params,
+    )
+    assert len(s) == 1
+    meta_data_stub = next(iter(s))
+    assert_equal(meta_data_stub, metadata)
+    assert_equal(meta_data_stub, metadata)
 
 
 @mongomock.patch()
