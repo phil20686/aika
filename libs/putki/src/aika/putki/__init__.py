@@ -8,4 +8,5 @@ from .task import (
     TimeSeriesFunctionWrapper,
     TimeSeriesTaskBase,
 )
+
 __version__ = "1.0.0"

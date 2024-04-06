@@ -170,7 +170,7 @@ class SklearnEstimator(Transformer):
                     f"Estimators must return tensors of rank one or 2 but received shape {array.shape}"
                 )  # pragma: no cover
         else:
-            raise ValueError("Estimator has not been fitted")
+            raise ValueError("Estimator has not been fitted")  # pragma: no cover
 
 
 class Pipeline:

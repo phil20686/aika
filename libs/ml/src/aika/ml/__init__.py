@@ -8,4 +8,5 @@ from .interface import (
     apply_trained_models,
 )
 from .generators.walkforward import CausalDataSetGenerator
+
 __version__ = "1.0.0"

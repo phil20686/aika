@@ -11,6 +11,7 @@ from aika.datagraph.interface import (
     DataSetMetadataStub,
     IPersistenceEngine,
 )
+from aika.datagraph.utils import normalize_parameters
 from aika.time.time_range import TimeRange
 
 
@@ -215,6 +216,8 @@ class HashBackedPersistanceEngine(IPersistenceEngine):
         self, dataset_name: str, params: t.Optional[t.Dict] = None
     ) -> t.Set[DataSetMetadataStub]:
         results = set()
+        if params:
+            params = normalize_parameters(params)
         for metadata in self._cache.keys():
             if metadata.name == dataset_name and (
                 not params

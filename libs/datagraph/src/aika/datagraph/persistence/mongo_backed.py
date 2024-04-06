@@ -14,6 +14,8 @@ from aika.datagraph.interface import (
 )
 from aika.utilities.hashing import session_consistent_hash
 
+from aika.datagraph.utils import normalize_parameters
+
 
 class IMongoClientCreator(ABC):
     """
@@ -229,6 +231,7 @@ class MongoBackedPersistanceEngine(_SerialisingBase):
         }
         if params:
             results = set()
+            params = normalize_parameters(params)
             for candidate in candidates:
                 if all(
                     [
