@@ -129,6 +129,8 @@ Graph Status:
         self._number_of_tasks_run += 1
         new_additions = set()
         for successor in self._graph.get_successors(task):
+            # it is possible for a successor to be outside the graph of tasks that need to be run, or to
+            # have been complete already due to a different completion checker.
             if self._all_dependencies_complete(successor) and successor in self._visited and successor not in self._complete:
                 new_additions.add(successor)
         self._ready_to_run.update(new_additions)
