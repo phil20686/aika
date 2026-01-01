@@ -82,7 +82,7 @@ class TestRunnersWithMocks:
 
     runners = [
         SingleThreadedRunner,
-        # MultiThreadedRunner,
+        MultiThreadedRunner,
     ]
 
     child = MockTask(
