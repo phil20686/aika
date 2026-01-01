@@ -5,11 +5,13 @@
 python --version
 # first, build wheels for all the packages, but exclude dependencies so that the
 # packages don't need to know where to find each other.
+python -m pip install pip-tools
 for package_dir in libs/*
 do
   cd $package_dir
   python -m pip wheel --no-deps . -w ../../wheels
-  python setup.py --name >> ../../packages.in
+  (grep -Po '(?<=^name = ).*' setup.cfg) >> ../../packages.in
+#  python setup.py --name >> ../../packages.in
   cd -
 done
 
@@ -39,3 +41,5 @@ pip-compile packages.in -o $REQUIREMENTS --find-links ./wheels --upgrade --rebui
 
 # replace all references to the local packages with editable path versions
 sed -i -E "s|^aika-([^=]+)==.*$|-e libs/\1|g" $REQUIREMENTS
+
+read -n 1 -s -r -p "Press any key to exit"

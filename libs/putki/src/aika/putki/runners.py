@@ -54,10 +54,18 @@ class GraphStatus:
         """
         return copy.copy(self._failed_predecessors)
 
+    @property
+    def number_of_tasks_run(self) -> int:
+        """
+        Returns the number of tasks that have been run in this graph run.
+        """
+        return self._number_of_tasks_run
+
     def __str__(self):
         return f"""
 Graph Status:
     Graph contains {len(self._graph)} tasks
+    {self._number_of_tasks_run} tasks have been run
     {len(self.complete)} are complete
     {len(self.failed)} have failed
     {len(self.ready)} are ready to run
@@ -75,20 +83,22 @@ Graph Status:
         self._failed_predecessors = set()
         self._graph = graph
         self._ready_to_run = set()
+        self._number_of_tasks_run = 0
+        self._visited = set()
 
         stack = collections.deque()
         stack.extend(graph.sinks)
-        visited = set()
+
         while stack:
             task = stack.popleft()
-            if task not in visited:
-                visited.add(task)
+            if task not in self._visited:
+                self._visited.add(task)
                 if task.complete():
                     self._complete.add(task)
                 else:
                     self._need_to_run.add(task)
                     for dep in task.dependencies.values():
-                        if dep.task not in visited:
+                        if dep.task not in self._visited:
                             stack.append(dep.task)
 
         self._initialise_ready_to_run()
@@ -116,9 +126,10 @@ Graph Status:
         self._need_to_run.discard(task)
         self._ready_to_run.discard(task)
         self._complete.add(task)
+        self._number_of_tasks_run += 1
         new_additions = set()
         for successor in self._graph.get_successors(task):
-            if self._all_dependencies_complete(successor):
+            if self._all_dependencies_complete(successor) and successor in self._visited and successor not in self._complete:
                 new_additions.add(successor)
         self._ready_to_run.update(new_additions)
         return new_additions
@@ -138,12 +149,15 @@ Graph Status:
         new_fails = set()
         while stack:
             successor = stack.popleft()
-            self._need_to_run.discard(successor)
-            self._failed_predecessors.add(successor)
-            new_fails.add(successor)
-            for grand_successor in self._graph.get_successors(successor):
-                if grand_successor not in self._failed_predecessors:
-                    stack.append(grand_successor)
+            # It is possible for a failed task to have a successor which is either not in the set of tasks
+            # that needs to be run, or which is already complete due to having a different completion checker.
+            if successor in self._visited and successor not in self._complete:
+                self._need_to_run.discard(successor)
+                self._failed_predecessors.add(successor)
+                new_fails.add(successor)
+                for grand_successor in self._graph.get_successors(successor):
+                    if grand_successor not in self._failed_predecessors:
+                        stack.append(grand_successor)
         self._failed_predecessors.update(new_fails)
         return new_fails
 

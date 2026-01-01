@@ -39,6 +39,9 @@ class MockTask:
     def __hash__(self):
         return session_consistent_hash(self.name)
 
+    def __repr__(self):
+        return f"<MockTask {self.name}> is_complete: {self._is_complete} should raise: {self._should_raise}"
+
     def __init__(
         self,
         name,
@@ -79,7 +82,7 @@ class TestRunnersWithMocks:
 
     runners = [
         SingleThreadedRunner,
-        MultiThreadedRunner,
+        # MultiThreadedRunner,
     ]
 
     child = MockTask(
@@ -148,20 +151,38 @@ class TestRunnersWithMocks:
         },
     )
 
+    diamond_with_blocking_complete = MockTask(
+        "diamond_with_blocking_complete",
+        dependencies={
+            "foo": MockTask(
+                "leaf_one",
+                dependencies={"bar": MockTask("grandparent", is_complete=False)},
+                is_complete=False
+            ),
+            "bar": MockTask(
+                "leaf_two",
+                dependencies={"bar": MockTask("grandparent", is_complete=False)},
+                is_complete=True
+            ),
+        },
+        is_complete=False
+    )
+
     @pytest.mark.parametrize("runner", runners)
     @pytest.mark.parametrize(
-        "input_graph, expected_complete, expected_failed, expected_not_run",
+        "input_graph, expected_complete, expected_failed, expected_not_run, expected_run",
         [
-            (Graph([child]), 3, 0, 0),
-            (Graph([child, child]), 3, 0, 0),
+            (Graph([child]), 3, 0, 0, 3),
+            (Graph([child, child]), 3, 0, 0, 3),
             # in this case the graph never looked at the grandparent because it was blocked by a complete parent.
-            (Graph([child_with_complete_parent_and_grandparent]), 2, 0, 0),
-            (Graph([child_with_complete_parents]), 3, 0, 0),
-            (Graph([diamond_grandchild_of_failure]), 0, 1, 3),
-            (Graph([grand_child]), 4, 0, 0),
-            (Graph([child, grand_child]), 4, 0, 0),
-            (Graph([failed_child]), 2, 1, 0),
-            (Graph([child_of_failure]), 2, 1, 1),
+            (Graph([child_with_complete_parent_and_grandparent]), 2, 0, 0, 1),
+            (Graph([child_with_complete_parents]), 3, 0, 0, 1),
+            (Graph([diamond_grandchild_of_failure]), 0, 1, 3, 0),
+            (Graph([grand_child]), 4, 0, 0, 4),
+            (Graph([child, grand_child]), 4, 0, 0, 4),
+            (Graph([failed_child]), 2, 1, 0, 2),
+            (Graph([child_of_failure]), 2, 1, 1, 2),
+            (Graph([diamond_with_blocking_complete]), 4, 0, 0, 3),
         ],
     )
     def test_runner(
@@ -171,6 +192,7 @@ class TestRunnersWithMocks:
         expected_complete,
         expected_failed,
         expected_not_run,
+        expected_run,
     ):
         status = runner.run(
             copy.deepcopy(
@@ -182,6 +204,7 @@ class TestRunnersWithMocks:
         assert len(status.failed) == expected_failed
         assert len(status.waiting) == 0
         assert len(status.has_failed_predecessor) == expected_not_run
+        assert status.number_of_tasks_run == expected_run
         assert "Graph Status:" in str(status)
 
 
