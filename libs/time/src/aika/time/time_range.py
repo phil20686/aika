@@ -73,7 +73,7 @@ class TimeRange:
             return tensor.loc[mask]
 
         else:
-            start, end = np.searchsorted(index, [self.start, self.end], side="left")
+            start, end = np.searchsorted(index.as_unit("ns"), [self.start, self.end], side="left")
 
             return tensor.iloc[start:end]
 

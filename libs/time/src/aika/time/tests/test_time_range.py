@@ -15,8 +15,10 @@ def timestamp_index(*args, tz=None, **kwargs):
         tz = "UTC"
     return pd.date_range(*args, **kwargs, tz=tz)
 
-
-empty_ts_index = pd.DatetimeIndex([], dtype=pd.DatetimeTZDtype(tz="UTC"))
+if version.parse(pd.__version__) < version.parse("3.0.0"):
+    empty_ts_index = pd.DatetimeIndex([], dtype=pd.DatetimeTZDtype(tz="UTC", unit="ns"))
+else:
+    empty_ts_index = pd.DatetimeIndex([], dtype=pd.DatetimeTZDtype(tz="UTC", unit="us"))
 
 
 @pytest.mark.parametrize(

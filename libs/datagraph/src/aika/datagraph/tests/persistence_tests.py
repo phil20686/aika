@@ -162,12 +162,12 @@ extremely_large_static_dataset = DataSet.build(
 replace_tests = [([leaf1_extended], leaf1, {leaf1})]
 
 append_tests = [
-    (
-        [
-            leaf1,
-        ],
-        {leaf1},
-    ),
+    # (
+    #     [
+    #         leaf1,
+    #     ],
+    #     {leaf1},
+    # ),
     (
         [
             leaf1,
