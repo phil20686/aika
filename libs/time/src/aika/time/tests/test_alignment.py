@@ -9,11 +9,11 @@ from aika.utilities.testing import assert_call
 
 class PdIndex:
     date_index = pd.date_range("2000-01-01", periods=10)
-    hourly_index = pd.date_range("2000-01-01", periods=10, freq="1H")
+    hourly_index = pd.date_range("2000-01-01", periods=10, freq="1h")
     duplicated_hourly_index = hourly_index.append(hourly_index).sort_values()
-    half_hourly_index = pd.date_range("2000-01-01", periods=10, freq="30Min")
+    half_hourly_index = pd.date_range("2000-01-01", periods=10, freq="30min")
     half_hourly_index_offset = pd.date_range(
-        "2000-01-01T00:00:05", periods=10, freq="30Min"
+        "2000-01-01T00:00:05", periods=10, freq="30min"
     )
 
 

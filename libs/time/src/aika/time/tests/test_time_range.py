@@ -95,7 +95,7 @@ def test_constructor_and_equality(start, end, expect, str_repr):
         (
             TimeRange("2020-01-01", "2020-01-10"),
             pd.Series(
-                1.0, index=timestamp_index(start="2022-04-21", freq="H", periods=10)
+                1.0, index=timestamp_index(start="2022-04-21", freq="h", periods=10)
             ),
             pd.Series(
                 dtype=float,
@@ -105,7 +105,7 @@ def test_constructor_and_equality(start, end, expect, str_repr):
         (
             TimeRange("2022-04-21T00:00", "2022-04-21T02:00:00"),
             pd.Series(
-                1.0, index=timestamp_index(start="2022-04-21", freq="H", periods=10)
+                1.0, index=timestamp_index(start="2022-04-21", freq="h", periods=10)
             ),
             pd.Series(
                 1.0,
@@ -121,7 +121,7 @@ def test_constructor_and_equality(start, end, expect, str_repr):
             pd.Series(
                 1.0,
                 index=timestamp_index(
-                    start="2022-04-21", freq="H", periods=10, tz="America/New_York"
+                    start="2022-04-21", freq="h", periods=10, tz="America/New_York"
                 ),
             ),
             pd.Series(
@@ -345,7 +345,7 @@ def test_in(time_range, ts, expect):
             ValueError("Cannot extract time range from empty index"),
         ),
         (
-            timestamp_index(start="2012-01-01 00:00", freq="H", periods=10),
+            timestamp_index(start="2012-01-01 00:00", freq="h", periods=10),
             None,
             TimeRange("2012-01-01 00:00", "2012-01-01 09:00:00.000000001"),
         ),
