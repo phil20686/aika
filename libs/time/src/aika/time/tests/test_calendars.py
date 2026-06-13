@@ -18,7 +18,7 @@ from aika.utilities.testing import assert_call
 @pytest.mark.parametrize(
     "offset, expect",
     [
-        ("17MIN", ValueError("Offset must evenly divide into one day.*")),
+        ("17min", ValueError("Offset must evenly divide into one day.*")),
         (BDay(), ValueError("Offset must be a pd.offsets.Tick.*")),
     ],
 )
@@ -36,14 +36,14 @@ def test_validator(offset, expect):
             TimeOfDay.from_str("15:45 [Europe/London]"),
             freq=CDay(weekmask="1001000"),
         ),
-        OffsetCalendar("5MIN"),
-        OffsetCalendar("1MIN"),
+        OffsetCalendar("5min"),
+        OffsetCalendar("1min"),
         OffsetCalendar(Hour()),
         UnionCalendar(
             {
                 TimeOfDayCalendar(TimeOfDay.from_str("15:47 [Europe/London]")),
                 TimeOfDayCalendar(TimeOfDay.from_str("15:47 [America/New_York]")),
-                OffsetCalendar("5MIN"),
+                OffsetCalendar("5min"),
             }
         ),
     ],

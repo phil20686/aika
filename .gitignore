@@ -16,3 +16,4 @@ htmlcov
 .pytest_cache
 libs/datagraph/src/aika/datagraph/tests/file_backend_data/*
 libs/putki/src/aika/putki/tests/runners_test/*
+AGENTS.md

@@ -47,8 +47,8 @@ def right_dot_product(matrix: pd.DataFrame, vector: pd.DataFrame) -> pd.DataFram
     """
     return (
         matrix.multiply(vector, axis=0, level=1)
-        .groupby(axis=1, level=0)
-        .apply(lambda df: df.sum(skipna=False, axis=1))
+        .T.groupby(level=0)
+        .apply(lambda df: df.sum(skipna=False, axis=0)).T
     )
     # return matrix.multiply(vector, axis=0, level=1).sum(axis=1, level=0, skipna=False)
 

@@ -105,7 +105,7 @@ class OffsetCalendar(ICalendar):
                 f"{value.__class__.__name__}"
             )
 
-        per_day = pd.Timedelta(days=1) / value.delta
+        per_day = pd.Timedelta(days=1) / pd.Timedelta(value)
         if per_day != int(per_day):
             raise ValueError(
                 f"Offset must evenly divide into one day; got {value}, of which "
