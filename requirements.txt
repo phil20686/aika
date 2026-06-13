@@ -25,15 +25,15 @@
     #   aika-ml
     #   aika-putki
     #   aika-time
-attrs==25.4.0
+attrs==26.1.0
     # via
     #   aika-putki
     #   aika-time
 colorama==0.4.6
     # via pytest
-coverage[toml]==7.13.1
+coverage[toml]==7.14.1
     # via pytest-cov
-decorator==5.2.1
+decorator==5.3.1
     # via retry
 dnspython==2.8.0
     # via pymongo
@@ -47,9 +47,11 @@ joblib==1.5.3
     # via scikit-learn
 mongomock==4.3.0
     # via aika-datagraph
+narwhals==2.22.1
+    # via scikit-learn
 networkx==3.6.1
     # via aika-putki
-numpy==2.4.0
+numpy==2.4.6
     # via
     #   aika-datagraph
     #   aika-ml
@@ -61,12 +63,12 @@ numpy==2.4.0
     #   scipy
 overrides==7.7.0
     # via aika-putki
-packaging==25.0
+packaging==26.2
     # via
     #   aika-time
     #   mongomock
     #   pytest
-pandas==2.3.3
+pandas==3.0.3
     # via
     #   aika-datagraph
     #   aika-ml
@@ -81,11 +83,11 @@ portalocker==3.2.0
     # via aika-datagraph
 py==1.11.0
     # via retry
-pygments==2.19.2
+pygments==2.20.0
     # via pytest
-pymongo==4.15.5
+pymongo==4.17.0
     # via aika-datagraph
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   aika-datagraph
     #   aika-ml
@@ -93,7 +95,7 @@ pytest==9.0.2
     #   aika-time
     #   aika-utilities
     #   pytest-cov
-pytest-cov==7.0.0
+pytest-cov==7.1.0
     # via
     #   aika-datagraph
     #   aika-ml
@@ -102,17 +104,15 @@ pytest-cov==7.0.0
     #   aika-utilities
 python-dateutil==2.9.0.post0
     # via pandas
-pytz==2025.2
-    # via
-    #   mongomock
-    #   pandas
-pywin32==311
+pytz==2026.2
+    # via mongomock
+pywin32==312
     # via portalocker
 retry==0.9.2
     # via aika-datagraph
-scikit-learn==1.8.0
+scikit-learn==1.9.0
     # via aika-ml
-scipy==1.16.3
+scipy==1.17.1
     # via scikit-learn
 sentinels==1.1.1
     # via mongomock
@@ -122,5 +122,5 @@ threadpoolctl==3.6.0
     # via scikit-learn
 typing-extensions==4.15.0
     # via aika-datagraph
-tzdata==2025.3
+tzdata==2026.2
     # via pandas
